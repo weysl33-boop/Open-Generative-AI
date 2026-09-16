@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/billing';
-import { getDatabase } from '@/lib/db';
+import { execute, queryOne } from '@/lib/db';
 import { createModerationCase } from '@/lib/repositories/moderation';
 
 export const runtime = 'nodejs';
@@ -20,24 +20,23 @@ export async function POST(request) {
       return NextResponse.json({ error: '缺少作品标识' }, { status: 400 });
     }
 
-    const db = getDatabase();
-    const creation = db.prepare('SELECT id, status FROM creations WHERE id = ?').get(creationId);
+    const creation = await queryOne('SELECT id, status FROM creations WHERE id = $1', [creationId]);
     if (!creation) {
       return NextResponse.json({ error: '未找到指定作品记录' }, { status: 404 });
     }
 
     // 创建审核待办案件
-    const modCase = createModerationCase({
+    const modCase = await createModerationCase({
       creationId,
       reasonCode,
     });
 
     // 将作品标记为审核中
-    db.prepare(`
+    await execute(`
       UPDATE creations
       SET status = 'under_review'
-      WHERE id = ?
-    `).run(creationId);
+      WHERE id = $1
+    `, [creationId]);
 
     return NextResponse.json({
       success: true,
