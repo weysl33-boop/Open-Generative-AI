@@ -1,32 +1,25 @@
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
 import path from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
-const DEFAULT_DB_PATH = path.join(process.cwd(), 'data', 'billing.db');
-const dbPath = process.env.BILLING_DB_PATH || DEFAULT_DB_PATH;
+const execFileAsync = promisify(execFile);
 
-if (!fs.existsSync(dbPath)) {
-  console.error(`[backup] 数据库文件不存在: ${dbPath}`);
-  process.exit(1);
+export async function createPostgresBackup() {
+  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required for PostgreSQL backup.');
+  const backupDir = path.join(process.cwd(), 'data', 'backups');
+  await fs.mkdir(backupDir, { recursive: true });
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const target = path.join(backupDir, 'postgres-' + timestamp + '.dump');
+  await execFileAsync('pg_dump', ['--format=custom', '--no-owner', '--file', target, process.env.DATABASE_URL], { env: { ...process.env }, windowsHide: true });
+  const stat = await fs.stat(target);
+  return { target, bytes: stat.size };
 }
 
-const backupDir = path.join(path.dirname(dbPath), 'backups');
-fs.mkdirSync(backupDir, { recursive: true });
-
-const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-const targetBackupPath = path.join(backupDir, `billing-${timestamp}.db`);
-
-console.log(`[backup] 正在执行数据库一致性备份...`);
-console.log(`源路径: ${dbPath}`);
-console.log(`目标路径: ${targetBackupPath}`);
-
 try {
-  const db = new DatabaseSync(dbPath);
-  // 使用 VACUUM INTO 进行无损一致性在线快照
-  db.exec(`VACUUM INTO '${targetBackupPath.replace(/\\/g, '/')}'`);
-  const bytes = fs.statSync(targetBackupPath).size;
-  console.log(`[backup] 备份成功！文件大小: ${(bytes / 1024 / 1024).toFixed(2)} MB`);
+  const result = await createPostgresBackup();
+  console.log('[backup] PostgreSQL backup created: ' + result.target + ' (' + (result.bytes / 1024 / 1024).toFixed(2) + ' MB)');
 } catch (error) {
-  console.error(`[backup] 备份失败:`, error.message);
-  process.exit(1);
+  console.error('[backup] PostgreSQL backup failed:', error.message);
+  process.exitCode = 1;
 }
