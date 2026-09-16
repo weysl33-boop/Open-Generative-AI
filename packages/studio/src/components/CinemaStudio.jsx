@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { generateImage, uploadFile } from "../muapi.js";
+import { generateImage, generateVideo, generateI2V, uploadFile } from "../muapi.js";
 import { scopedPersistKey, migrateLegacyPersistKey } from "../persistKey.js";
 import MobileGenerationActions, {
   CopyContentIcon,
@@ -131,6 +131,39 @@ const ASSET_URLS = {
   "f/11": "/assets/cinema/f_11.webp",
 };
 
+
+// ─── Cinema Multi-Models & Video Engine ─────────────────────────────────────
+
+const CINEMA_VIDEO_MODELS = [
+  { id: "minimax-hailuo-2.3-standard-t2v", i2vId: "minimax-hailuo-2.3-standard-i2v", name: "Hailuo 2.3 (海螺电影级)", badge: "4K Cinema" },
+  { id: "kling-v3.0-standard-text-to-video", i2vId: "kling-v3.0-standard-image-to-video", name: "Kling 3.0 Pro (可灵电影)", badge: "Pro" },
+  { id: "veo-2-text-to-video", i2vId: "veo-2-image-to-video", name: "Google Veo 2 (电影运镜)", badge: "Ultra" },
+  { id: "luma-dream-machine", i2vId: "luma-dream-machine", name: "Luma Dream Machine", badge: "Fast" },
+  { id: "wan2.1-t2v-14b", i2vId: "wan2.1-i2v-14b", name: "Wan 2.1 14B (通义万相)", badge: "HQ" },
+];
+
+const CINEMA_PHOTO_MODELS = [
+  { id: "nano-banana-pro", editId: "nano-banana-pro-edit", name: "Nano Banana Pro (8K胶片)", badge: "8K Cinema" },
+  { id: "flux-1.1-pro", editId: "flux-1.1-pro", name: "Flux 1.1 Pro (大片质感)", badge: "Pro" },
+  { id: "flux-schnell-image", editId: "flux-schnell-image", name: "Flux Schnell (极速电影)", badge: "Fast" },
+  { id: "sd-3.5-large", editId: "sd-3.5-large", name: "SD 3.5 Large (写实摄影)", badge: "HQ" },
+];
+
+const VIDEO_DURATIONS = ["5s", "10s"];
+
+function isVideoUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  return (
+    url.endsWith(".mp4") ||
+    url.endsWith(".webm") ||
+    url.endsWith(".mov") ||
+    url.includes(".mp4?") ||
+    url.includes(".webm?") ||
+    url.includes("/video/") ||
+    url.includes("video")
+  );
+}
+
 const ASPECT_RATIOS = ["16:9", "21:9", "9:16", "1:1", "4:5"];
 const RESOLUTIONS = ["1K", "2K", "4K"];
 const CAMERAS = Object.keys(CAMERA_MAP);
@@ -144,16 +177,15 @@ function buildNanoBananaPrompt(
   lens,
   focalLength,
   aperture,
+  isCinemaVideo = false,
 ) {
   const cameraDesc = CAMERA_MAP[camera] || camera;
   const lensDesc = LENS_MAP[lens] || lens;
   const perspective = FOCAL_PERSPECTIVE[focalLength] || "";
   const depthEffect = APERTURE_EFFECT[aperture] || "";
-  const qualityTags = [
-    "professional photography",
-    "ultra-detailed",
-    "8K resolution",
-  ];
+  const qualityTags = isCinemaVideo
+    ? ["cinematic motion", "smooth cinematic camera movement", "masterpiece cinema film", "4K HDR film grade"]
+    : ["professional photography", "ultra-detailed", "8K resolution"];
   const parts = [
     basePrompt,
     `shot on a ${cameraDesc}`,
@@ -546,6 +578,10 @@ export default function CinemaStudio({
   }, [PERSIST_KEY]);
 
   // ── Settings state ──
+  const [generationMode, setGenerationMode] = useState("video"); // 'video' | 'image'
+  const [selectedVideoModel, setSelectedVideoModel] = useState(CINEMA_VIDEO_MODELS[0].id);
+  const [selectedPhotoModel, setSelectedPhotoModel] = useState(CINEMA_PHOTO_MODELS[0].id);
+  const [videoDuration, setVideoDuration] = useState("5s");
   const [settings, setSettings] = useState({
     prompt: "",
     aspect_ratio: "16:9",
@@ -573,7 +609,10 @@ export default function CinemaStudio({
   const [internalHistory, setInternalHistory] = useState([]);
 
   // ── Dropdown state ──
-  const [openDropdown, setOpenDropdown] = useState(null); // 'ar' | 'res' | null
+  const [openDropdown, setOpenDropdown] = useState(null); // 'mode' | 'model' | 'duration' | 'ar' | 'res' | null
+  const modeBtnRef = useRef(null);
+  const modelBtnRef = useRef(null);
+  const durationBtnRef = useRef(null);
   const arBtnRef = useRef(null);
   const resBtnRef = useRef(null);
 
@@ -656,6 +695,10 @@ export default function CinemaStudio({
       const stored = localStorage.getItem(PERSIST_KEY);
       if (stored) {
         const data = JSON.parse(stored);
+        if (data.generationMode) setGenerationMode(data.generationMode);
+        if (data.selectedVideoModel) setSelectedVideoModel(data.selectedVideoModel);
+        if (data.selectedPhotoModel) setSelectedPhotoModel(data.selectedPhotoModel);
+        if (data.videoDuration) setVideoDuration(data.videoDuration);
         if (data.settings) setSettings(data.settings);
         if (data.resolution) setResolution(data.resolution);
         if (data.internalHistory) setInternalHistory(data.internalHistory);
@@ -672,6 +715,10 @@ export default function CinemaStudio({
     const timer = setTimeout(() => {
       try {
         const state = {
+          generationMode,
+          selectedVideoModel,
+          selectedPhotoModel,
+          videoDuration,
           settings,
           resolution,
           internalHistory,
@@ -705,29 +752,58 @@ export default function CinemaStudio({
     onGenerationStart?.();
     setIsGenerating(true);
 
+    const isVideo = generationMode === "video";
     const finalPrompt = buildNanoBananaPrompt(
       basePrompt,
       settings.camera,
       settings.lens,
       settings.focal,
       settings.aperture,
+      isVideo,
     );
 
     try {
-      const res = await generateImage(apiKey, {
-        model: uploadedImage ? "nano-banana-pro-edit" : "nano-banana-pro",
-        prompt: finalPrompt,
-        aspect_ratio: settings.aspect_ratio,
-        resolution: resolution.toLowerCase(),
-        negative_prompt: "blurry, low quality, distortion, bad composition",
-        images_list: uploadedImage ? [uploadedImage] : [],
-      });
+      let res;
+      if (isVideo) {
+        const modelObj = CINEMA_VIDEO_MODELS.find((m) => m.id === selectedVideoModel) || CINEMA_VIDEO_MODELS[0];
+        const targetModel = uploadedImage ? (modelObj.i2vId || modelObj.id) : modelObj.id;
+        
+        const videoParams = {
+          model: targetModel,
+          prompt: finalPrompt,
+          aspect_ratio: settings.aspect_ratio,
+          duration: videoDuration,
+          resolution: resolution.toLowerCase(),
+        };
+        if (uploadedImage) {
+          videoParams.image_url = uploadedImage;
+          res = await generateI2V(apiKey, videoParams);
+        } else {
+          res = await generateVideo(apiKey, videoParams);
+        }
+      } else {
+        const modelObj = CINEMA_PHOTO_MODELS.find((m) => m.id === selectedPhotoModel) || CINEMA_PHOTO_MODELS[0];
+        const targetModel = uploadedImage ? (modelObj.editId || modelObj.id) : modelObj.id;
+        
+        res = await generateImage(apiKey, {
+          model: targetModel,
+          prompt: finalPrompt,
+          aspect_ratio: settings.aspect_ratio,
+          resolution: resolution.toLowerCase(),
+          negative_prompt: "blurry, low quality, distortion, bad composition",
+          images_list: uploadedImage ? [uploadedImage] : [],
+        });
+      }
 
       if (res && res.url) {
         const entry = {
           url: res.url,
           timestamp: Date.now(),
+          mediaType: isVideo ? "video" : "image",
           settings: {
+            mode: generationMode,
+            model: isVideo ? selectedVideoModel : selectedPhotoModel,
+            duration: isVideo ? videoDuration : undefined,
             prompt: basePrompt,
             camera: settings.camera,
             lens: settings.lens,
@@ -738,7 +814,6 @@ export default function CinemaStudio({
           },
         };
 
-        // Only update internal history if not using prop-driven history
         if (historyItems == null) {
           setInternalHistory((prev) => [entry, ...prev].slice(0, 50));
         }
@@ -748,16 +823,17 @@ export default function CinemaStudio({
         if (onGenerationComplete) {
           onGenerationComplete({
             url: res.url,
-            model: "nano-banana-pro",
+            mediaType: isVideo ? "video" : "image",
+            model: isVideo ? selectedVideoModel : selectedPhotoModel,
             prompt: basePrompt,
             type: "cinema",
           });
         }
       } else {
-        throw new Error("No data returned");
+        throw new Error("No media returned from generation");
       }
     } catch (e) {
-      console.error(e);
+      console.error("CinemaStudio generate failed:", e);
       onGenerationError?.(e.message?.slice(0, 120) || "Cinema generation failed");
     } finally {
       setIsGenerating(false);
@@ -765,13 +841,17 @@ export default function CinemaStudio({
     }
   }, [
     settings,
+    generationMode,
+    selectedVideoModel,
+    selectedPhotoModel,
+    videoDuration,
     resolution,
+    uploadedImage,
     apiKey,
     isGenerating,
     onGenerationComplete,
     onGenerationEnd,
     onGenerationError,
-    onGenerationStart,
     historyItems,
   ]);
 
@@ -873,11 +953,30 @@ export default function CinemaStudio({
                 className="relative group rounded-lg overflow-hidden border border-white/10 bg-[#0a0a0a] shadow-xl hover:border-[#22d3ee]/50 transition-all duration-300 flex flex-col cursor-pointer"
                 onClick={() => setFullscreenUrl(entry.url)}
               >
-                <img
-                  src={entry.url}
-                  alt={copy.card.historyItemAlt.replace("{index}", idx + 1)}
-                  className="w-full aspect-[4/3] object-cover bg-black/40"
-                />
+                {entry.mediaType === "video" || isVideoUrl(entry.url) ? (
+                  <div className="relative w-full aspect-[4/3] bg-black overflow-hidden flex items-center justify-center">
+                    <video
+                      src={entry.url}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover bg-black/40"
+                    />
+                    <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-black/70 border border-[#22d3ee]/30 text-[9px] text-[#22d3ee] font-bold tracking-wider flex items-center gap-1.5 backdrop-blur-md">
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                      </svg>
+                      CINEMA VIDEO
+                    </div>
+                  </div>
+                ) : (
+                  <img
+                    src={entry.url}
+                    alt={copy.card.historyItemAlt.replace("{index}", idx + 1)}
+                    className="w-full aspect-[4/3] object-cover bg-black/40"
+                  />
+                )}
                 
                 {/* Overlay actions */}
                 <div className="absolute top-2 right-2 hidden md:flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1186,6 +1285,120 @@ export default function CinemaStudio({
           {/* Bottom Row: Controls & Generate */}
           <PromptFooter>
             <PromptControls>
+              {/* Cinema Mode Toggle (Video / Photo) */}
+              <div className="flex items-center bg-white/5 p-0.5 rounded-full border border-white/10 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setGenerationMode("video")}
+                  className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    generationMode === "video"
+                      ? "bg-[#22d3ee] text-black shadow-md shadow-[#22d3ee]/20"
+                      : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polygon points="23 7 16 12 23 17 23 7"/>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                  </svg>
+                  {copy.modes?.video || "视频"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGenerationMode("image")}
+                  className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    generationMode === "image"
+                      ? "bg-[#22d3ee] text-black shadow-md shadow-[#22d3ee]/20"
+                      : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                  {copy.modes?.image || "摄影"}
+                </button>
+              </div>
+
+              {/* Model Picker */}
+              <div className="relative">
+                <button
+                  ref={modelBtnRef}
+                  className={promptControlClassName({
+                    active: openDropdown === "model",
+                    className: "text-xs font-semibold",
+                  })}
+                  onClick={() =>
+                    setOpenDropdown((d) => (d === "model" ? null : "model"))
+                  }
+                >
+                  <span className="text-[#22d3ee]">✦</span>
+                  <span className="max-w-[130px] truncate">
+                    {generationMode === "video"
+                      ? (CINEMA_VIDEO_MODELS.find((m) => m.id === selectedVideoModel)?.name || "Hailuo 2.3")
+                      : (CINEMA_PHOTO_MODELS.find((m) => m.id === selectedPhotoModel)?.name || "Nano Banana Pro")}
+                  </span>
+                </button>
+                {openDropdown === "model" && (
+                  <Dropdown
+                    title={copy.models?.title || "电影模型"}
+                    items={
+                      generationMode === "video"
+                        ? CINEMA_VIDEO_MODELS.map((m) => m.name)
+                        : CINEMA_PHOTO_MODELS.map((m) => m.name)
+                    }
+                    selected={
+                      generationMode === "video"
+                        ? (CINEMA_VIDEO_MODELS.find((m) => m.id === selectedVideoModel)?.name)
+                        : (CINEMA_PHOTO_MODELS.find((m) => m.id === selectedPhotoModel)?.name)
+                    }
+                    onSelect={(val) => {
+                      if (generationMode === "video") {
+                        const m = CINEMA_VIDEO_MODELS.find((item) => item.name === val);
+                        if (m) setSelectedVideoModel(m.id);
+                      } else {
+                        const m = CINEMA_PHOTO_MODELS.find((item) => item.name === val);
+                        if (m) setSelectedPhotoModel(m.id);
+                      }
+                    }}
+                    triggerRef={modelBtnRef}
+                    onClose={() => setOpenDropdown(null)}
+                  />
+                )}
+              </div>
+
+              {/* Duration Button (only for video mode) */}
+              {generationMode === "video" && (
+                <div className="relative">
+                  <button
+                    ref={durationBtnRef}
+                    className={promptControlClassName({
+                      active: openDropdown === "duration",
+                      className: "text-xs font-semibold",
+                    })}
+                    onClick={() =>
+                      setOpenDropdown((d) => (d === "duration" ? null : "duration"))
+                    }
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    {videoDuration}
+                  </button>
+                  {openDropdown === "duration" && (
+                    <Dropdown
+                      title={copy.duration?.title || "视频时长"}
+                      items={VIDEO_DURATIONS}
+                      selected={videoDuration}
+                      onSelect={(val) => setVideoDuration(val)}
+                      triggerRef={durationBtnRef}
+                      onClose={() => setOpenDropdown(null)}
+                    />
+                  )}
+                </div>
+              )}
+
               {/* Aspect Ratio Button */}
               <div className="relative">
                 <button
@@ -1292,12 +1505,24 @@ export default function CinemaStudio({
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
-          <img
-            src={fullscreenUrl}
-            alt={copy.fullscreen.alt}
-            className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up" 
-            onClick={(e) => e.stopPropagation()}
-          />
+          {isVideoUrl(fullscreenUrl) ? (
+            <video
+              src={fullscreenUrl}
+              autoPlay
+              loop
+              controls
+              playsInline
+              className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up" 
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <img
+              src={fullscreenUrl}
+              alt={copy.fullscreen.alt}
+              className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up" 
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
         </div>
       )}  
       {/* ── Camera Controls Overlay ── */}

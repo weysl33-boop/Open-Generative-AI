@@ -1,6 +1,7 @@
 {
   "tabs": {
     "image": "图像工作室",
+    "headshot": "AI爆头",
     "layers": "图层工作室",
     "video": "视频工作室",
     "audio": "音频工作室",
@@ -9,7 +10,7 @@
     "vibe-motion": "动感运镜",
     "lipsync": "唇形同步",
     "body-swap": "换体",
-    "cinema": "影院工作室",
+    "cinema": "电影影视工作室",
     "marketing": "营销工作室",
     "workflows": "工作流",
     "agents": "智能体",

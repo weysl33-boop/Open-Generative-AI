@@ -12,6 +12,16 @@
       "aperture": "光圈"
     }
   },
+  "modes": {
+    "video": "电影视频",
+    "image": "电影摄影"
+  },
+  "models": {
+    "title": "电影模型"
+  },
+  "duration": {
+    "title": "视频时长"
+  },
   "dropdowns": {
     "aspectRatio": "宽高比",
     "resolution": "分辨率"
@@ -27,23 +37,23 @@
   },
   "card": {
     "noPrompt": "无提示词",
-    "badge": "影院工作室",
+    "badge": "电影工作室",
     "historyItemAlt": "历史记录 {index}"
   },
   "empty": {
-    "kicker": "开始使用",
-    "title": "影院工作室",
-    "description": "如果预算无限，你想拍什么？自由掌控相机、灯光、镜头，写下高端电影级场景的提示词。"
+    "kicker": "开始创作",
+    "title": "电影工作室 CINEMA STUDIO",
+    "description": "自由掌控电影机、运镜、镜头和光圈，支持多模型电影级视频与高清剧照生成。"
   },
   "prompt": {
-    "placeholder": "描述你的电影场景...",
-    "generating": "生成中...",
-    "generate": "拍摄"
+    "placeholder": "描述你的电影视频或摄影场景...",
+    "generating": "正在拍摄制作...",
+    "generate": "开机拍摄"
   },
   "fullscreen": {
     "alt": "全屏预览"
   },
   "referenceImage": {
-    "alt": "参考图片"
+    "alt": "首帧/参考图片"
   }
 }

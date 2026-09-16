@@ -18,6 +18,9 @@ function addSecurityHeaders(response) {
         'Content-Security-Policy',
         "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://muapi.ai https://*.muapi.ai; font-src 'self' data:;"
     );
+    // 强制 HTML 页面与动态 API 不被浏览器协商强缓存，防止版本发布后旧 HTML 错位
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    response.headers.set('Pragma', 'no-cache');
     return response;
 }
 
@@ -30,12 +33,8 @@ export function middleware(request) {
                     url.pathname.startsWith('/api/v1');
 
     if (isMuApi) {
-        // Exclude paths that have their own dedicated route handlers with custom logic
-        const isHandledByRoute = url.pathname.startsWith('/api/v1/creative-agent') ||
-                                url.pathname.startsWith('/api/v1/get_upload_url') ||
-                                url.pathname.startsWith('/api/v1/upload-binary');
-
-        if (url.pathname.startsWith('/api/v1') && !isHandledByRoute) {
+        // /api/v1 下的所有端点已全部由专用的 Route Handler 接管安全扣费与模型管控
+        if (url.pathname.startsWith('/api/workflow') || url.pathname.startsWith('/api/app')) {
             const targetUrl = new URL(url.pathname + url.search, 'https://api.muapi.ai');
             const rewriteResponse = NextResponse.rewrite(targetUrl);
             return addSecurityHeaders(rewriteResponse);

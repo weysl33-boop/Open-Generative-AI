@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { ImageStudio, VideoStudio, ClippingStudio, MotionControlStudio, VibeMotionStudio, LipSyncStudio, RecastStudio, CinemaStudio, AudioStudio, MarketingStudio, WorkflowStudio, AgentStudio, AppsStudio, AiInfluencerStudio, LayersStudio, getUserBalance } from 'studio';
@@ -11,6 +11,8 @@ const DesignAgentStudio = dynamic(() => import('studio').then(mod => mod.DesignA
 });
 import axios from 'axios';
 import ApiKeyModal from './ApiKeyModal';
+import AuthModal from './AuthModal';
+import HeadshotStudio from './HeadshotStudio';
 import { getCommonCopy, getLocaleConfig, localizeStudioPath } from '@/lib/locales';
 
 // Tab/category ids, icons, and English `label` fallbacks are stable
@@ -27,6 +29,16 @@ const TABS = [
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
         <circle cx="8.5" cy="8.5" r="1.5"/>
         <polyline points="21 15 16 10 5 21"/>
+      </svg>
+    )
+  },
+  {
+    id: 'headshot',
+    label: 'AI Headshot',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
       </svg>
     )
   },
@@ -211,7 +223,7 @@ const NAVIGATION_CATEGORIES = [
   {
     id: 'images',
     label: 'Images',
-    tabIds: ['image', 'layers', 'cinema', 'design-agent', 'ai-influencer'],
+    tabIds: ['image', 'headshot', 'layers', 'cinema', 'design-agent', 'ai-influencer'],
     icon: (
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -223,7 +235,7 @@ const NAVIGATION_CATEGORIES = [
   {
     id: 'video',
     label: 'Video',
-    tabIds: ['video', 'clipping', 'motion-control', 'vibe-motion', 'lipsync', 'body-swap', 'marketing'],
+    tabIds: ['cinema', 'video', 'clipping', 'motion-control', 'vibe-motion', 'lipsync', 'body-swap', 'marketing'],
     icon: (
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="4" width="15" height="16" rx="2"/>
@@ -348,6 +360,95 @@ export default function StandaloneShell({ locale = 'en' }) {
   const [showSettings, setShowSettings] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [hasMounted, setHasMounted] = useState(false);
+  const [accountUser, setAccountUser] = useState(null);
+  const [accountCredits, setAccountCredits] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const pendingAuthResolverRef = useRef(null);
+
+  const refreshAccount = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/me', { cache: 'no-store' });
+      const data = await res.json().catch(() => ({}));
+      if (data.user) {
+        setAccountUser(data.user);
+        setAccountCredits(data.entitlements?.credits ?? null);
+        return data.user;
+      } else {
+        setAccountUser(null);
+        setAccountCredits(null);
+        return null;
+      }
+    } catch {
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshAccount();
+  }, [refreshAccount]);
+
+  // 全局额度守卫：当点击消耗模型额度的动作时被触发
+  const requireAccountGate = useCallback(() => {
+    return new Promise(async (resolve, reject) => {
+      // 1. 如果已有登录用户或已有 apiKey，直接放行
+      if (accountUser) {
+        resolve(accountUser);
+        return;
+      }
+      const currentUser = await refreshAccount();
+      if (currentUser) {
+        resolve(currentUser);
+        return;
+      }
+      if (apiKey) {
+        resolve({ id: 'byok', email: 'byok@local', role: 'byok' });
+        return;
+      }
+      // 2. 未登录，挂起 Promise 并打开 AuthModal 弹窗
+      pendingAuthResolverRef.current = { resolve, reject };
+      setShowAuthModal(true);
+    });
+  }, [accountUser, apiKey, refreshAccount]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.__KOYOSIM_REQUIRE_ACCOUNT__ = requireAccountGate;
+      window.__KOYOSIM_REQUIRE_API_KEY__ = async () => {
+        if (apiKey) return apiKey;
+        const cookieKey = document.cookie.match(/muapi_key=([^;]+)/)?.[1];
+        if (cookieKey) return cookieKey;
+        const user = await requireAccountGate();
+        return user ? 'koyosim-account-session' : null;
+      };
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete window.__KOYOSIM_REQUIRE_ACCOUNT__;
+        delete window.__KOYOSIM_REQUIRE_API_KEY__;
+      }
+    };
+  }, [requireAccountGate, apiKey]);
+
+  const handleAuthSuccess = useCallback((user, entitlements) => {
+    setAccountUser(user);
+    setAccountCredits(entitlements?.credits ?? 10);
+    setShowAuthModal(false);
+    if (pendingAuthResolverRef.current) {
+      const { resolve } = pendingAuthResolverRef.current;
+      pendingAuthResolverRef.current = null;
+      resolve(user);
+    }
+  }, []);
+
+  const handleAuthClose = useCallback(() => {
+    setShowAuthModal(false);
+    if (pendingAuthResolverRef.current) {
+      const { reject } = pendingAuthResolverRef.current;
+      pendingAuthResolverRef.current = null;
+      reject(new Error('用户取消了登录'));
+    }
+  }, []);
+
   const [showVadooBanner, setShowVadooBanner] = useState(() => {
     if (typeof window !== 'undefined') return localStorage.getItem('vadoo_banner_dismissed') !== '1';
     return true;
@@ -675,10 +776,6 @@ export default function StandaloneShell({ locale = 'en' }) {
     </div>
   );
 
-  if (!apiKey) {
-    return <ApiKeyModal onSave={handleKeySave} locale={locale} />;
-  }
-
   return (
     <div 
       className="h-screen bg-[#030303] flex flex-col overflow-hidden text-white relative"
@@ -795,24 +892,48 @@ export default function StandaloneShell({ locale = 'en' }) {
           </div>
 
           {/* Right: Actions */}
-          <div className="flex-shrink-0 flex items-center gap-3">
-            <div className="flex items-center gap-2.5 bg-white/5 px-3 py-1.5 rounded-full border border-white/5 transition-colors">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-xs font-bold text-white/90">
-                ${balance !== null ? `${balance}` : '---'}
-              </span>
-            </div>
+          <div className="flex-shrink-0 flex items-center gap-2.5">
+            {accountUser ? (
+              <a
+                href="/account"
+                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full border border-white/10 transition-colors text-xs"
+                title="查看账户与模型额度"
+              >
+                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="font-semibold text-cyan-300">
+                  ⚡ {accountCredits !== null ? `${accountCredits} 额度` : '已登录'}
+                </span>
+                <span className="hidden md:inline text-white/50 text-[11px] truncate max-w-[120px]">
+                  {accountUser.email}
+                </span>
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(true)}
+                className="flex items-center gap-1.5 bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm"
+              >
+                登录 / 注册
+              </button>
+            )}
+
+            {apiKey && (
+              <div className="hidden sm:flex items-center gap-1.5 bg-white/5 px-2.5 py-1.5 rounded-md border border-white/5 text-[11px] text-white/70">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                <span>BYOK</span>
+              </div>
+            )}
 
             <button
               onClick={() => setShowSettings(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-white/10 bg-white/5 text-[13px] font-bold text-white/80 hover:text-white hover:bg-white/10 hover:border-white/20 transition-colors"
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-white/10 bg-white/5 text-[13px] font-bold text-white/80 hover:text-white hover:bg-white/10 transition-colors"
               aria-label={copy.shell.settings}
+              title="设置与 API Key"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
-              <span className="hidden sm:inline">{copy.shell.settings}</span>
             </button>
           </div>
         </header>
@@ -977,6 +1098,9 @@ export default function StandaloneShell({ locale = 'en' }) {
         <div className="flex-1 min-h-0 h-full relative overflow-hidden bg-[#030303]">
         <div className={activeTab === 'image' ? "h-full w-full" : "hidden"}>
           <ImageStudio apiKey={apiKey} locale={locale} droppedFiles={droppedFiles} onFilesHandled={handleFilesHandled} onGenerationStart={makeGenerationStartCallback('image')} onGenerationEnd={makeGenerationEndCallback('image')} onGenerationComplete={makeSuccessCallback('image')} onGenerationError={makeErrorCallback('image')} />
+        </div>
+        <div className={activeTab === 'headshot' ? "h-full w-full" : "hidden"}>
+          <HeadshotStudio apiKey={apiKey} locale={locale} droppedFiles={droppedFiles} onFilesHandled={handleFilesHandled} onGenerationStart={makeGenerationStartCallback('headshot')} onGenerationEnd={makeGenerationEndCallback('headshot')} onGenerationComplete={makeSuccessCallback('headshot')} onGenerationError={makeErrorCallback('headshot')} />
         </div>
         <div className={activeTab === 'layers' ? "h-full w-full" : "hidden"}>
           <LayersStudio apiKey={apiKey} locale={locale} droppedFiles={droppedFiles} onFilesHandled={handleFilesHandled} onGenerationStart={makeGenerationStartCallback('layers')} onGenerationEnd={makeGenerationEndCallback('layers')} onGenerationComplete={makeSuccessCallback('layers')} onGenerationError={makeErrorCallback('layers')} />
@@ -1187,7 +1311,7 @@ export default function StandaloneShell({ locale = 'en' }) {
                    {copy.settingsModal.activeApiKey}
                 </label>
                 <div className="text-[13px] font-mono text-white/80">
-                  {apiKey.slice(0, 8)}••••••••••••••••
+                  {apiKey ? `${apiKey.slice(0, 8)}••••••••••••••••` : '未配置（优先使用本站账户额度）'}
                 </div>
               </div>
             </div>
@@ -1208,6 +1332,15 @@ export default function StandaloneShell({ locale = 'en' }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 登录拦截与登录弹窗 */}
+      {showAuthModal && (
+        <AuthModal
+          onSuccess={handleAuthSuccess}
+          onClose={handleAuthClose}
+          locale={locale}
+        />
       )}
     </div>
   );

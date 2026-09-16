@@ -1,7 +1,12 @@
 import './globals.css';
 import { Inter } from "next/font/google";
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { getLocaleConfig } from '@/lib/locales';
+import ChunkSelfHealing from '@/components/ChunkSelfHealing';
+import GlobalSiteBanner from '@/components/GlobalSiteBanner';
+import MaintenanceGate from '@/components/MaintenanceGate';
+import { getSettingByKey } from '@/lib/repositories/settings';
+import { getUserBySession } from '@/lib/billing';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -20,9 +25,26 @@ export default async function RootLayout({ children }) {
   const headerList = await headers();
   const { htmlLang } = getLocaleConfig(headerList.get('x-locale'));
 
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get('ko_session')?.value;
+  const user = getUserBySession(sessionToken);
+
+  let banner = null;
+  let maintenance = null;
+  try {
+    banner = getSettingByKey('site_banner')?.value || null;
+    maintenance = getSettingByKey('maintenance_mode')?.value || null;
+  } catch {}
+
   return (
     <html lang={htmlLang}>
-      <body className={inter.variable}>{children}</body>
+      <body className={inter.variable}>
+        <ChunkSelfHealing />
+        <GlobalSiteBanner banner={banner} />
+        <MaintenanceGate maintenance={maintenance} user={user}>
+          {children}
+        </MaintenanceGate>
+      </body>
     </html>
   );
 }

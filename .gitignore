@@ -31,6 +31,13 @@ release/
 .next/
 out/
 
+# Local runtime/session data and generated archives
+cookies.txt
+data/backups/
+*.db
+*.tar
+*.tar.gz
+
 # Misc
 *.pem
 .env

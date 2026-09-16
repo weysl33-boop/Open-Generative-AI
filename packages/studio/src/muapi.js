@@ -62,10 +62,29 @@ function normalizePredictionResult(submitData, result, outputUrl) {
 }
 
 async function submitAndPoll(endpoint, payload, key, onRequestId, maxAttempts = 60) {
+    // The shell opens the account dialog only when a model request is about
+    // to consume quota. It resolves after login so the original request can
+    // continue without making the user click Generate a second time.
+    const accountGate = typeof window !== 'undefined' && window.__KOYOSIM_REQUIRE_ACCOUNT__;
+    if (accountGate) {
+        const user = await accountGate();
+        if (!user) throw new Error('Generation cancelled: account login is required.');
+    }
+    let requestKey = key;
+    if (!requestKey && typeof window !== 'undefined' && window.__KOYOSIM_REQUIRE_API_KEY__) {
+        requestKey = await window.__KOYOSIM_REQUIRE_API_KEY__();
+    }
+    if (!requestKey) {
+        const cookieMatch = typeof document !== 'undefined' && document.cookie.match(/muapi_key=([^;]+)/);
+        if (cookieMatch) requestKey = cookieMatch[1];
+    }
+    if (!requestKey) {
+        requestKey = 'koyosim-account-session';
+    }
     const url = `${BASE_URL}/api/v1/${endpoint}`;
     const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': requestKey },
         body: JSON.stringify(payload)
     });
     if (!response.ok) {
@@ -77,7 +96,7 @@ async function submitAndPoll(endpoint, payload, key, onRequestId, maxAttempts = 
     const requestId = submitData.request_id || submitData.id;
     if (!requestId) return submitData;
     if (onRequestId) onRequestId(requestId);
-    const result = await pollForResult(requestId, key, maxAttempts);
+    const result = await pollForResult(requestId, requestKey, maxAttempts);
     const outputUrl = result.outputs?.[0] || result.url || result.output?.url;
     return normalizePredictionResult(submitData, result, outputUrl);
 }
@@ -366,7 +385,16 @@ export async function generateAudio(apiKey, params) {
     return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
 }
 
-export function uploadFile(apiKey, file, onProgress) {
+export async function uploadFile(apiKey, file, onProgress) {
+    let uploadKey = apiKey || (typeof window !== 'undefined' && window.__KOYOSIM_REQUIRE_API_KEY__
+        ? await window.__KOYOSIM_REQUIRE_API_KEY__()
+        : null);
+    if (!uploadKey) {
+        const cookieMatch = typeof document !== 'undefined' && document.cookie.match(/muapi_key=([^;]+)/);
+        if (cookieMatch) uploadKey = cookieMatch[1];
+    }
+    if (!uploadKey) uploadKey = 'koyosim-account-session';
+
     return new Promise((resolve, reject) => {
         const url = `${BASE_URL}/api/v1/upload_file`;
         const formData = new FormData();
@@ -374,7 +402,7 @@ export function uploadFile(apiKey, file, onProgress) {
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', url);
-        xhr.setRequestHeader('x-api-key', apiKey);
+        xhr.setRequestHeader('x-api-key', uploadKey);
         xhr.timeout = FILE_UPLOAD_TIMEOUT_MS;
 
         if (onProgress) {
