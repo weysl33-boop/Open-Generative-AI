@@ -41,11 +41,19 @@ export function middleware(request) {
         }
     }
 
-    // Plain response header carrying the locale derived from the URL path
-    // (same "set in middleware, read via headers() in the root layout"
-    // trick the main muapi client uses — see docs/localization.md).
+    let locale = getLocaleFromPathname(url.pathname);
+    if (locale === 'en') {
+        const queryLocale = url.searchParams.get('lang') || url.searchParams.get('locale');
+        const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value || request.cookies.get('locale')?.value;
+        if (queryLocale === 'zh' || queryLocale === 'en') {
+            locale = queryLocale;
+        } else if (cookieLocale === 'zh' || cookieLocale === 'en') {
+            locale = cookieLocale;
+        }
+    }
+
     const response = NextResponse.next();
-    response.headers.set('x-locale', getLocaleFromPathname(url.pathname));
+    response.headers.set('x-locale', locale);
     return addSecurityHeaders(response);
 }
 

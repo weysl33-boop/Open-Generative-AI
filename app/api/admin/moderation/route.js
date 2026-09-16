@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-  const guard = requirePermission(request, PERMISSIONS.moderationRead);
+  const guard = await requirePermission(request, PERMISSIONS.moderationRead);
   if (!guard.ok) return guard.response;
 
   const result = listModerationCases(request.nextUrl.searchParams);

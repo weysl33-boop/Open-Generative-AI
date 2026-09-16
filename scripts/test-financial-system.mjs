@@ -25,8 +25,8 @@ async function main() {
   // 创建两个测试用户
   await execute(`
     INSERT INTO users (id, email, display_name, password_hash, password_salt, role, credits, status, created_at)
-    VALUES (?, ?, '测试用户A', 'fakehash', 'fakesalt', 'user', 0, 'active', ?),
-           (?, ?, '测试用户B', 'fakehash', 'fakesalt', 'user', 0, 'active', ?)
+    VALUES ($1, $2, '测试用户A', 'fakehash', 'fakesalt', 'user', 0, 'active', $3),
+           ($4, $5, '测试用户B', 'fakehash', 'fakesalt', 'user', 0, 'active', $6)
   `, [userA, `${userA}@test.com`, now, userB, `${userB}@test.com`, now]);
 
   console.log(`\n1. 测试平台货币充值 (法币购买 K-Coin) 与复式分录...`);
@@ -160,7 +160,7 @@ async function main() {
   const userC = `usr_test_c_${Date.now()}`;
   await execute(`
     INSERT INTO users (id, email, display_name, password_hash, password_salt, role, credits, status, created_at)
-    VALUES (?, ?, '并发测试用户C', 'fake', 'fake', 'user', 0, 'active', ?)
+    VALUES ($1, $2, '并发测试用户C', 'fake', 'fake', 'user', 0, 'active', $3)
   `, [userC, `${userC}@test.com`, now]);
   await grantPerpetualCredits(userC, 5, '并发测试初始额度');
 

@@ -11,7 +11,7 @@ function formatDate(value) {
 
 export default async function SubscriptionsPage({ searchParams }) {
   const params = toSearchParams(await searchParams);
-  const result = listSubscriptions(params);
+  const result = await listSubscriptions(params);
 
   const columns = [
     {

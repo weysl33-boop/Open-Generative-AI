@@ -11,7 +11,7 @@ function formatDate(value) {
 
 export default async function CouponsPage({ searchParams }) {
   const params = toSearchParams(await searchParams);
-  const result = listCoupons(params);
+  const result = await listCoupons(params);
 
   const columns = [
     {

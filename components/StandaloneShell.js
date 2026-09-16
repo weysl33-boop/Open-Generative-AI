@@ -13,6 +13,7 @@ import axios from 'axios';
 import ApiKeyModal from './ApiKeyModal';
 import AuthModal from './AuthModal';
 import HeadshotStudio from './HeadshotStudio';
+import LanguageSwitcher from './LanguageSwitcher';
 import { getCommonCopy, getLocaleConfig, localizeStudioPath } from '@/lib/locales';
 
 // Tab/category ids, icons, and English `label` fallbacks are stable
@@ -428,6 +429,29 @@ export default function StandaloneShell({ locale = 'en' }) {
       }
     };
   }, [requireAccountGate, apiKey]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const remixPrompt = searchParams.get('remixPrompt');
+    if (remixPrompt) {
+      pushNotification({
+        type: 'success',
+        tabId: activeTab,
+        label: '即梦社区同款',
+        message: `已自动载入同款提示词: "${remixPrompt.slice(0, 25)}..."`,
+      });
+      setTimeout(() => {
+        const textareas = document.querySelectorAll('textarea');
+        if (textareas.length > 0) {
+          const target = textareas[0];
+          target.value = remixPrompt;
+          target.dispatchEvent(new Event('input', { bubbles: true }));
+          target.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }, 600);
+    }
+  }, [activeTab, pushNotification]);
 
   const handleAuthSuccess = useCallback((user, entitlements) => {
     setAccountUser(user);
@@ -892,7 +916,23 @@ export default function StandaloneShell({ locale = 'en' }) {
           </div>
 
           {/* Right: Actions */}
-          <div className="flex-shrink-0 flex items-center gap-2.5">
+          <div className="flex-shrink-0 flex items-center gap-2">
+            <a
+              href="/community"
+              className="flex items-center gap-1.5 bg-gradient-to-r from-cyan-500/15 via-blue-500/15 to-purple-500/15 hover:from-cyan-500/25 hover:to-purple-500/25 text-cyan-300 border border-cyan-400/30 px-3 py-1.5 rounded-full text-xs font-bold transition shadow-sm"
+              title="前往即梦社区发现万千灵感与一键做同款"
+            >
+              <span>🔥 即梦社区</span>
+            </a>
+
+            <a
+              href="/creations"
+              className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 px-3 py-1.5 rounded-full text-xs font-medium transition"
+              title="查看与管理我的生图/生视频/生音乐素材"
+            >
+              <span>📁 我的作品</span>
+            </a>
+
             {accountUser ? (
               <a
                 href="/account"
@@ -904,7 +944,7 @@ export default function StandaloneShell({ locale = 'en' }) {
                   ⚡ {accountCredits !== null ? `${accountCredits} 额度` : '已登录'}
                 </span>
                 <span className="hidden md:inline text-white/50 text-[11px] truncate max-w-[120px]">
-                  {accountUser.email}
+                  {accountUser.displayName || accountUser.email}
                 </span>
               </a>
             ) : (
@@ -923,6 +963,8 @@ export default function StandaloneShell({ locale = 'en' }) {
                 <span>BYOK</span>
               </div>
             )}
+
+            <LanguageSwitcher />
 
             <button
               onClick={() => setShowSettings(true)}
@@ -1313,6 +1355,17 @@ export default function StandaloneShell({ locale = 'en' }) {
                 <div className="text-[13px] font-mono text-white/80">
                   {apiKey ? `${apiKey.slice(0, 8)}••••••••••••••••` : '未配置（优先使用本站账户额度）'}
                 </div>
+              </div>
+              <div className="bg-white/5 border border-white/[0.03] rounded-md p-4 flex items-center justify-between">
+                <div>
+                  <label className="block text-xs font-bold text-white/30 mb-1">
+                    {locale === 'zh' ? '界面语言' : 'Interface Language'}
+                  </label>
+                  <span className="text-[13px] text-white/80">
+                    {locale === 'zh' ? '简体中文' : 'English'}
+                  </span>
+                </div>
+                <LanguageSwitcher showLabel={false} />
               </div>
             </div>
 

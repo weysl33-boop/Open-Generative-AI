@@ -1,11 +1,9 @@
-import { healthCheck } from '@/lib/db';
-import { getMigrationStatus } from '@/lib/db/migrations';
-import { getProvidersOverview } from '@/lib/services/providers';
+import { getSystemHealth } from '@/lib/services/systemHealth';
 import { Card, MetricCard, PageHeader, StatusBadge } from '@/components/admin/AdminUi';
 import LiveLogViewer from './LiveLogViewer';
 
 export default async function SystemHealthPage() {
-  const [database, migrations, providers] = await Promise.all([healthCheck(), getMigrationStatus(), getProvidersOverview()]);
+  const { database, migrations, providers } = await getSystemHealth();
   const mem = process.memoryUsage();
 
   return (

@@ -11,7 +11,7 @@ function formatDate(value) {
 
 export default async function WebhooksPage({ searchParams }) {
   const params = toSearchParams(await searchParams);
-  const result = listWebhookEvents(params);
+  const result = await listWebhookEvents(params);
 
   const columns = [
     {

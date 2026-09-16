@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/billing';
-import { execute, queryOne } from '@/lib/db';
-import { createModerationCase } from '@/lib/repositories/moderation';
+import { reportCreation } from '@/lib/services/moderation';
 
 export const runtime = 'nodejs';
 
@@ -20,28 +19,13 @@ export async function POST(request) {
       return NextResponse.json({ error: '缺少作品标识' }, { status: 400 });
     }
 
-    const creation = await queryOne('SELECT id, status FROM creations WHERE id = $1', [creationId]);
-    if (!creation) {
-      return NextResponse.json({ error: '未找到指定作品记录' }, { status: 404 });
-    }
-
-    // 创建审核待办案件
-    const modCase = await createModerationCase({
-      creationId,
-      reasonCode,
-    });
-
-    // 将作品标记为审核中
-    await execute(`
-      UPDATE creations
-      SET status = 'under_review'
-      WHERE id = $1
-    `, [creationId]);
+    const result = await reportCreation({ userId: user.id, creationId, reasonCode });
+    if (result.error) return NextResponse.json({ error: result.error }, { status: 404 });
 
     return NextResponse.json({
       success: true,
       message: '举报已受理，内容安全团队将尽快核查处理',
-      caseId: modCase.id,
+      caseId: result.caseId,
     });
   } catch (error) {
     console.error('[creations/report]', error);

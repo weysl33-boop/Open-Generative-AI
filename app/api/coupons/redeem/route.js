@@ -13,7 +13,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const code = body.code;
-    const result = redeemCoupon({ code, user });
+    const result = await redeemCoupon({ code, user });
 
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: 400 });

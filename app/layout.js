@@ -7,6 +7,8 @@ import GlobalSiteBanner from '@/components/GlobalSiteBanner';
 import MaintenanceGate from '@/components/MaintenanceGate';
 import { getSettingByKey } from '@/lib/repositories/settings';
 import { getUserBySession } from '@/lib/billing';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages, getLocale } from 'next-intl/server';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -36,14 +38,23 @@ export default async function RootLayout({ children }) {
     maintenance = getSettingByKey('maintenance_mode')?.value || null;
   } catch {}
 
+  let messages = {};
+  let currentLocale = 'en';
+  try {
+    messages = await getMessages();
+    currentLocale = await getLocale();
+  } catch {}
+
   return (
-    <html lang={htmlLang}>
+    <html lang={htmlLang || currentLocale}>
       <body className={inter.variable}>
-        <ChunkSelfHealing />
-        <GlobalSiteBanner banner={banner} />
-        <MaintenanceGate maintenance={maintenance} user={user}>
-          {children}
-        </MaintenanceGate>
+        <NextIntlClientProvider locale={currentLocale} messages={messages}>
+          <ChunkSelfHealing />
+          <GlobalSiteBanner banner={banner} />
+          <MaintenanceGate maintenance={maintenance} user={user}>
+            {children}
+          </MaintenanceGate>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

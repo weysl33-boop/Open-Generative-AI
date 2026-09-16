@@ -66,5 +66,41 @@
     "submit": "Get Started",
     "needKey": "Need a key?",
     "getOneFree": "Get one free →"
+  },
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "success": "Success",
+    "failed": "Failed",
+    "language": "Language",
+    "switchLanguage": "Switch Language",
+    "copy": "Copy",
+    "copied": "Copied to clipboard"
+  },
+  "api": {
+    "unauthorized": "Unauthorized, please login first",
+    "forbidden": "Forbidden, insufficient permissions",
+    "badRequest": "Invalid request parameters",
+    "notFound": "Requested resource not found",
+    "internalError": "Internal server error, please try again later",
+    "rateLimit": "Too many requests, please try again later",
+    "operationSuccess": "Operation completed successfully"
+  },
+  "financial": {
+    "wallet": "Wallet",
+    "kcoin": "K-Coin",
+    "credits": "Credits",
+    "balance": "Balance",
+    "recharge": "Recharge",
+    "transfer": "Transfer",
+    "exchange": "Exchange",
+    "checkin": "Daily Check-in",
+    "checkinSuccess": "Check-in successful! Received free daily credits",
+    "insufficientBalance": "Insufficient balance",
+    "transferSuccess": "Transfer completed successfully",
+    "invalidPassword": "Invalid payment password"
   }
 }

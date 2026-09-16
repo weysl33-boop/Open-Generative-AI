@@ -42,8 +42,8 @@ async function main() {
   // 创建两个用户
   await execute(`
     INSERT INTO users (id, email, display_name, password_hash, password_salt, role, credits, status, created_at)
-    VALUES (?, ?, 'API测试用户1', 'hash', 'salt', 'user', 0, 'active', ?),
-           (?, ?, 'API测试用户2', 'hash', 'salt', 'user', 0, 'active', ?)
+    VALUES ($1, $2, 'API测试用户1', 'hash', 'salt', 'user', 0, 'active', $3),
+           ($4, $5, 'API测试用户2', 'hash', 'salt', 'user', 0, 'active', $6)
   `, [user1, `${user1}@test.com`, now, user2, `${user2}@test.com`, now]);
 
   const session1 = await createSession(user1);

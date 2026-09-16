@@ -66,5 +66,41 @@
     "submit": "开始使用",
     "needKey": "还没有密钥？",
     "getOneFree": "免费获取 →"
+  },
+  "common": {
+    "confirm": "确认",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "loading": "加载中...",
+    "success": "成功",
+    "failed": "失败",
+    "language": "语言",
+    "switchLanguage": "切换语言",
+    "copy": "复制",
+    "copied": "已复制到剪贴板"
+  },
+  "api": {
+    "unauthorized": "未授权，请先登录",
+    "forbidden": "权限不足，拒绝访问",
+    "badRequest": "请求参数无效",
+    "notFound": "请求的资源未找到",
+    "internalError": "服务器内部错误，请稍后重试",
+    "rateLimit": "请求过于频繁，请稍候再试",
+    "operationSuccess": "操作成功完成"
+  },
+  "financial": {
+    "wallet": "资产钱包",
+    "kcoin": "K 币",
+    "credits": "算力积分",
+    "balance": "可用余额",
+    "recharge": "充值",
+    "transfer": "转账",
+    "exchange": "兑换",
+    "checkin": "每日签到",
+    "checkinSuccess": "签到成功！已领取今日算力积分",
+    "insufficientBalance": "账户余额不足",
+    "transferSuccess": "转账完成",
+    "invalidPassword": "支付密码错误"
   }
 }

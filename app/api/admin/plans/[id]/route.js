@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function PATCH(request, context) {
-  const guard = requirePermission(request, PERMISSIONS.plansWrite);
+  const guard = await requirePermission(request, PERMISSIONS.plansWrite);
   if (!guard.ok) return guard.response;
 
   const { id } = await context.params;
@@ -15,7 +15,7 @@ export async function PATCH(request, context) {
     body = await request.json();
   } catch {}
 
-  const result = updatePlanDetails({
+  const result = await updatePlanDetails({
     actor: guard.user,
     planId: id,
     name: body.name,

@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-  const guard = requirePermission(request, PERMISSIONS.providersRead);
+  const guard = await requirePermission(request, PERMISSIONS.providersRead);
   if (!guard.ok) return guard.response;
 
   const data = await getProvidersOverview();

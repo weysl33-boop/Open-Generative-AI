@@ -4,8 +4,8 @@ import ModelsManagerClient from './ModelsManagerClient';
 
 export const dynamic = 'force-dynamic';
 
-export default function ModelsConfigPage() {
-  const models = getAllModelsOverview();
+export default async function ModelsConfigPage() {
+  const models = await getAllModelsOverview();
 
   return (
     <>

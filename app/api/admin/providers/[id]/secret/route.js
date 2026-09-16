@@ -7,13 +7,13 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function PUT(request, context) {
-  const guard = requirePermission(request, PERMISSIONS.providersWrite);
+  const guard = await requirePermission(request, PERMISSIONS.providersWrite);
   if (!guard.ok) return guard.response;
 
   const { id } = await context.params;
   const idempotencyKey = request.headers.get('idempotency-key');
 
-  const idemp = checkIdempotency({
+  const idemp = await checkIdempotency({
     scope: 'provider_secret_rotate',
     key: idempotencyKey,
     actorId: guard.user.id,
@@ -34,7 +34,7 @@ export async function PUT(request, context) {
     return errorResponse('UNAUTHORIZED', '管理员密码二次验证失败，拒绝轮换密钥', 403, guard.requestId);
   }
 
-  const result = rotateProviderSecret({
+  const result = await rotateProviderSecret({
     actor: guard.user,
     provider: id,
     secretName: body.secretName || 'api_key',
@@ -46,6 +46,6 @@ export async function PUT(request, context) {
     return errorResponse('BAD_REQUEST', result.error, 400, guard.requestId);
   }
 
-  completeIdempotency(idemp.keyHash, result);
+  await completeIdempotency(idemp.keyHash, result);
   return okResponse(result, guard.requestId);
 }

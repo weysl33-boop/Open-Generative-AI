@@ -68,14 +68,58 @@ export default function AccountClient() {
   const [devCodeTip, setDevCodeTip] = useState('');
   const [busy, setBusy] = useState(false);
 
+  // 个人资料与创作资产扩展状态
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileName, setProfileName] = useState('');
+  const [profileBio, setProfileBio] = useState('');
+  const [profileStats, setProfileStats] = useState({ totalCreations: 0, publishedPosts: 0, totalLikes: 0 });
+
   const loadAccount = async () => {
     try {
       const response = await fetch('/api/auth/me', { cache: 'no-store' });
       const data = await response.json();
       setUser(data.user || null);
       setCredits(data.entitlements?.credits ?? (data.user ? data.user.credits : null));
+
+      if (data.user) {
+        setProfileName(data.user.displayName || '');
+        const profileRes = await fetch('/api/user/profile', { cache: 'no-store' }).catch(() => null);
+        if (profileRes && profileRes.ok) {
+          const pData = await profileRes.json();
+          if (pData.user) {
+            setProfileBio(pData.user.bio || '');
+            if (pData.user.stats) {
+              setProfileStats(pData.user.stats);
+            }
+          }
+        }
+      }
     } catch {
       setMessage('账户状态加载失败，请刷新重试');
+    }
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const res = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName: profileName, bio: profileBio }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage('个人资料已成功更新！');
+        setEditingProfile(false);
+        await loadAccount();
+      } else {
+        setMessage(data.error || '更新失败');
+      }
+    } catch {
+      setMessage('网络请求失败');
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -405,13 +449,27 @@ export default function AccountClient() {
           /* 已登录：用户资产与多渠道凭据展示 */
           <section className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-[#121316]/95 p-6 sm:p-8 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-6">
-              <div>
+              <div className="flex-1">
                 <p className="text-xs text-white/40">当前登录用户</p>
-                <h2 className="mt-1 text-2xl font-bold text-white">{user.displayName}</h2>
+                <div className="flex items-center gap-3 mt-1">
+                  <h2 className="text-2xl font-bold text-white">{user.displayName || 'AI 创作者'}</h2>
+                  <button
+                    type="button"
+                    onClick={() => setEditingProfile(!editingProfile)}
+                    className="text-xs text-cyan-300 hover:text-cyan-200 border border-cyan-400/30 rounded-lg px-2.5 py-1 bg-cyan-400/10 transition"
+                  >
+                    {editingProfile ? '取消编辑' : '✏️ 编辑资料'}
+                  </button>
+                </div>
                 <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-white/60">
                   {user.email && <span>✉️ {user.email}</span>}
                   {user.phone && <span>📱 {user.phoneCountryCode || '+86'} {user.phone}</span>}
                 </div>
+                {profileBio && !editingProfile && (
+                  <p className="mt-2 text-xs text-white/70 italic bg-white/[0.03] p-2.5 rounded-xl border border-white/5 max-w-md">
+                    "{profileBio}"
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${
@@ -422,6 +480,100 @@ export default function AccountClient() {
                   {user.role === 'super_admin' ? '👑 超级管理员' : user.role === 'admin' ? '🛡️ 管理员' : '已认证用户'}
                 </span>
               </div>
+            </div>
+
+            {/* 编辑个人简介表单 */}
+            {editingProfile && (
+              <form onSubmit={handleSaveProfile} className="mt-5 rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
+                <h4 className="text-xs font-bold text-cyan-300 uppercase tracking-wider">更新个人主页信息</h4>
+                <div>
+                  <label className="text-xs text-white/50 block mb-1">展示昵称</label>
+                  <input
+                    type="text"
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    maxLength={30}
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white focus:border-cyan-400 focus:outline-none"
+                    placeholder="输入您的昵称"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-white/50 block mb-1">个人简介 (Bio)</label>
+                  <textarea
+                    rows={2}
+                    value={profileBio}
+                    onChange={(e) => setProfileBio(e.target.value)}
+                    maxLength={150}
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white focus:border-cyan-400 focus:outline-none"
+                    placeholder="分享你的创作风格、主页或擅长领域..."
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setEditingProfile(false)}
+                    className="rounded-xl border border-white/10 px-3 py-1.5 text-xs text-white/60 hover:bg-white/5"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="rounded-xl bg-cyan-400 px-4 py-1.5 text-xs font-bold text-black hover:bg-cyan-300 disabled:opacity-50"
+                  >
+                    保存资料
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* 个人创作资产与即梦社区两大功能卡片 */}
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <a
+                href="/creations"
+                className="group rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-950/20 to-black/40 p-4 hover:border-cyan-400/40 hover:shadow-lg hover:shadow-cyan-500/10 transition flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xl">🎨</span>
+                    <span className="text-[11px] font-mono text-cyan-300 bg-cyan-400/10 border border-cyan-400/20 px-2 py-0.5 rounded-full">
+                      {profileStats.totalCreations} 件作品
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-bold text-white mt-2 group-hover:text-cyan-300 transition">
+                    个人作品资产库
+                  </h3>
+                  <p className="text-xs text-white/50 mt-1">
+                    集中管理所有生图、视频、音频作品，支持一键发布分享到社区。
+                  </p>
+                </div>
+                <div className="mt-3 flex items-center text-xs font-semibold text-cyan-300">
+                  <span>查看作品列表 →</span>
+                </div>
+              </a>
+
+              <a
+                href="/community"
+                className="group rounded-2xl border border-white/10 bg-gradient-to-br from-purple-950/20 to-black/40 p-4 hover:border-purple-400/40 hover:shadow-lg hover:shadow-purple-500/10 transition flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xl">🔥</span>
+                    <span className="text-[11px] font-mono text-pink-300 bg-pink-400/10 border border-pink-400/20 px-2 py-0.5 rounded-full">
+                      获赞 {profileStats.totalLikes}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-bold text-white mt-2 group-hover:text-purple-300 transition">
+                    即梦创作社区
+                  </h3>
+                  <p className="text-xs text-white/50 mt-1">
+                    探索社区精选画廊与视频瀑布流，沉浸体验并一键同款生成。
+                  </p>
+                </div>
+                <div className="mt-3 flex items-center text-xs font-semibold text-purple-300">
+                  <span>发现灵感与做同款 →</span>
+                </div>
+              </a>
             </div>
 
             {/* 运营标签展示 */}

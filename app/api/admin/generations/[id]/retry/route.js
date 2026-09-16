@@ -7,13 +7,13 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request, context) {
-  const guard = requirePermission(request, PERMISSIONS.generationsWrite);
+  const guard = await requirePermission(request, PERMISSIONS.generationsWrite);
   if (!guard.ok) return guard.response;
 
   const { id } = await context.params;
   const idempotencyKey = request.headers.get('idempotency-key');
 
-  const idemp = checkIdempotency({
+  const idemp = await checkIdempotency({
     scope: 'generation_retry',
     key: idempotencyKey,
     actorId: guard.user.id,
@@ -29,7 +29,7 @@ export async function POST(request, context) {
     body = await request.json();
   } catch {}
 
-  const result = retryGenerationTask({
+  const result = await retryGenerationTask({
     actor: guard.user,
     creationId: id,
     chargeCredits: Boolean(body.chargeCredits),
@@ -40,6 +40,6 @@ export async function POST(request, context) {
     return errorResponse('BAD_REQUEST', result.error, 400, guard.requestId);
   }
 
-  completeIdempotency(idemp.keyHash, result);
+  await completeIdempotency(idemp.keyHash, result);
   return okResponse(result, guard.requestId);
 }

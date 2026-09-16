@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-  const guard = requirePermission(request, PERMISSIONS.settingsRead);
+  const guard = await requirePermission(request, PERMISSIONS.settingsRead);
   if (!guard.ok) return guard.response;
 
   const settings = getSystemSettingsList();
@@ -14,7 +14,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  const guard = requirePermission(request, PERMISSIONS.settingsWrite);
+  const guard = await requirePermission(request, PERMISSIONS.settingsWrite);
   if (!guard.ok) return guard.response;
 
   let body = {};
@@ -22,7 +22,7 @@ export async function POST(request) {
     body = await request.json();
   } catch {}
 
-  const result = saveSystemSetting({
+  const result = await saveSystemSetting({
     actor: guard.user,
     key: body.key,
     value: body.value,

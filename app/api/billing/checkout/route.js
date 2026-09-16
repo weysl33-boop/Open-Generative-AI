@@ -46,7 +46,7 @@ async function createStripeCheckout({ request, user, plan, orderId, currency }) 
     console.error('[billing/stripe-checkout]', stripeResponse.status, payload?.error?.type || 'unknown');
     return { error: 'Stripe 暂时无法创建收款页面', status: 502 };
   }
-  updateOrder(orderId, { provider_order_id: payload.id, checkout_url: payload.url });
+  await updateOrder(orderId, { provider_order_id: payload.id, checkout_url: payload.url });
   return { checkoutUrl: payload.url, orderId };
 }
 
@@ -71,7 +71,7 @@ export async function POST(request) {
     if (provider === 'alipay' && !(process.env.ALIPAY_APP_ID && process.env.ALIPAY_PRIVATE_KEY_PATH)) {
       return json({ error: '支付宝尚未配置 AppID 和应用私钥' }, { status: 503 });
     }
-    const orderId = createOrder({ userId: user.id, provider, plan, amountMinor, currency });
+    const orderId = await createOrder({ userId: user.id, provider, plan, amountMinor, currency });
     if (provider === 'stripe') {
       const result = await createStripeCheckout({ request, user, plan, orderId, currency });
       if (result.error) return json({ error: result.error }, { status: result.status });

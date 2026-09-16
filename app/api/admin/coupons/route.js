@@ -6,20 +6,20 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-  const guard = requirePermission(request, PERMISSIONS.creditsRead);
+  const guard = await requirePermission(request, PERMISSIONS.creditsRead);
   if (!guard.ok) return guard.response;
 
-  const result = listCoupons(request.nextUrl.searchParams);
+  const result = await listCoupons(request.nextUrl.searchParams);
   return okResponse(result, guard.requestId);
 }
 
 export async function POST(request) {
-  const guard = requirePermission(request, PERMISSIONS.creditsAdjust || PERMISSIONS.billingWrite);
+  const guard = await requirePermission(request, PERMISSIONS.creditsAdjust || PERMISSIONS.billingWrite);
   if (!guard.ok) return guard.response;
 
   try {
     const body = await request.json();
-    const result = createCouponsBatch({
+    const result = await createCouponsBatch({
       count: body.count || 1,
       type: body.type || 'credits',
       value: body.value || '50',

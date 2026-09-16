@@ -7,13 +7,13 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function PUT(request, context) {
-  const guard = requirePermission(request, PERMISSIONS.adminsWrite);
+  const guard = await requirePermission(request, PERMISSIONS.adminsWrite);
   if (!guard.ok) return guard.response;
 
   const { id } = await context.params;
   const idempotencyKey = request.headers.get('idempotency-key');
 
-  const idemp = checkIdempotency({
+  const idemp = await checkIdempotency({
     scope: 'admin_role_change',
     key: idempotencyKey,
     actorId: guard.user.id,
@@ -45,6 +45,6 @@ export async function PUT(request, context) {
     return errorResponse('BAD_REQUEST', result.error, 400, guard.requestId);
   }
 
-  completeIdempotency(idemp.keyHash, result);
+  await completeIdempotency(idemp.keyHash, result);
   return okResponse(result, guard.requestId);
 }

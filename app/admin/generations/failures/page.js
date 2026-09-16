@@ -12,8 +12,8 @@ function formatDate(value) {
 
 export default async function FailedGenerationsPage({ searchParams }) {
   const params = toSearchParams(await searchParams);
-  const clusters = getFailureClusters();
-  const result = listFailedCreations(params);
+  const clusters = await getFailureClusters();
+  const result = await listFailedCreations(params);
 
   const columns = [
     {

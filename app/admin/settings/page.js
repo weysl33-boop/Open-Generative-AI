@@ -2,8 +2,8 @@ import { getSystemSettingsList } from '@/lib/services/settings';
 import { PageHeader } from '@/components/admin/AdminUi';
 import SettingsEditor from './SettingsEditor';
 
-export default function SystemSettingsPage() {
-  const settings = getSystemSettingsList();
+export default async function SystemSettingsPage() {
+  const settings = await getSystemSettingsList();
 
   return (
     <>

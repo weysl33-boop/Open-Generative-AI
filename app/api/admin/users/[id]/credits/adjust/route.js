@@ -7,13 +7,13 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request, context) {
-  const guard = requirePermission(request, PERMISSIONS.creditsAdjust);
+  const guard = await requirePermission(request, PERMISSIONS.creditsAdjust);
   if (!guard.ok) return guard.response;
 
   const { id } = await context.params;
   const idempotencyKey = request.headers.get('idempotency-key');
 
-  const idemp = checkIdempotency({
+  const idemp = await checkIdempotency({
     scope: 'credits_adjust',
     key: idempotencyKey,
     actorId: guard.user.id,
@@ -31,7 +31,7 @@ export async function POST(request, context) {
     body = await request.json();
   } catch {}
 
-  const result = adjustUserCredits({
+  const result = await adjustUserCredits({
     actor: guard.user,
     userId: id,
     delta: body.delta,
@@ -44,6 +44,6 @@ export async function POST(request, context) {
     return errorResponse('BAD_REQUEST', result.error, 400, guard.requestId);
   }
 
-  completeIdempotency(idemp.keyHash, result);
+  await completeIdempotency(idemp.keyHash, result);
   return okResponse(result, guard.requestId);
 }

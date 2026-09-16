@@ -12,9 +12,9 @@
     "packages/Open-AI-Design-Agent/packages/design-agent"
   ],
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/require-database-url.mjs && next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/require-database-url.mjs && next start",
     "lint": "next lint",
     "db:migrate": "node scripts/migrate.mjs",
     "db:status": "node scripts/db-status.mjs",
@@ -123,6 +123,7 @@
     "ai-agent": "file:./packages/Open-Poe-AI/packages/agents",
     "axios": "^1.7.0",
     "next": "^15.0.0",
+    "next-intl": "^4.14.5",
     "pg": "^8.23.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

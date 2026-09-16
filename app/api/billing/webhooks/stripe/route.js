@@ -1,7 +1,6 @@
 import crypto from 'node:crypto';
-import {
-  findUserById, getPlan, json, recordWebhookEvent, upsertSubscription, updateOrder,
-} from '@/lib/billing';
+import { json, recordWebhookEvent } from '@/lib/billing';
+import { dispatchStripeEvent } from '@/lib/services/webhookDispatcher';
 
 export const runtime = 'nodejs';
 
@@ -29,33 +28,8 @@ export async function POST(request) {
   }
   let event;
   try { event = JSON.parse(rawBody); } catch { return json({ error: '无效的事件数据' }, { status: 400 }); }
-  if (!recordWebhookEvent('stripe', event.id, event)) return json({ received: true, duplicate: true });
+  if (!await recordWebhookEvent('stripe', event.id, event)) return json({ received: true, duplicate: true });
 
-  const object = event.data?.object || {};
-  if (event.type === 'checkout.session.completed') {
-    const userId = object.metadata?.user_id;
-    const plan = getPlan(object.metadata?.plan_id);
-    if (userId && findUserById(userId) && plan) {
-      upsertSubscription({
-        userId, provider: 'stripe', providerCustomerId: object.customer || null,
-        providerSubscriptionId: object.subscription || object.id, planId: plan.id,
-        status: 'active', currentPeriodEnd: null,
-      });
-      if (object.metadata?.order_id) updateOrder(object.metadata.order_id, { status: 'paid', provider_order_id: object.id });
-    }
-  } else if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
-    const metadata = object.metadata || {};
-    const plan = getPlan(metadata.plan_id || 'pro');
-    const userId = metadata.user_id;
-    if (userId && findUserById(userId) && plan) {
-      const end = object.current_period_end ? new Date(object.current_period_end * 1000).toISOString() : null;
-      upsertSubscription({
-        userId, provider: 'stripe', providerCustomerId: object.customer || null,
-        providerSubscriptionId: object.id, planId: plan.id,
-        status: event.type.endsWith('.deleted') ? 'canceled' : (object.status || 'active'),
-        currentPeriodEnd: end,
-      });
-    }
-  }
+  await dispatchStripeEvent(event);
   return json({ received: true });
 }

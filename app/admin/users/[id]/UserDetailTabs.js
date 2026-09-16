@@ -401,7 +401,8 @@ export default function UserDetailTabs({ detail }) {
               rows={detail.orders}
               empty="暂无订单记录"
             />
-          </div>
+          </Card>
+        </div>
       )}
 
       {/* 5. 生成记录 */}

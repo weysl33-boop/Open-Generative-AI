@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request, context) {
-  const guard = requirePermission(request, PERMISSIONS.sessionsRevoke);
+  const guard = await requirePermission(request, PERMISSIONS.sessionsRevoke);
   if (!guard.ok) return guard.response;
 
   const { id } = await context.params;

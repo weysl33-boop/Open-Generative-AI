@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-  const guard = requirePermission(request, PERMISSIONS.billingRead);
+  const guard = await requirePermission(request, PERMISSIONS.billingRead);
   if (!guard.ok) return guard.response;
 
   const result = listSubscriptions(request.nextUrl.searchParams);

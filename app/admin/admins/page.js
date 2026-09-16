@@ -10,7 +10,7 @@ function formatDate(value) {
 }
 
 export default async function AdminsPage() {
-  const admins = listAdmins();
+  const admins = await listAdmins();
 
   return (
     <>

@@ -1,6 +1,6 @@
 import { requirePermission, errorResponse } from '@/lib/admin/authz';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { queryMany } from '@/lib/db';
+import { exportCreations, exportOrders, exportUsers } from '@/lib/repositories/exports';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,13 +21,13 @@ export async function GET(request, context) {
   let headers; let rows;
   if (type === 'users') {
     headers = ['id', 'email', 'display_name', 'role', 'status', 'credits', 'created_at', 'last_login_at'];
-    rows = await queryMany('SELECT id, email, display_name, role, status, credits, created_at, last_login_at FROM users ORDER BY created_at DESC');
+    rows = await exportUsers();
   } else if (type === 'orders') {
     headers = ['id', 'email', 'provider', 'plan_id', 'status', 'amount', 'currency', 'created_at', 'paid_at', 'refunded_at'];
-    rows = await queryMany('SELECT o.id, u.email, o.provider, o.plan_id, o.status, (o.amount_minor / 100.0) AS amount, o.currency, o.created_at, o.paid_at, o.refunded_at FROM orders o JOIN users u ON u.id = o.user_id ORDER BY o.created_at DESC');
+    rows = await exportOrders();
   } else if (type === 'creations') {
     headers = ['id', 'email', 'provider', 'model', 'studio_id', 'status', 'credit_cost', 'duration_ms', 'created_at', 'completed_at'];
-    rows = await queryMany('SELECT c.id, u.email, c.provider, c.model, c.studio_id, c.status, c.credit_cost, c.duration_ms, c.created_at, c.completed_at FROM creations c JOIN users u ON u.id = c.user_id ORDER BY c.created_at DESC LIMIT 10000');
+    rows = await exportCreations();
   } else {
     return errorResponse('BAD_REQUEST', '不支持的导出数据类型', 400, guard.requestId);
   }
