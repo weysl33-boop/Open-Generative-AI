@@ -1,4 +1,4 @@
-﻿-- 006_community_and_social.sql
+-- 006_community_and_social.sql
 -- 扩展用户资料字段与创建社区帖子、点赞、评论表
 
 -- 1. 扩展 auth_usr.users
@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS ai_studio.community_posts (
   parameters JSONB NOT NULL DEFAULT '{}'::jsonb,
   tags TEXT[] NOT NULL DEFAULT '{}',
   likes_count INT NOT NULL DEFAULT 0,
+  coins_count INT NOT NULL DEFAULT 0,
   views_count INT NOT NULL DEFAULT 0,
   remix_count INT NOT NULL DEFAULT 0,
   comments_count INT NOT NULL DEFAULT 0,
@@ -38,6 +39,7 @@ CREATE INDEX IF NOT EXISTS community_posts_user_idx ON ai_studio.community_posts
 CREATE INDEX IF NOT EXISTS community_posts_status_idx ON ai_studio.community_posts(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS community_posts_media_type_idx ON ai_studio.community_posts(media_type, created_at DESC);
 CREATE INDEX IF NOT EXISTS community_posts_likes_idx ON ai_studio.community_posts(likes_count DESC);
+CREATE INDEX IF NOT EXISTS community_posts_coins_idx ON ai_studio.community_posts(coins_count DESC);
 CREATE INDEX IF NOT EXISTS community_posts_featured_idx ON ai_studio.community_posts(is_featured, created_at DESC);
 
 -- 3. 社区点赞表

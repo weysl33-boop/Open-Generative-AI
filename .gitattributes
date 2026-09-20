@@ -1,0 +1,8 @@
+# 迁移文件由 sys_core.schema_migrations 的 sha256 记账：检出的字节必须与仓库内的字节完全一致。
+# 本机 core.autocrlf=true 会在检出时把 LF 改写成 CRLF，从而制造全量校验和漂移并让
+# /api/health 长期降级，因此这里禁用换行转换（-text 同时保留可读的 diff）。
+lib/db/migrations/** -text
+
+# 备份/恢复演练与种子脚本同样按字节比对，不做换行改写
+scripts/*.sql -text
+backups/** -text
