@@ -1,5 +1,6 @@
 import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';
 import { PERMISSIONS } from '@/lib/admin/permissions';
+import { diagnosticErrorMessage } from '@/lib/security/publicError';
 import { getProviderAdapter } from '@/lib/adapters/index';
 import { getProviderModelById } from '@/lib/repositories/aiCatalog';
 
@@ -35,7 +36,7 @@ async function handlePOST(request) {
       providerModelId: channel.provider_model_id,
       latencyMs,
       message: `渠道测试成功 (${healthResult.status || 'OK'})`,
-      details: healthResult,
+      details: { ...healthResult, message: diagnosticErrorMessage(healthResult) },
     }, guard.requestId);
   } catch (error) {
     const latencyMs = Date.now() - start;
@@ -45,7 +46,7 @@ async function handlePOST(request) {
       providerId: channel.provider_id,
       providerModelId: channel.provider_model_id,
       latencyMs,
-      message: error.message || '渠道探测请求失败',
+      message: diagnosticErrorMessage(error, '渠道探测请求失败'),
       errorCode: error.code || 'CHANNEL_PROBE_ERROR',
     }, guard.requestId);
   }

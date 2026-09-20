@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/services/auth.js';
 import * as authRepo from '@/lib/repositories/auth.js';
 import { withTransaction } from '@/lib/db/index.js';
+import { publicErrorMessage } from '@/lib/security/publicError';
 
 export const runtime = 'nodejs';
 
@@ -81,6 +82,6 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('[api/user/onboarding] 保存失败:', error);
-    return NextResponse.json({ error: error.message || '保存偏好设置失败' }, { status: 500 });
+    return NextResponse.json({ error: publicErrorMessage(error, '保存偏好设置失败，请稍后重试') }, { status: 500 });
   }
 }
