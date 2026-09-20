@@ -1,6 +1,6 @@
 import { getUserFromRequest, json } from '@/lib/services/auth';
 import { createGenerationQuote } from '@/lib/services/pricingEngine';
-import { findUserActiveSubscription } from '@/lib/repositories/billing';
+import { getSubscription } from '@/lib/services/billing';
 import { guardMutation } from '@/lib/security/requestGuard';
 import { publicErrorMessage } from '@/lib/security/publicError';
 
@@ -21,14 +21,10 @@ export async function POST(request) {
       return json({ error: '必须指定模型 ID' }, { status: 422 });
     }
 
-    // 获取用户当前订阅等级
-    let subscriptionLevel = 'free';
-    try {
-      const activeSub = await findUserActiveSubscription(user.id);
-      if (activeSub?.plan_id) {
-        subscriptionLevel = activeSub.plan_id;
-      }
-    } catch {}
+    // 订阅等级直接决定报价折扣。读不到生效订阅才按 free 计价；
+    // 这里不能吞掉数据库异常，否则付费用户会被静默按免费档报价。
+    const activeSubscription = await getSubscription(user.id);
+    const subscriptionLevel = activeSubscription?.plan_id || 'free';
 
     const quote = await createGenerationQuote({
       userId: user.id,
