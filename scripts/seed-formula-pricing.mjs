@@ -1,5 +1,6 @@
 import 'server-only';
 import { queryMany, execute } from '../lib/db/index.js';
+import { assertSandboxDatabase } from './require-sandbox-db.mjs';
 
 // Solvent pricing: base = 2.3x provider cost (≈57% gross margin), 1 credit ≈ ¥0.07.
 const USD_CNY = 7.2;
@@ -15,13 +16,14 @@ const FORMULA_CONFIG = {
 const SUBSCRIPTION_DISCOUNTS = { free: 1.0, starter: 0.95, basic: 0.90, plus: 0.85, pro: 0.80 };
 
 async function main() {
+  const apply = process.argv.includes('--apply');
+  if (apply) await assertSandboxDatabase();
   const rows = await queryMany(
     "SELECT pm.model_id, m.category, MIN((pm.cost_config->>'base_cost')::numeric) AS min_cost_usd " +
     "FROM ai_studio.provider_models pm JOIN ai_studio.ai_models m ON m.id = pm.model_id " +
     "WHERE pm.provider_id = 'muapi' AND pm.enabled AND pm.cost_config ? 'base_cost' " +
     "GROUP BY pm.model_id, m.category"
   );
-  const apply = process.argv.includes('--apply');
   let n = 0;
   for (const r of rows) {
     const costUsd = Number(r.min_cost_usd);

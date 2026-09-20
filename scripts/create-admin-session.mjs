@@ -1,7 +1,11 @@
 import crypto from 'node:crypto';
 import { execute, queryOne } from '../lib/db/index.js';
+import { assertSandboxDatabase } from './require-sandbox-db.mjs';
 
 try {
+  // Mints a 30-day super_admin session, so it must never reach the live database
+  // by accident.
+  await assertSandboxDatabase();
   const admin = await queryOne("SELECT id, email FROM users WHERE role = 'super_admin' LIMIT 1");
   if (!admin) throw new Error('未找到 super_admin 用户');
   const rawToken = crypto.randomBytes(32).toString('base64url');

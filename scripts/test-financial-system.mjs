@@ -14,10 +14,12 @@ import {
   grantPerpetualCredits
 } from '../lib/financial/index.js';
 import { query, queryOne, execute, nowIso, randomId } from '../lib/db/index.js';
+import { assertSandboxDatabase } from './require-sandbox-db.mjs';
 
 console.log('=== [开始金融级系统核心测试套件] ===');
 
 async function main() {
+  await assertSandboxDatabase();
   const now = nowIso();
   const userA = `usr_test_a_${Date.now()}`;
   const userB = `usr_test_b_${Date.now()}`;

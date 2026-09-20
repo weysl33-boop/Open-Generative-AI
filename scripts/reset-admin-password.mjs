@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { execute, queryOne } from '../lib/db/index.js';
 import { setUserPassword } from '../lib/repositories/auth.js';
+import { assertSandboxDatabase } from './require-sandbox-db.mjs';
 
 function passwordHash(password, salt = crypto.randomBytes(16).toString('hex')) {
   return { salt, hash: crypto.scryptSync(password, salt, 64).toString('hex') };
@@ -13,6 +14,7 @@ if (!password || password.length < 12 || !email) {
   process.exitCode = 2;
 } else {
   try {
+    await assertSandboxDatabase();
     const existing = await queryOne('SELECT id FROM users WHERE LOWER(email) = $1', [email]);
     if (!existing) throw new Error('未找到用户: ' + email);
     const { salt, hash } = passwordHash(password);

@@ -1,11 +1,13 @@
 import 'server-only';
 import { execute, queryMany } from '../lib/db/index.js';
+import { assertSandboxDatabase } from './require-sandbox-db.mjs';
 
 /**
  * 完整填充全平台所有主流模型的混合多渠道通道映射 (Provider Models)
  * 涵盖 Kling、MiniMax、Alibaba DashScope、OpenAI、Google、Runway、Luma
  */
 export async function seedHybridChannels() {
+  await assertSandboxDatabase();
   console.log('开始填充多供应商混合通道映射 (ProviderModels)...');
 
   const mappings = [

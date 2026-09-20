@@ -1,5 +1,6 @@
 ﻿import assert from 'node:assert/strict';
 import { query, queryOne } from '../lib/db/pg.js';
+import { assertSandboxDatabase } from './require-sandbox-db.mjs';
 import {
   createCommunityPost,
   getCommunityPostById,
@@ -12,6 +13,7 @@ import {
 } from '../lib/repositories/community.js';
 
 async function main() {
+  await assertSandboxDatabase();
   console.log('==================================================');
   console.log('🧪 开始执行用户系统、个人作品与即梦社区 E2E 验证');
   console.log('==================================================');

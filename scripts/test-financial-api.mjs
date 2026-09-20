@@ -1,6 +1,8 @@
 import assert from 'node:assert';
 import { execute, nowIso, randomId } from '../lib/db/index.js';
-import { createSession, getEntitlements } from '../lib/billing.js';
+import { assertSandboxDatabase } from './require-sandbox-db.mjs';
+import { createSession } from '../lib/services/auth.js';
+import { getEntitlements } from '../lib/services/billing.js';
 import { rechargeCurrency } from '../lib/financial/index.js';
 
 // 动态导入所有 API Handler
@@ -35,6 +37,7 @@ function createMockRequest({ token, method = 'GET', body = null, headers = {} })
 }
 
 async function main() {
+  await assertSandboxDatabase();
   const now = nowIso();
   const user1 = `usr_api_1_${Date.now()}`;
   const user2 = `usr_api_2_${Date.now()}`;

@@ -3,6 +3,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import pg from 'pg';
+import { assertSandboxDatabase } from './require-sandbox-db.mjs';
 
 const ENCRYPTION_ALGO = 'aes-256-gcm';
 
@@ -32,6 +33,8 @@ function encrypt(text) {
 }
 
 async function main() {
+  // 生产密钥写入必须由操作者显式确认目标库（两个环境变量），否则拒绝执行。
+  await assertSandboxDatabase();
   const databaseUrl = String(process.env.DATABASE_URL || '').trim();
   if (!databaseUrl) throw new Error('缺少 DATABASE_URL');
   const apiKey = String(process.env.VOLCENGINE_API_KEY || process.env.ARK_API_KEY || '').trim();
