@@ -6,6 +6,18 @@ const result = spawnSync('git', ['ls-files', '-co', '--exclude-standard'], { enc
 if (result.status !== 0) throw new Error(result.stderr || 'git ls-files failed');
 const roots = ['app/', 'components/', 'lib/', 'packages/', 'scripts/', 'tests/'];
 const extensions = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.css', '.sql', '.yml', '.yaml']);
+const MIGRATIONS_PREFIX = 'lib/db/migrations/';
+const eol = (text) => text.replace(/\r\n/g, '\n');
+
+// 已提交的迁移文件由 sys_core.schema_migrations 的 sha256 记账，字节一旦上线就不可改写：
+// 仅补一个结尾换行也会立刻造成校验和漂移，把 /api/health 打成降级。
+// 因此结尾 LF 只对新增或内容已变更的迁移强制生效。
+function committedMigrationUnchanged(name, workingContent) {
+  if (!name.startsWith(MIGRATIONS_PREFIX)) return false;
+  const head = spawnSync('git', ['show', `HEAD:${name}`], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+  return head.status === 0 && eol(head.stdout) === eol(workingContent);
+}
+
 const issues = [];
 for (const name of result.stdout.split(/\r?\n/).filter(Boolean)) {
   if (!roots.some((root) => name.startsWith(root)) || !extensions.has(path.extname(name))) continue;
@@ -18,7 +30,7 @@ for (const name of result.stdout.split(/\r?\n/).filter(Boolean)) {
   // Git labels both ends of a conflict, so match only `<<<<<<<`/`>>>>>>>`; a bare
   // `===` run is a common text divider (e.g. generated receipts) and misfires.
   if (/^(?:<{7}|>{7})(?:\s|$)/m.test(content)) issues.push(`${name}: contains merge-conflict markers`);
-  if (!content.endsWith('\n')) issues.push(`${name}: must end with LF`);
+  if (!content.endsWith('\n') && !committedMigrationUnchanged(name, content)) issues.push(`${name}: must end with LF`);
 }
 if (issues.length) {
   console.error(issues.join('\n'));
