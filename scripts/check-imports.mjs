@@ -28,11 +28,82 @@ const sources = [
   ...collect(path.join(repoRoot, packageSource)).filter((file) => /[/\\]src[/\\]/.test(file)),
 ];
 
+// Workspace packages are transpiled from source by `next.config.mjs`
+// (`transpilePackages`), so their `exports` map is a real contract we can
+// validate — a wrong `studio/ui/...` subpath or missing component export
+// fails the same way `radix-ui`'s did: silently at build, loudly at runtime.
+const workspacePackages = new Map();
+(function indexWorkspacePackages() {
+  const roots = [path.join(repoRoot, packageSource)];
+  for (const dir of roots) {
+    if (!fs.existsSync(dir)) continue;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const top = path.join(dir, entry.name);
+      const candidates = [top, ...nestedPackageDirs(top)];
+      for (const candidate of candidates) {
+        const manifest = path.join(candidate, 'package.json');
+        if (!fs.existsSync(manifest)) continue;
+        try {
+          const pkg = JSON.parse(fs.readFileSync(manifest, 'utf8'));
+          if (pkg.name) workspacePackages.set(pkg.name, { name: pkg.name, dir: candidate, exports: pkg.exports });
+        } catch {
+          /* malformed manifests are not this gate's problem */
+        }
+      }
+    }
+  }
+})();
+
+function nestedPackageDirs(dir) {
+  const inner = path.join(dir, 'packages');
+  if (!fs.existsSync(inner)) return [];
+  return fs.readdirSync(inner, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => path.join(inner, e.name));
+}
+
+function exportTarget(exportMap, subpath) {
+  if (!exportMap || typeof exportMap !== 'object') return null;
+  if (Object.prototype.hasOwnProperty.call(exportMap, subpath)) return flattenExport(exportMap[subpath]);
+  for (const [key, value] of Object.entries(exportMap)) {
+    if (!key.includes('*')) continue;
+    const [prefix, suffix] = key.split('*');
+    if (!subpath.startsWith(prefix) || (suffix && !subpath.endsWith(suffix))) continue;
+    const wildcard = subpath.slice(prefix.length, suffix ? subpath.length - suffix.length : undefined);
+    return flattenExport(value).replace('*', wildcard);
+  }
+  return null;
+}
+
+function flattenExport(value) {
+  if (typeof value === 'string') return value;
+  if (!value || typeof value !== 'object') return '';
+  for (const condition of ['import', 'require', 'default']) {
+    const found = flattenExport(value[condition]);
+    if (found) return found;
+  }
+  return '';
+}
+
 function resolveLocal(specifier, fromFile) {
   const repoAliased = !path.relative(repoRoot, fromFile).startsWith(`packages${path.sep}`);
   let base = null;
   if (specifier.startsWith('@/') && repoAliased) base = path.join(repoRoot, specifier.slice(2));
   else if (specifier.startsWith('./') || specifier.startsWith('../')) base = path.resolve(path.dirname(fromFile), specifier);
+  else {
+    const pkg = workspacePackages.get(specifier.split('/')[0]);
+    if (!pkg) return null; // third-party from node_modules
+    // Vendored workspace packages (`ai-agent`, `workflow-builder`, `design-agent`)
+    // have no `exports` map and resolve to a bundled `dist` whose shapes don't
+    // mirror `src`, so only `exports`-declaring packages (`studio`) are contract-checked.
+    if (!pkg.exports) return null;
+    const subpath = specifier === pkg.name || specifier.startsWith(`${pkg.name}/`)
+      ? (specifier === pkg.name ? '.' : `.${specifier.slice(pkg.name.length)}`)
+      : null;
+    if (subpath === null) return null;
+    const target = exportTarget(pkg.exports, subpath);
+    if (!target) return undefined; // declared package, undeclared subpath
+    base = path.join(pkg.dir, target.replace(/^\.\//, ''));
+  }
   if (!base) return null;
   const candidates = [base, ...extensions.map((ext) => base + ext)];
   for (const dir of ['', 'src']) {
@@ -82,7 +153,7 @@ for (const file of sources) {
   for (const match of source.matchAll(/import\s+([^'";]*?)\s*from\s*['"]([^'"]+)['"]/g)) {
     const clause = match[1].trim();
     const specifier = match[2];
-    if (!/^[.@~]/.test(specifier) && !specifier.startsWith('@/')) continue;
+    if (!/^[.@~]/.test(specifier) && !workspacePackages.has(specifier.split('/')[0])) continue;
     const target = resolveLocal(specifier, file);
     if (target === null) continue; // third-party
     if (target === undefined) {
