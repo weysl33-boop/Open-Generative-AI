@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { execute, queryOne } from '../lib/db/index.js';
+import { setUserPassword } from '../lib/repositories/auth.js';
 
 function passwordHash(password, salt = crypto.randomBytes(16).toString('hex')) {
   return { salt, hash: crypto.scryptSync(password, salt, 64).toString('hex') };
@@ -12,10 +13,11 @@ if (!password || password.length < 12 || !email) {
   process.exitCode = 2;
 } else {
   try {
-    const existing = await queryOne('SELECT id FROM users WHERE email = $1', [email]);
+    const existing = await queryOne('SELECT id FROM users WHERE LOWER(email) = $1', [email]);
     if (!existing) throw new Error('未找到用户: ' + email);
     const { salt, hash } = passwordHash(password);
-    await execute("UPDATE users SET password_hash = $1, password_salt = $2, role = 'super_admin', status = 'active', is_active = TRUE, is_banned = FALSE, updated_at = $3 WHERE id = $4", [hash, salt, new Date().toISOString(), existing.id]);
+    await execute("UPDATE users SET role = 'super_admin', status = 'active', is_active = TRUE, is_banned = FALSE, updated_at = $1 WHERE id = $2", [new Date().toISOString(), existing.id]);
+    await setUserPassword({ userId: existing.id, passwordHash: hash, passwordSalt: salt });
     await execute('DELETE FROM sessions WHERE user_id = $1', [existing.id]);
     console.log('[成功] 已在 PostgreSQL 中重置 ' + email + ' 的管理员密码并作废旧会话。');
   } catch (error) {
