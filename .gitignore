@@ -38,8 +38,15 @@ data/backups/
 *.tar
 *.tar.gz
 
+# Agent scratch workspace: may contain host credentials and must stay local
+.agents/
+
 # Misc
 *.pem
 .env
 .env.*
 !.env.example
+
+# Temporary P7 browser fixtures
+e2e/.sessions.json
+test-results/
