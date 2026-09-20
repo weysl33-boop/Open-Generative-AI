@@ -4,6 +4,7 @@ import {
   exchangeOAuthCode,
   fetchOAuthProfile,
   getOAuthProvider,
+  getPublicAppOrigin,
   getRedirectUri,
   readOAuthState,
 } from '@/lib/oauth';
@@ -12,7 +13,7 @@ import { publicErrorMessage } from '@/lib/security/publicError';
 export const runtime = 'nodejs';
 
 function htmlResponse(request, { ok, returnTo, message }) {
-  const origin = new URL(request.url).origin;
+  const origin = getPublicAppOrigin(request);
   const safePath = returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/studio';
   const target = `${origin}${safePath}${safePath.includes('?') ? '&' : '?'}auth=${ok ? 'success' : 'error'}${message ? `&msg=${encodeURIComponent(message)}` : ''}`;
   const payload = JSON.stringify({ type: 'koyosim-auth-complete', ok, message: message || null });
