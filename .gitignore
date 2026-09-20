@@ -50,3 +50,6 @@ data/backups/
 # Temporary P7 browser fixtures
 e2e/.sessions.json
 test-results/
+
+# Runtime IP-block state written by the app
+lib/security/ip_block_state.json
