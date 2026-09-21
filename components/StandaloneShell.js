@@ -38,6 +38,8 @@ const HeadshotStudio = dynamicStudio(() => import('./HeadshotStudio'));
 import LanguageSwitcher from './LanguageSwitcher';
 import UserDropdownMenu from './UserDropdownMenu';
 import AccountModal from './account/AccountModal';
+import TopMegaNavigation from './navigation/TopMegaNavigation';
+import { MEGA_NAV_CATEGORIES } from '../config/mega-navigation';
 import { getCommonCopy, getLocaleConfig, localizeStudioPath, normalizeLocale } from '@/lib/locales';
 import { STUDIO_TAB_IDS } from '@/lib/studio-routes';
 import {
@@ -950,6 +952,25 @@ export default function StandaloneShell({ locale = 'en' }) {
     }
   };
 
+  const handleMegaMenuSelect = useCallback((e, tabId, modelKey) => {
+    if (tabId) {
+      if (e?.preventDefault) e.preventDefault();
+      let targetUrl = studioPath(tabId);
+      if (modelKey) {
+        const url = new URL(targetUrl, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+        url.searchParams.set('model', modelKey);
+        targetUrl = url.pathname + url.search;
+      }
+      window.history.pushState(null, '', targetUrl);
+      setActiveTab(tabId);
+      setIsMobileOpen(false);
+
+      if (modelKey && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('koyosim-select-model', { detail: { modelKey, tabId } }));
+      }
+    }
+  }, [studioPath]);
+
   // Auto-hide header when inside a specific workflow view or design agent
   useEffect(() => {
     const isEditingWorkflow = (activeTab === 'workflows' || !!idFromParams) && urlWorkflowId;
@@ -1106,36 +1127,22 @@ export default function StandaloneShell({ locale = 'en' }) {
 
       {/* Header */}
       {isHeaderVisible && (
-        <header className="bg-surface-glass z-header flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line-subtle px-4 backdrop-blur-md">
-          {/* Left: Mobile menu toggle + Logo + Desktop Sidebar Toggle */}
-          <div className="flex items-center gap-3">
+        <header className="bg-surface-glass z-header flex h-14 shrink-0 items-center justify-between gap-2 sm:gap-4 border-b border-line-subtle px-3 sm:px-4 backdrop-blur-md">
+          {/* Left: Mobile menu toggle + Logo + TopMegaNavigation */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             {/* Mobile drawer toggle */}
             <IconButton
               icon={Menu}
               onClick={() => setIsMobileOpen(!isMobileOpen)}
-              className="md:hidden"
+              className="lg:hidden shrink-0"
               label={copy.shell.toggleNavMenu}
             />
-
-            {/* Desktop Sidebar Toggle Button (Single Toggle Button) */}
-            <div className="group relative hidden md:block">
-              <IconButton
-                icon={PanelLeft}
-                onClick={toggleSidebar}
-                label={isSidebarCollapsed ? copy.shell.expandSidebar : copy.shell.collapseSidebar}
-                className={isSidebarCollapsed ? '[&_svg]:rotate-180' : undefined}
-              />
-              {/* Custom Tooltip */}
-              <div className="text-caption bg-overlay-glass z-tooltip pointer-events-none absolute left-0 top-full mt-2 whitespace-nowrap rounded-md border border-line-strong px-2.5 py-1 font-medium text-ink opacity-0 shadow-elevation-3 backdrop-blur-md transition-opacity duration-base group-hover:opacity-100">
-                {isSidebarCollapsed ? copy.shell.expandSidebar : copy.shell.collapseSidebar}
-              </div>
-            </div>
 
             {/* Logo & Title (动态品牌与Logo) */}
             <a
               href={siteBrand?.logoHref || '/studio'}
               target={siteBrand?.logoTarget || '_self'}
-              className="group flex items-center gap-2.5 cursor-pointer"
+              className="group flex items-center gap-2.5 cursor-pointer shrink-0"
               aria-label={siteBrand?.brandName || copy.shell.brand}
             >
               {siteBrand?.logoUrl && !logoImgError ? (
@@ -1148,10 +1155,6 @@ export default function StandaloneShell({ locale = 'en' }) {
                   />
                 </div>
               ) : (
-                /* The brand tile is admin data, so an override colour is
-                   allowed to win; the fallback resolves from --accent-primary
-                   through `text-ink-on-accent` / `bg-brand` rather than a
-                   second copy of the hex. */
                 <div
                   className="bg-brand text-ink-on-accent flex size-8 items-center justify-center rounded-lg shadow-elevation-1 transition-transform duration-base group-hover:scale-105"
                   style={siteBrand?.logoBgColor ? { backgroundColor: siteBrand.logoBgColor } : undefined}
@@ -1171,40 +1174,14 @@ export default function StandaloneShell({ locale = 'en' }) {
               )}
             </a>
 
-            {/* 左侧全站固定纯文字导航 (首页 + 社区) */}
-            <nav className="ml-1 flex items-center gap-1 sm:ml-4 sm:gap-2" aria-label={copy.shell.studioNavigation}>
-              {/* Hidden below `sm`: the logo tile beside it already links to
-                  /studio, and at 390px the duplicate label is what pushed the
-                  Log in control past the viewport edge. */}
-              <a
-                href={studioPath('')}
-                className={`text-body-sm hidden rounded-md px-2.5 py-1 transition-colors sm:text-body sm:block ${
-                  pathname === '/' || pathname?.includes('/studio')
-                    ? 'font-semibold text-ink'
-                    : 'text-ink-muted hover:text-ink'
-                }`}
-              >
-                {copy.shell?.home || (isZh ? '首页' : 'Studio')}
-              </a>
-              <a
-                href="/community"
-                className={`text-body-sm rounded-md px-2.5 py-1 transition-colors sm:text-body ${
-                  pathname?.startsWith('/community')
-                    ? 'font-semibold text-ink'
-                    : 'text-ink-muted hover:text-ink'
-                }`}
-              >
-                {isZh ? '社区' : 'Community'}
-              </a>
-            </nav>
-          </div>
-
-          {/* Active Tab Breadcrumb Badge */}
-          <div className="bg-wash text-caption hidden items-center gap-2 rounded-full border border-line-subtle px-3 py-1 text-ink-muted lg:flex">
-            <span className="size-1.5 rounded-full bg-brand" />
-            <span className="font-medium text-ink">
-              {tabLabel(activeTab) || copy.shell.studioFallback}
-            </span>
+            {/* 顶栏水平 Mega Menu 导航 (桌面端 lg: 呈现) */}
+            <div className="hidden lg:flex items-center min-w-0 flex-1 ml-2">
+              <TopMegaNavigation
+                activeTab={activeTab}
+                locale={locale}
+                onSelectTab={handleMegaMenuSelect}
+              />
+            </div>
           </div>
 
           {/* Right: Actions (右上角固定图标功能区: 额度、提醒、语言切换、用户头像) */}
@@ -1228,23 +1205,22 @@ export default function StandaloneShell({ locale = 'en' }) {
         </header>
       )}
 
-      {/* Main Body Layout: Left Sidebar + Studio Content Area */}
+      {/* Main Body Layout: Mobile Sidebar Drawer + Studio Content Area */}
       <div className="flex-1 min-h-0 flex relative overflow-hidden">
         {/* Mobile Backdrop Overlay */}
         {isMobileOpen && (
           <div 
-            className="bg-scrim z-sticky animate-fade-in fixed inset-0 backdrop-blur-sm md:hidden"
+            className="bg-scrim z-sticky animate-fade-in fixed inset-0 backdrop-blur-sm lg:hidden"
             onClick={() => setIsMobileOpen(false)}
           />
         )}
 
-        {/* Left Sidebar Navigation */}
+        {/* Mobile Drawer (仅在移动端/小屏 lg:hidden 下作为侧边抽屉呈现) */}
         {isHeaderVisible && (
           <aside
             className={`
-              bg-surface-glass z-drawer fixed bottom-0 left-0 top-14 flex shrink-0 select-none flex-col border-r border-line-subtle backdrop-blur-md transition-[transform,width] duration-slow ease-standard md:static md:h-full
-              ${isMobileOpen ? 'w-sidebar translate-x-0' : '-translate-x-full md:translate-x-0'}
-              ${isSidebarCollapsed ? 'md:w-sidebar-collapsed' : 'md:w-sidebar'}
+              bg-surface-glass z-drawer fixed bottom-0 left-0 top-14 flex shrink-0 select-none flex-col border-r border-line-subtle backdrop-blur-md transition-transform duration-slow ease-standard w-sidebar lg:hidden
+              ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
             `}
           >
             <nav aria-label={copy.shell.studioNavigation} className="flex-1 overflow-x-hidden overflow-y-auto px-2 py-2">
