@@ -21,6 +21,8 @@ import AuthModal from '@/components/AuthModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AVATAR_FRAMES, BENEFITS, BENEFIT_STATUS_LABELS } from '@/lib/benefits/catalog';
+import { usePathname } from 'next/navigation';
+import { localizedHref } from '@/lib/client/localeSwitch';
 
 const BIZ_LABELS = {
   DAILY_LOGIN: '每日登录打卡',
@@ -49,6 +51,7 @@ function remainingHours(until) {
 }
 
 export default function BenefitsClient() {
+  const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [coins, setCoins] = useState(0);
   const [ledger, setLedger] = useState([]);
@@ -250,7 +253,7 @@ export default function BenefitsClient() {
                   <ShieldCheck className="size-4 text-success" />
                   <span>渠道二 · 有效提交</span>
                 </div>
-                <Link href="/account?action=feedback" className="text-micro font-semibold text-brand hover:text-brand-hover flex items-center gap-0.5">
+                <Link href={localizedHref('/account?action=feedback', { pathname })} className="text-micro font-semibold text-brand hover:text-brand-hover flex items-center gap-0.5">
                   去提交 <ArrowUpRight className="size-3" />
                 </Link>
               </div>
@@ -465,12 +468,12 @@ export default function BenefitsClient() {
               <span className="text-ink">硬币不能兑换算力</span>；硬币只负责优先出图加速卡、永久头像框与社区作品投币。
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Link href="/credits">
+              <Link href={localizedHref('/credits', { pathname })}>
                 <Button variant="outline" size="sm" className="text-caption rounded-xl border-line cursor-pointer">
                   资产与额度总览
                 </Button>
               </Link>
-              <Link href="/pricing">
+              <Link href={localizedHref('/pricing', { pathname })}>
                 <Button variant="ghost" size="sm" className="text-caption text-brand hover:text-brand-hover cursor-pointer">
                   会员与算力包 <ArrowUpRight className="size-3.5" />
                 </Button>

@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import { localizedHref } from '@/lib/client/localeSwitch';
 
 export default function StudioErrorBoundary({ error, reset }) {
+  const pathname = usePathname();
   useEffect(() => {
     console.error('[Studio Error Caught]:', error);
   }, [error]);
@@ -25,7 +28,7 @@ export default function StudioErrorBoundary({ error, reset }) {
             重试
           </button>
           <a
-            href="/studio"
+            href={localizedHref('/studio', { pathname })}
             className="rounded-xl border border-line bg-wash px-4 py-2 text-label font-medium text-ink transition-colors hover:bg-wash-press"
           >
             返回工作台

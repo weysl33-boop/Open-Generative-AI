@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FEEDBACK_KINDS, FEEDBACK_STATUS_LABELS, findFeedbackKind } from '@/lib/feedback/catalog';
+import { usePathname } from 'next/navigation';
+import { localizedHref } from '@/lib/client/localeSwitch';
 
 const STATUS_TONES = {
   pending: 'neutral',
@@ -22,6 +24,7 @@ function formatTime(value) {
 }
 
 export default function FeedbackTab() {
+  const pathname = usePathname();
   const [kind, setKind] = useState(FEEDBACK_KINDS[0].id);
   const [title, setTitle] = useState('');
   const [pageUrl, setPageUrl] = useState('');
@@ -84,7 +87,7 @@ export default function FeedbackTab() {
         <h1 className="text-page-title font-bold tracking-tight text-ink">建议与漏洞提交</h1>
         <p className="mt-1 text-label text-ink-muted">
           把你发现的报错、体验问题或安全隐患写清楚，审核采纳后硬币会自动到账，可在
-          <a href="/benefits" className="mx-1 text-brand hover:text-brand-hover underline underline-offset-2">硬币权益页</a>
+          <a href={localizedHref('/benefits', { pathname })} className="mx-1 text-brand hover:text-brand-hover underline underline-offset-2">硬币权益页</a>
           查看余额与兑换。
         </p>
       </div>

@@ -20,8 +20,11 @@ import StudioHeader from '@/components/site/StudioHeader';
 import AuthModal from '@/components/AuthModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { usePathname } from 'next/navigation';
+import { localizedHref } from '@/lib/client/localeSwitch';
 
 export default function CreditsClient() {
+  const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [coinBalance, setCoinBalance] = useState(0);
   const [subCredits, setSubCredits] = useState(0);
@@ -276,7 +279,7 @@ export default function CreditsClient() {
             </Button>
 
             {/* 会员订阅升级入口 */}
-            <Link href="/pricing">
+            <Link href={localizedHref('/pricing', { pathname })}>
               <Button variant="outline" size="sm" className="gap-1.5 border-brand-line bg-brand-soft text-brand-hover hover:bg-brand-pressed active:scale-95">
                 <Crown className="size-3.5 text-warning" />
                 <span>{planId === 'free' ? '开通商业订阅' : '管理订阅套餐'}</span>
@@ -316,11 +319,11 @@ export default function CreditsClient() {
                 </p>
               </div>
               <div className="pt-4 mt-3 border-t border-line-subtle flex items-center justify-between">
-                <Link href="/benefits" className="text-xs font-semibold text-warning hover:text-ink flex items-center gap-1">
+                <Link href={localizedHref('/benefits', { pathname })} className="text-xs font-semibold text-warning hover:text-ink flex items-center gap-1">
                   <span>硬币权益中心</span>
                   <ArrowUpRight className="size-3.5" />
                 </Link>
-                <Link href="/account?action=feedback" className="text-xs font-semibold text-ink hover:text-warning flex items-center gap-1">
+                <Link href={localizedHref('/account?action=feedback', { pathname })} className="text-xs font-semibold text-ink hover:text-warning flex items-center gap-1">
                   <span>提交赚硬币</span>
                   <ArrowUpRight className="size-3.5" />
                 </Link>
@@ -359,7 +362,7 @@ export default function CreditsClient() {
                 <span className="text-[11px] text-ink-subtle">
                   {subExpiresAt ? `重置日：${new Date(subExpiresAt).toLocaleDateString('zh-CN')}` : '开通套餐即享月度额度'}
                 </span>
-                <Link href="/pricing" className="text-xs font-semibold text-brand hover:text-brand-hover flex items-center gap-1">
+                <Link href={localizedHref('/pricing', { pathname })} className="text-xs font-semibold text-brand hover:text-brand-hover flex items-center gap-1">
                   <span>{planId === 'free' ? '升级获取额度' : '续订/升级'}</span>
                   <ArrowUpRight className="size-3.5" />
                 </Link>
@@ -404,7 +407,7 @@ export default function CreditsClient() {
                   {checkinLoading ? <Loader2 className="size-3.5 animate-spin" /> : <Gift className="size-3.5" />}
                   <span>{checkedInToday ? '今日积分已领' : (checkinLoading ? '签到中…' : '签到 +20 积分')}</span>
                 </button>
-                <Link href="/pricing#credit-packs" className="text-xs font-semibold text-ink-muted hover:text-ink flex items-center gap-1 cursor-pointer">
+                <Link href={localizedHref('/pricing#credit-packs', { pathname })} className="text-xs font-semibold text-ink-muted hover:text-ink flex items-center gap-1 cursor-pointer">
                   <span>充值积分包</span>
                   <ArrowUpRight className="size-3.5" />
                 </Link>
@@ -424,7 +427,7 @@ export default function CreditsClient() {
                   明确每 1 额度的实际生产力，让您的每一笔订阅投资清晰透明、极具性价比。
                 </p>
               </div>
-              <Link href="/pricing">
+              <Link href={localizedHref('/pricing', { pathname })}>
                 <Button variant="outline" size="sm" className="gap-1 text-xs border-line bg-wash text-brand-hover hover:text-ink">
                   <span>查看套餐额度详情</span>
                   <ArrowUpRight className="size-3.5" />
@@ -599,7 +602,7 @@ export default function CreditsClient() {
                   平台支持 200+ 大模型，生图每次消耗 1–4 额度，会员享全站 LLM 无限免费畅聊。
                 </p>
               </div>
-              <Link href="/account?action=price-details">
+              <Link href={localizedHref('/account?action=price-details', { pathname })}>
                 <Button variant="ghost" size="sm" className="w-full justify-between mt-4 text-xs text-brand hover:text-brand-hover p-0">
                   <span>查看各模型详细扣费表</span>
                   <ArrowUpRight className="size-3.5" />
@@ -618,7 +621,7 @@ export default function CreditsClient() {
                 </h2>
                 <p className="text-xs text-ink-subtle mt-0.5">
                   每日签到积分与生成任务消耗均实时记录在账；
-                  <Link href="/benefits" className="text-warning hover:text-ink underline underline-offset-2">硬币获取与消耗明细</Link>
+                  <Link href={localizedHref('/benefits', { pathname })} className="text-warning hover:text-ink underline underline-offset-2">硬币获取与消耗明细</Link>
                   见权益中心。
                 </p>
               </div>
