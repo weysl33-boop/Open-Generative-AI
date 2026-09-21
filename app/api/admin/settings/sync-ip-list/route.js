@@ -25,7 +25,8 @@ async function handlePOST(request) {
       actor: guard.user,
       key: 'china_ip_block',
       value: updatedConfig,
-      visibility: 'public',
+      // 与后台开关保持一致：白名单 IP 属运营内部信息，不给匿名可读的可见性。
+      visibility: 'private',
       requestId: guard.requestId,
     });
 

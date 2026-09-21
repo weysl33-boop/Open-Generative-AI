@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getLocaleFromPathname } from './lib/locales';
+import { getLocaleFromPathname, isSupportedLocale, normalizeLocale, SUPPORTED_LOCALES } from './lib/locales';
+import { evaluateChinaIpGate } from './lib/security/chinaIpGate';
+import { buildGateResponse } from './lib/security/chinaIpResponse';
 
 function addSecurityHeaders(response) {
     // Prevent MIME type sniffing (CWE-693)
@@ -10,13 +12,12 @@ function addSecurityHeaders(response) {
     response.headers.set('X-XSS-Protection', '1; mode=block');
     // Referrer policy
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    // Content Security Policy - restricts script sources to prevent XSS (CWE-79).
-    // connect-src covers *.muapi.ai (not just api.muapi.ai) because generated
-    // media, model thumbnails, and other assets are served from cdn.muapi.ai
-    // and other muapi subdomains that the renderer fetches directly.
+    // Content Security Policy
+    // style-src includes fonts.googleapis.com for Jost webfont
+    // font-src includes fonts.gstatic.com for actual font files
     response.headers.set(
         'Content-Security-Policy',
-        "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://muapi.ai https://*.muapi.ai; font-src 'self' data:;"
+        "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://muapi.ai https://*.muapi.ai; font-src 'self' data: https://fonts.gstatic.com;"
     );
     // 强制 HTML 页面与动态 API 不被浏览器协商强缓存，防止版本发布后旧 HTML 错位
     response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -27,38 +28,44 @@ function addSecurityHeaders(response) {
 export function middleware(request) {
     const url = request.nextUrl;
 
-    // Catch requests to /api/workflow, /api/app, and /api/v1
-    const isMuApi = url.pathname.startsWith('/api/workflow') ||
-                    url.pathname.startsWith('/api/app') ||
-                    url.pathname.startsWith('/api/v1');
-
-    if (isMuApi) {
-        // /api/v1 下的所有端点已全部由专用的 Route Handler 接管安全扣费与模型管控
-        if (url.pathname.startsWith('/api/workflow') || url.pathname.startsWith('/api/app')) {
-            const targetUrl = new URL(url.pathname + url.search, 'https://api.muapi.ai');
-            const rewriteResponse = NextResponse.rewrite(targetUrl);
-            return addSecurityHeaders(rewriteResponse);
-        }
+    const gate = evaluateChinaIpGate(request);
+    if (gate.blocked) {
+        console.warn(
+            `[chinaIpGate] 403 ${url.pathname} ip=${gate.clientIp} via=${gate.ipSource} action=${gate.action}`,
+        );
+        return addSecurityHeaders(buildGateResponse(request, gate));
     }
 
     let locale = getLocaleFromPathname(url.pathname);
     if (locale === 'en') {
         const queryLocale = url.searchParams.get('lang') || url.searchParams.get('locale');
         const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value || request.cookies.get('locale')?.value;
-        if (queryLocale === 'zh' || queryLocale === 'en') {
-            locale = queryLocale;
-        } else if (cookieLocale === 'zh' || cookieLocale === 'en') {
-            locale = cookieLocale;
+        const normalizedQueryLocale = normalizeLocale(queryLocale);
+        const normalizedCookieLocale = normalizeLocale(cookieLocale);
+        if (queryLocale && isSupportedLocale(queryLocale) && SUPPORTED_LOCALES.includes(normalizedQueryLocale)) {
+            locale = normalizedQueryLocale;
+        } else if (cookieLocale && isSupportedLocale(cookieLocale) && SUPPORTED_LOCALES.includes(normalizedCookieLocale)) {
+            locale = normalizedCookieLocale;
         }
     }
 
-    const response = NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-locale', locale);
+
+    const response = NextResponse.next({
+        request: {
+            headers: requestHeaders,
+        },
+    });
     response.headers.set('x-locale', locale);
     return addSecurityHeaders(response);
 }
 
 // Match all paths for security headers. Exclude Next.js internal paths.
+// `runtime: 'nodejs'` (Next 15.5 起稳定) 是中国大陆 IP 门禁的前提：
+// 判定要读 data/ 与 lib/security/ 下的网段库和拦截配置镜像，Edge 运行时没有 fs。
 export const config = {
+    runtime: 'nodejs',
     matcher: [
         '/api/:path*',
         '/((?!_next/static|_next/image|favicon.ico|__nextjs_original-stack-frame).*)',

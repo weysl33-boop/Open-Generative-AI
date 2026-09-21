@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Card, StatusBadge } from '@/components/admin/AdminUi';
 
-export default function SettingsEditor({ initialSettings }) {
+export default function SettingsEditor({ initialSettings, gateDiagnostics }) {
   const [settings, setSettings] = useState(initialSettings || []);
   const [savingKey, setSavingKey] = useState(null);
   const [feedback, setFeedback] = useState({});
@@ -20,19 +20,27 @@ export default function SettingsEditor({ initialSettings }) {
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
         body: JSON.stringify({ key, value, visibility }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error?.message || '保存失败');
 
+      // warning 表示库里存下了但运行时没生效（例如镜像文件写失败），不能提示成功。
+      if (data?.data?.warning) {
+        setFeedback((prev) => ({ ...prev, [key]: data.data.warning }));
+        return data;
+      }
+
       setFeedback((prev) => ({ ...prev, [key]: '已成功更新并留存审计' }));
       setTimeout(() => {
         setFeedback((prev) => ({ ...prev, [key]: '' }));
       }, 3000);
+      return data;
     } catch (err) {
       setFeedback((prev) => ({ ...prev, [key]: `错误: ${err.message}` }));
+      return null;
     } finally {
       setSavingKey(null);
     }
@@ -54,12 +62,126 @@ export default function SettingsEditor({ initialSettings }) {
   const [maintEnabled, setMaintEnabled] = useState(Boolean(maint.enabled));
   const [maintMsg, setMaintMsg] = useState(maint.message || '系统正在例行升级，请稍候访问');
 
+  // 4. 探索应用 (Explore Apps) 入口开关 (默认隐藏)
+  const exploreAppsCfg = getVal('feature_explore_apps', { enabled: false });
+  const [exploreAppsEnabled, setExploreAppsEnabled] = useState(Boolean(exploreAppsCfg.enabled));
+
+  // 5. 中国大陆 IP 访问拦截（middleware 层，默认关闭）
+  const gate = getVal('china_ip_block', {});
+  const [gateEnabled, setGateEnabled] = useState(Boolean(gate.enabled));
+  const [gateAction, setGateAction] = useState(gate.action === 'icp_notice' ? 'icp_notice' : 'forbidden');
+  const [gateMsg, setGateMsg] = useState(gate.custom_message || '');
+  const [gateBlockApi, setGateBlockApi] = useState(gate.block_api !== false);
+  const [gateWhitelist, setGateWhitelist] = useState(gate.whitelist_ips || '');
+  const [syncingLib, setSyncingLib] = useState(false);
+
+  const diag = gateDiagnostics || {};
+  const lib = diag.library || {};
+  // 库里存的开关与 middleware 实际读到的镜像不一致 = 镜像没写成功，拦截不会生效。
+  const gateDrift = typeof diag.runtimeEnabled === 'boolean' && diag.runtimeEnabled !== gateEnabled;
+
+  const whitelistCurrentIp = () => {
+    const ip = (diag.clientIp || '').trim();
+    if (!ip) return;
+    const entries = gateWhitelist.split(/[\n,;]/).map((s) => s.trim()).filter(Boolean);
+    if (entries.includes(ip)) return;
+    setGateWhitelist([...entries, ip].join('\n'));
+  };
+
+  const syncIpLibrary = async () => {
+    setSyncingLib(true);
+    setFeedback((prev) => ({ ...prev, china_ip_block: '' }));
+    try {
+      const res = await fetch('/api/admin/settings/sync-ip-list', {
+        method: 'POST',
+        headers: { 'Idempotency-Key': crypto.randomUUID() },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error?.message || '同步失败');
+      setFeedback((prev) => ({ ...prev, china_ip_block: data?.data?.message || 'IP 库同步完成' }));
+    } catch (err) {
+      setFeedback((prev) => ({ ...prev, china_ip_block: `错误: ${err.message}` }));
+    } finally {
+      setSyncingLib(false);
+    }
+  };
+
   return (
     <div className="grid gap-6 lg:grid-cols-2">
+      {/* 探索应用 (Explore Apps) 侧边栏开关 */}
+      <Card className="lg:col-span-2 border-brand-soft bg-scrim">
+        <div className="flex items-center justify-between border-b border-line pb-3 mb-4">
+          <div className="space-y-1">
+            <h2 className="text-sm font-bold text-ink">探索应用 (Explore Apps) 侧边栏入口</h2>
+            <p className="text-xs text-ink-muted">
+              控制 Studio 创作者左侧侧边栏底部的「Explore Apps」功能入口。首发上线建议保持隐藏，待正式生态插件发布后开启。
+            </p>
+          </div>
+          <StatusBadge tone={exploreAppsEnabled ? 'good' : 'neutral'}>
+            {exploreAppsEnabled ? '前台已显示' : '已隐藏 (推荐)'}
+          </StatusBadge>
+        </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            saveSetting('feature_explore_apps', {
+              enabled: exploreAppsEnabled,
+            });
+          }}
+          className="flex flex-wrap items-center justify-between gap-4 pt-1"
+        >
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="explore_apps_toggle"
+              checked={exploreAppsEnabled}
+              onChange={(e) => setExploreAppsEnabled(e.target.checked)}
+              className="size-4 rounded border-line-strong bg-scrim text-brand focus:ring-brand"
+            />
+            <label htmlFor="explore_apps_toggle" className="text-xs font-semibold text-ink select-none cursor-pointer">
+              在前台左侧导航栏显示「Explore Apps (应用探索)」入口
+            </label>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-brand-hover">{feedback['feature_explore_apps']}</span>
+            <button
+              type="submit"
+              disabled={savingKey === 'feature_explore_apps'}
+              className="rounded-xl border border-brand-line bg-brand-soft px-4 py-2 text-xs font-bold text-brand-hover hover:bg-brand-pressed disabled:opacity-50 transition-all"
+            >
+              {savingKey === 'feature_explore_apps' ? '保存中…' : '保存应用入口设置'}
+            </button>
+          </div>
+        </form>
+      </Card>
+      {/* 前端Logo与导航菜单管理 */}
+      <Card className="lg:col-span-2 border-brand-line bg-gradient-to-r from-brand-pressed via-canvas to-purple-950/20">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="flex size-2 rounded-full bg-brand" />
+              <h2 className="text-sm font-bold text-ink">前端Logo与导航菜单管理</h2>
+              <StatusBadge tone="good">动态全站响应</StatusBadge>
+            </div>
+            <p className="text-xs text-ink-muted">
+              支持调整 Studio 及全站前台 Logo 模式（矢量/图片/纯文字）、徽标配色盘、点击跳转路径以及顶栏右侧菜单按钮的增删改查、排序和角标样式。
+            </p>
+          </div>
+          <a
+            href="/admin/content/branding"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2 text-xs font-bold text-ink-on-accent transition-all hover:bg-brand active:scale-[0.98] shadow-elevation-2 shadow-brand-soft"
+          >
+            进入前端管理工作台 →
+          </a>
+        </div>
+      </Card>
+
       {/* 全站公告横幅 */}
       <Card>
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-4">
-          <h2 className="text-sm font-bold text-white">前台全站横幅公告 (Banner)</h2>
+        <div className="flex items-center justify-between border-b border-line pb-3 mb-4">
+          <h2 className="text-sm font-bold text-ink">前台全站横幅公告 (Banner)</h2>
           <StatusBadge tone={bannerEnabled ? 'info' : 'neutral'}>
             {bannerEnabled ? '已开启前台展示' : '已关闭'}
           </StatusBadge>
@@ -85,29 +207,29 @@ export default function SettingsEditor({ initialSettings }) {
               onChange={(e) => setBannerEnabled(e.target.checked)}
               className="rounded"
             />
-            <label htmlFor="banner_toggle" className="text-xs text-white/80">
+            <label htmlFor="banner_toggle" className="text-xs text-ink">
               启用前台顶部公告横幅
             </label>
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-white/50 mb-1">公告文案内容</label>
+            <label className="block text-[11px] font-semibold text-ink-subtle mb-1">公告文案内容</label>
             <input
               type="text"
               required
               value={bannerMsg}
               onChange={(e) => setBannerMsg(e.target.value)}
               placeholder="例如：系统已升级支持全新 Flux 与 Hailuo 视频生成模型！"
-              className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2 text-xs text-white outline-none focus:border-cyan-300/60"
+              className="w-full rounded-xl border border-line bg-scrim px-3.5 py-2 text-xs text-ink outline-none focus:border-brand-ring"
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-white/50 mb-1">展示色调风格</label>
+            <label className="block text-[11px] font-semibold text-ink-subtle mb-1">展示色调风格</label>
             <select
               value={bannerTone}
               onChange={(e) => setBannerTone(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-3.5 py-2 text-xs text-white outline-none focus:border-cyan-300/60"
+              className="w-full rounded-xl border border-line bg-canvas px-3.5 py-2 text-xs text-ink outline-none focus:border-brand-ring"
             >
               <option value="info">冰青 (信息通知)</option>
               <option value="good">翠绿 (新功能/福利)</option>
@@ -116,11 +238,11 @@ export default function SettingsEditor({ initialSettings }) {
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-cyan-200">{feedback['site_banner']}</span>
+            <span className="text-xs text-brand-hover">{feedback['site_banner']}</span>
             <button
               type="submit"
               disabled={savingKey === 'site_banner'}
-              className="rounded-xl bg-cyan-300 px-4 py-2 text-xs font-bold text-black hover:bg-cyan-200 disabled:opacity-50"
+              className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-ink-on-accent hover:bg-brand disabled:opacity-50"
             >
               {savingKey === 'site_banner' ? '保存中…' : '保存公告配置'}
             </button>
@@ -130,8 +252,8 @@ export default function SettingsEditor({ initialSettings }) {
 
       {/* 注册与第三方登录开关 */}
       <Card>
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-4">
-          <h2 className="text-sm font-bold text-white">用户注册与授权访问</h2>
+        <div className="flex items-center justify-between border-b border-line pb-3 mb-4">
+          <h2 className="text-sm font-bold text-ink">用户注册与授权访问</h2>
           <StatusBadge tone={allowRegister ? 'good' : 'warn'}>
             {allowRegister ? '开放新用户注册' : '已暂停注册'}
           </StatusBadge>
@@ -147,11 +269,11 @@ export default function SettingsEditor({ initialSettings }) {
           }}
           className="space-y-4"
         >
-          <div className="rounded-xl border border-white/[0.06] bg-black/20 p-3.5 space-y-3">
+          <div className="rounded-xl border border-line-subtle bg-black/20 p-3.5 space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-white">允许新用户自主注册</p>
-                <p className="text-[11px] text-white/40">关闭后仅已有用户可登录</p>
+                <p className="text-xs font-semibold text-ink">允许新用户自主注册</p>
+                <p className="text-[11px] text-ink-subtle">关闭后仅已有用户可登录</p>
               </div>
               <input
                 type="checkbox"
@@ -161,10 +283,10 @@ export default function SettingsEditor({ initialSettings }) {
               />
             </div>
 
-            <div className="flex items-center justify-between border-t border-white/[0.05] pt-3">
+            <div className="flex items-center justify-between border-t border-line-subtle pt-3">
               <div>
-                <p className="text-xs font-semibold text-white">允许 Google / X / TikTok 登录</p>
-                <p className="text-[11px] text-white/40">通过外部第三方快捷鉴权通道</p>
+                <p className="text-xs font-semibold text-ink">允许 Google / X / TikTok 登录</p>
+                <p className="text-[11px] text-ink-subtle">通过外部第三方快捷鉴权通道</p>
               </div>
               <input
                 type="checkbox"
@@ -176,11 +298,11 @@ export default function SettingsEditor({ initialSettings }) {
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-cyan-200">{feedback['registration_enabled']}</span>
+            <span className="text-xs text-brand-hover">{feedback['registration_enabled']}</span>
             <button
               type="submit"
               disabled={savingKey === 'registration_enabled'}
-              className="rounded-xl bg-cyan-300 px-4 py-2 text-xs font-bold text-black hover:bg-cyan-200 disabled:opacity-50"
+              className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-ink-on-accent hover:bg-brand disabled:opacity-50"
             >
               {savingKey === 'registration_enabled' ? '保存中…' : '保存注册策略'}
             </button>
@@ -190,10 +312,10 @@ export default function SettingsEditor({ initialSettings }) {
 
       {/* 维护模式开关 */}
       <Card className="lg:col-span-2">
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-4">
+        <div className="flex items-center justify-between border-b border-line pb-3 mb-4">
           <div>
-            <h2 className="text-sm font-bold text-white">系统维护模式 (Maintenance Mode)</h2>
-            <p className="text-xs text-white/40 mt-1">开启后前台所有页面将显示维护拦截页，仅管理员可正常访问。</p>
+            <h2 className="text-sm font-bold text-ink">系统维护模式 (Maintenance Mode)</h2>
+            <p className="text-xs text-ink-subtle mt-1">开启后前台所有页面将显示维护拦截页，仅管理员可正常访问。</p>
           </div>
           <StatusBadge tone={maintEnabled ? 'danger' : 'good'}>
             {maintEnabled ? '维护拦截中' : '对外正常营业'}
@@ -218,30 +340,230 @@ export default function SettingsEditor({ initialSettings }) {
               onChange={(e) => setMaintEnabled(e.target.checked)}
               className="rounded"
             />
-            <label htmlFor="maint_toggle" className="text-xs font-semibold text-red-200">
+            <label htmlFor="maint_toggle" className="text-xs font-semibold text-danger">
               启用全局维护拦截模式
             </label>
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-white/50 mb-1">对外维护提示语</label>
+            <label className="block text-[11px] font-semibold text-ink-subtle mb-1">对外维护提示语</label>
             <input
               type="text"
               value={maintMsg}
               onChange={(e) => setMaintMsg(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2 text-xs text-white outline-none focus:border-cyan-300/60"
+              className="w-full rounded-xl border border-line bg-scrim px-3.5 py-2 text-xs text-ink outline-none focus:border-brand-ring"
             />
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-cyan-200">{feedback['maintenance_mode']}</span>
+            <span className="text-xs text-brand-hover">{feedback['maintenance_mode']}</span>
             <button
               type="submit"
               disabled={savingKey === 'maintenance_mode'}
-              className="rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold text-white hover:bg-white/20 disabled:opacity-50"
+              className="rounded-xl border border-line-strong bg-wash-press px-4 py-2 text-xs font-bold text-ink hover:bg-wash-press disabled:opacity-50"
             >
               {savingKey === 'maintenance_mode' ? '保存中…' : '保存维护设置'}
             </button>
+          </div>
+        </form>
+      </Card>
+
+      {/* 中国大陆 IP 访问拦截 */}
+      <Card className="lg:col-span-2">
+        <div className="flex items-center justify-between gap-4 border-b border-line pb-3 mb-4">
+          <div className="space-y-1">
+            <h2 className="text-sm font-bold text-ink">中国大陆 IP 访问拦截</h2>
+            <p className="text-xs text-ink-muted">
+              在 middleware 层对命中中国大陆网段的访问者返回真实 HTTP 403，前台页面与 API 一并生效。
+              境内管理员无法靠登录态放行（middleware 读不到会话），必须先加入下方 IP 白名单。
+            </p>
+          </div>
+          <StatusBadge tone={gateEnabled ? 'danger' : 'neutral'}>
+            {gateEnabled ? '拦截已开启' : '未拦截（默认）'}
+          </StatusBadge>
+        </div>
+
+        {/* 运行时诊断：拦截误判时后台自己也会被 403 挡在外面，所以先把"系统现在怎么看你"摊开 */}
+        <div className="mb-4 rounded-xl border border-line bg-well p-3.5">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-xs font-semibold text-ink-subtle">本机访问诊断</p>
+            {diag.forcedOff && (
+              <StatusBadge tone="warn">环境变量已强制停用拦截</StatusBadge>
+            )}
+          </div>
+          <dl className="grid gap-2 sm:grid-cols-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="text-xs text-ink-subtle">识别到的来访 IP</dt>
+              <dd className="font-mono text-xs text-ink">{diag.clientIp || '未知'}</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="text-xs text-ink-subtle">来源请求头</dt>
+              <dd className="font-mono text-xs text-ink">{diag.ipSource || '未知'}</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="text-xs text-ink-subtle">是否命中中国大陆网段</dt>
+              <dd className="text-xs font-semibold text-ink">{diag.isChinaIp ? '是' : '否'}</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="text-xs text-ink-subtle">运行时实际生效状态</dt>
+              <dd className="text-xs font-semibold text-ink">{diag.runtimeEnabled ? '拦截中' : '未拦截'}</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-3 sm:col-span-2">
+              <dt className="text-xs text-ink-subtle">IP 网段库</dt>
+              <dd className="text-right text-xs text-ink">
+                {lib.loaded
+                  ? `IPv4 ${lib.v4Ranges} 段 · IPv6 ${lib.v6Ranges} 段 · 更新于 ${lib.updatedAt || '未知'}`
+                  : '未加载（拦截会整体放行）'}
+              </dd>
+            </div>
+          </dl>
+          {(diag.ipSource === 'unknown-defaults' || diag.ipSource === 'missing-headers') && (
+            <p className="mt-2 text-xs text-ink-subtle">
+              提示：来访 IP 落到回环默认值，说明上游代理没有传递真实 IP，拦截不会对任何访客生效。
+              请检查 nginx 的
+              <span className="font-mono"> proxy_set_header X-Real-IP $remote_addr </span>
+              配置。
+            </p>
+          )}
+          {gateDrift && (
+            <p className="mt-2 text-xs font-semibold text-ink">
+              后台保存的开关与运行时镜像不一致，拦截按「{diag.runtimeEnabled ? '已开启' : '未开启'}」执行。
+              重新保存下方配置即可修复；若仍不一致，说明进程无法写入{" "}
+              <span className="font-mono">{diag.stateFile}</span>。
+            </p>
+          )}
+        </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            saveSetting(
+              'china_ip_block',
+              {
+                enabled: gateEnabled,
+                action: gateAction,
+                custom_message: gateMsg,
+                block_api: gateBlockApi,
+                whitelist_ips: gateWhitelist,
+              },
+              // 白名单里是运营与管理员的真实出口 IP， middleware 只读运行时镜像，
+              // 因此这条配置必须留在 private，不能进任何匿名可读的设置出口。
+              'private',
+            );
+          }}
+          className="space-y-4"
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-line bg-base p-3.5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-ink">启用中国大陆 IP 拦截</p>
+                  <p className="text-xs text-ink-subtle">开启前请先确认下方白名单</p>
+                </div>
+                <input
+                  type="checkbox"
+                  id="gate_toggle"
+                  checked={gateEnabled}
+                  onChange={(e) => setGateEnabled(e.target.checked)}
+                  className="size-4 rounded"
+                />
+              </div>
+
+              <div className="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3">
+                <div>
+                  <p className="text-xs font-semibold text-ink">同时拦截 /api 接口</p>
+                  <p className="text-xs text-ink-subtle">支付与生成回调地址不受影响</p>
+                </div>
+                <input
+                  type="checkbox"
+                  id="gate_api_toggle"
+                  checked={gateBlockApi}
+                  onChange={(e) => setGateBlockApi(e.target.checked)}
+                  disabled={!gateEnabled}
+                  className="size-4 rounded"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="gate_action" className="block text-xs font-semibold text-ink-subtle mb-1">
+                  对境内访客的展示方式
+                </label>
+                <select
+                  id="gate_action"
+                  value={gateAction}
+                  onChange={(e) => setGateAction(e.target.value)}
+                  className="w-full rounded-xl border border-line bg-canvas px-3.5 py-2 text-xs text-ink focus:border-brand"
+                >
+                  <option value="forbidden">默认 403 页面（nginx 风格，无任何品牌信息）</option>
+                  <option value="icp_notice">备案提示页（说明正在办理 ICP 备案）</option>
+                </select>
+              </div>
+
+              {gateAction === 'icp_notice' && (
+                <div>
+                  <label htmlFor="gate_msg" className="block text-xs font-semibold text-ink-subtle mb-1">
+                    备案提示页文案（留空使用默认文案）
+                  </label>
+                  <input
+                    id="gate_msg"
+                    type="text"
+                    value={gateMsg}
+                    onChange={(e) => setGateMsg(e.target.value)}
+                    maxLength={500}
+                    placeholder="网站正在办理工信部ICP备案审核，暂不对中国大陆境内用户提供访问服务。"
+                    className="w-full rounded-xl border border-line bg-canvas px-3.5 py-2 text-xs text-ink focus:border-brand"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+              <label htmlFor="gate_whitelist" className="text-xs font-semibold text-ink-subtle">
+                放行 IP 白名单（每行一个，支持 IPv4 CIDR）
+              </label>
+              <button
+                type="button"
+                onClick={whitelistCurrentIp}
+                disabled={!diag.clientIp}
+                className="rounded-lg border border-line bg-raised px-2.5 py-1 text-xs font-medium text-ink hover:bg-overlay hover:border-line-strong disabled:opacity-50"
+              >
+                把当前 IP 加入白名单
+              </button>
+            </div>
+            <textarea
+              id="gate_whitelist"
+              rows={3}
+              value={gateWhitelist}
+              onChange={(e) => setGateWhitelist(e.target.value)}
+              maxLength={4000}
+              placeholder={'203.0.113.24\n198.51.100.0/24'}
+              className="w-full rounded-xl border border-line bg-canvas px-3.5 py-2 font-mono text-xs text-ink focus:border-brand"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+            <span className="text-xs text-brand">{feedback['china_ip_block']}</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={syncIpLibrary}
+                disabled={syncingLib}
+                className="rounded-xl border border-line bg-raised px-4 py-2 text-xs font-medium text-ink hover:bg-overlay hover:border-line-strong disabled:opacity-50"
+              >
+                {syncingLib ? '同步中…' : '同步最新 IP 库'}
+              </button>
+              <button
+                type="submit"
+                disabled={savingKey === 'china_ip_block'}
+                className="rounded-xl border border-brand-line bg-brand px-4 py-2 text-xs font-semibold text-ink-on-accent hover:bg-brand-hover disabled:opacity-50"
+              >
+                {savingKey === 'china_ip_block' ? '保存中…' : '保存拦截设置'}
+              </button>
+            </div>
           </div>
         </form>
       </Card>
