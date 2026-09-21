@@ -17,9 +17,12 @@ ALTER TABLE ops_bill.plans_config
   ALTER COLUMN enabled DROP DEFAULT,
   ALTER COLUMN is_active DROP DEFAULT;
 
+-- USING 表达式必须与列的现有类型无关：干净库里这两列已经是 boolean（上面刚 ADD
+-- COLUMN），线上库里是 smallint。写成 COALESCE(col, 1) = 1 会在 boolean 列上报
+-- "COALESCE types boolean and integer cannot be matched"，把整批迁移连带 029 一起卡死。
 ALTER TABLE ops_bill.plans_config
-  ALTER COLUMN enabled TYPE BOOLEAN USING COALESCE(enabled, 1) = 1,
-  ALTER COLUMN is_active TYPE BOOLEAN USING COALESCE(is_active, 1) = 1;
+  ALTER COLUMN enabled TYPE BOOLEAN USING COALESCE(enabled::text, '1') NOT IN ('0', 'false', 'f', ''),
+  ALTER COLUMN is_active TYPE BOOLEAN USING COALESCE(is_active::text, '1') NOT IN ('0', 'false', 'f', '');
 
 ALTER TABLE ops_bill.plans_config
   ALTER COLUMN enabled SET DEFAULT TRUE,

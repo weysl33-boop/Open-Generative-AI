@@ -22,10 +22,18 @@ test('Admin navigation config includes social login route under 登录配置', a
     assert.ok(social, '登录配置缺少社交登录菜单');
     assert.equal(social.label, '社交登录');
     assert.ok(loginConfig.items.some((item) => item.href === '/admin/providers/sms'), '登录配置缺少短信登录菜单');
-    assert.ok(loginConfig.items.some((item) => item.href === '/admin/providers/email'), '登录配置缺少邮箱登录菜单');
+    assert.ok(
+      !loginConfig.items.some((item) => item.href === '/admin/providers/email'),
+      '邮箱 SMTP 已独立为发信设置页，不应再出现在登录配置分组'
+    );
+    const integrations = ADMIN_NAV_GROUPS.find((group) => group.id === 'integrations');
+    assert.ok(
+      integrations?.items.some((item) => item.href === '/admin/email'),
+      '系统集成缺少邮件发信设置菜单'
+    );
   } else {
     assert.match(content, /label:\s*'登录配置'/);
-    for (const href of ['/admin/providers/social', '/admin/providers/sms', '/admin/providers/email']) {
+    for (const href of ['/admin/providers/social', '/admin/providers/sms']) {
       assert.ok(content.includes(href), `登录配置缺少 ${href}`);
     }
   }
