@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowUpRight,
@@ -54,17 +54,43 @@ function remainingHours(until) {
   return diff > 0 ? Math.ceil(diff / 3600000) : 0;
 }
 
-/** 头像框实物预览：一圈描边 + 星座符号。 */
-function FrameSwatch({ def, worn, size = 'size-12' }) {
+/** 头像本体：兑换格里先看到自己的脸，再看框套上来的效果。 */
+function AvatarFace({ user }) {
+  const src = user?.photo_url || user?.avatar || user?.avatar_url || '';
+  const name = user?.displayName || user?.display_name || user?.email?.split('@')[0] || '';
+  const initial = name.trim().slice(0, 1).toUpperCase() || '我';
+  if (src) {
+    return (
+      <span className="avatar-frame-face">
+        <img src={src} alt="" className="size-full object-cover" />
+      </span>
+    );
+  }
+  return <span className="avatar-frame-face">{initial}</span>;
+}
+
+/** 头像框实物：描边套在头像外面，星座符号只是钉在框下沿的徽章。 */
+function FrameSwatch({ def, user, worn, celebrate, size = 'size-12' }) {
   return (
     <span className="relative inline-flex shrink-0">
       <span
-        className={`flex ${size} items-center justify-center rounded-full bg-overlay ${def.ringClasses}`}
+        className={`relative flex ${size} items-center justify-center rounded-full bg-overlay transition-transform group-hover:-translate-y-0.5 ${def.ringClasses}${
+          worn ? ' avatar-frame--live' : ''
+        }${celebrate ? ' avatar-frame--pop' : ''}`}
       >
-        {def.glyph ? <span className="avatar-frame-glyph">{`${def.glyph}\uFE0E`}</span> : null}
+        <AvatarFace user={user} />
+        {celebrate && <span className="avatar-frame-burst" aria-hidden="true" />}
+        {celebrate && (
+          <span className="avatar-frame-sparks" aria-hidden="true">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <i key={i} style={{ '--spark-angle': `${i * 60}deg`, animationDelay: `${i * 24}ms` }} />
+            ))}
+          </span>
+        )}
+        {def.glyph ? <span className="avatar-frame-emblem">{`${def.glyph}\uFE0E`}</span> : null}
       </span>
       {worn && (
-        <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full border border-line bg-surface text-brand">
+        <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full border border-line bg-surface text-brand animate-scale-in">
           <Check className="size-2.5" />
         </span>
       )}
@@ -86,6 +112,9 @@ export default function BenefitsClient() {
   const [wearing, setWearing] = useState(false);
   const [message, setMessage] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [celebrate, setCelebrate] = useState(null);
+  const [coinBump, setCoinBump] = useState(false);
+  const coinBaseline = useRef(0);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -129,6 +158,22 @@ export default function BenefitsClient() {
     const timer = window.setTimeout(() => setMessage(''), 5000);
     return () => window.clearTimeout(timer);
   }, [message]);
+
+  /* 戴上那一下的动效只播一次，播完就把爆发层摘掉 */
+  useEffect(() => {
+    if (!celebrate) return;
+    const timer = window.setTimeout(() => setCelebrate(null), 900);
+    return () => window.clearTimeout(timer);
+  }, [celebrate]);
+
+  /* 口袋数字变化时弹一下，让"进账/花掉"看得见 */
+  useEffect(() => {
+    if (coinBaseline.current === coins) return;
+    coinBaseline.current = coins;
+    setCoinBump(true);
+    const timer = window.setTimeout(() => setCoinBump(false), 420);
+    return () => window.clearTimeout(timer);
+  }, [coins]);
 
   const ownedFrames = user?.avatarFrames || [];
   const wornFrame = user?.avatarFrame || null;
@@ -186,6 +231,7 @@ export default function BenefitsClient() {
       } else if (benefit.kind === 'priority') {
         setMessage(`优先卡已生效，到 ${formatTime(data.priorityUntil)} 前都先轮到你`);
       } else {
+        setCelebrate(benefit.frame);
         setMessage(`${AVATAR_FRAMES[benefit.frame]?.label || '头像框'}已经是你的人了，现在戴着它`);
       }
       await Promise.all([loadWallet(), loadProfile()]);
@@ -206,8 +252,17 @@ export default function BenefitsClient() {
         body: JSON.stringify({ frame }),
       });
       const data = await res.json().catch(() => ({}));
-      setMessage(res.ok ? data.message || '换好了' : data.error || '刚才没换上，再试一次');
-      if (res.ok) await loadProfile();
+      if (res.ok) {
+        if (frame) {
+          setCelebrate(frame);
+          setMessage(`戴上了${AVATAR_FRAMES[frame]?.short || '头像框'}，去社区里走走`);
+        } else {
+          setMessage('先摘下来了，回到原来的样子');
+        }
+        await loadProfile();
+      } else {
+        setMessage(data.error || '刚才没换上，再试一次');
+      }
     } catch {
       setMessage('网络不太顺，稍后再试');
     } finally {
@@ -224,6 +279,7 @@ export default function BenefitsClient() {
   const shownFrames = shown.filter((b) => b.kind === 'avatar_frame');
   const shownOthers = shown.filter((b) => b.kind !== 'avatar_frame');
   const openCount = BENEFITS.filter((b) => b.status === 'open').length;
+  const wornDef = AVATAR_FRAMES[wornFrame] || { ringClasses: 'avatar-frame' };
 
   return (
     <div className="min-h-screen bg-canvas text-ink flex flex-col">
@@ -233,7 +289,7 @@ export default function BenefitsClient() {
         {message && (
           <div
             role="status"
-            className="flex items-center justify-between gap-3 rounded-2xl border border-warning-line bg-warning-soft px-5 py-3 text-label font-semibold text-warning animate-in fade-in"
+            className="flex items-center justify-between gap-3 rounded-2xl border border-warning-line bg-warning-soft px-5 py-3 text-label font-semibold text-warning animate-toast-in"
           >
             <span>{message}</span>
             <button type="button" onClick={() => setMessage('')} className="text-ink-muted hover:text-ink cursor-pointer">✕</button>
@@ -243,15 +299,26 @@ export default function BenefitsClient() {
         {/* 口袋 */}
         <section className="rounded-2xl border border-warning-line bg-gradient-to-b from-warning-soft via-well to-base p-6 shadow-elevation-3">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-              <span className="text-label text-ink-muted">你的口袋</span>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-display font-black tracking-tight text-warning font-mono">{coins.toFixed(2)}</span>
-                <span className="text-label text-warning">枚 🪙</span>
+            <div className="flex items-center gap-4">
+              <FrameSwatch
+                def={wornDef}
+                user={user}
+                worn={Boolean(wornFrame)}
+                celebrate={Boolean(wornFrame) && celebrate === wornFrame}
+                size="size-11"
+              />
+              <div className="min-w-0">
+                <span className="text-label text-ink-muted">你的口袋</span>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <span className={`inline-block text-display font-black tracking-tight text-warning font-mono${coinBump ? ' coin-bump' : ''}`}>
+                    {coins.toFixed(2)}
+                  </span>
+                  <span className="text-label text-warning">枚 🪙</span>
+                </div>
+                <p className="mt-2 text-label text-ink-muted leading-relaxed">
+                  硬币是社区给你的小心意，不买卖、不转赠，只用来换下面这些。
+                </p>
               </div>
-              <p className="mt-2 text-label text-ink-muted leading-relaxed">
-                硬币是社区给你的小心意，不买卖、不转赠，只用来换下面这些。
-              </p>
             </div>
             <Button
               variant="outline"
@@ -331,11 +398,11 @@ export default function BenefitsClient() {
                   type="button"
                   onClick={() => setCategory(tab.id)}
                   title={tab.blurb}
-                  className={`flex items-center gap-1.5 h-8 shrink-0 rounded-full px-3.5 text-label transition-colors cursor-pointer ${
-                    active ? 'bg-surface-inverse text-ink-inverse font-bold shadow-elevation-1' : 'text-ink-muted hover:text-ink'
+                  className={`flex items-center gap-1.5 h-8 shrink-0 rounded-full px-3.5 text-label transition cursor-pointer active:scale-95 ${
+                    active ? 'bg-surface-inverse text-ink-inverse font-bold shadow-elevation-1' : 'text-ink-muted hover:text-ink hover:bg-wash'
                   }`}
                 >
-                  <Icon className="size-3.5" />
+                  <Icon className={`size-3.5 transition-transform ${active ? 'scale-110' : ''}`} />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -350,7 +417,7 @@ export default function BenefitsClient() {
 
           {/* 头像框：直接试戴 */}
           {shownFrames.length > 0 && (
-            <div className="grid gap-3 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5">
+            <div key={`frames-${category}`} className="grid gap-3 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 animate-fade-in">
               {shownFrames.map((benefit) => {
                 const def = AVATAR_FRAMES[benefit.frame] || {};
                 const owned = ownedFrames.includes(benefit.frame);
@@ -360,9 +427,11 @@ export default function BenefitsClient() {
                 return (
                   <div
                     key={benefit.id}
-                    className="flex flex-col items-center gap-2 rounded-2xl border border-line bg-well p-4 text-center hover:border-warning-line transition-colors"
+                    className={`group frame-tile flex flex-col items-center gap-2 rounded-2xl border bg-well p-4 pt-5 text-center transition-colors hover:border-warning-line ${
+                      worn ? 'border-brand-line' : 'border-line'
+                    }`}
                   >
-                    <FrameSwatch def={def} worn={worn} />
+                    <FrameSwatch def={def} user={user} worn={worn} celebrate={celebrate === benefit.frame} />
                     <div className="min-w-0">
                       <p className="text-label font-bold text-ink truncate">{def.short || benefit.title}</p>
                       <p className="text-micro text-ink-subtle mt-0.5 truncate">
@@ -374,7 +443,7 @@ export default function BenefitsClient() {
                       variant="outline"
                       disabled={!user || (!owned && (!affordable || busy)) || (owned && (worn || wearing))}
                       onClick={() => (owned ? wear(benefit.frame) : redeem(benefit))}
-                      className={`w-full text-micro h-7 rounded-lg px-2 cursor-pointer disabled:cursor-not-allowed ${
+                      className={`w-full text-micro h-7 rounded-lg px-2 cursor-pointer transition-transform active:scale-95 disabled:cursor-not-allowed ${
                         worn
                           ? 'border-brand-line text-brand bg-brand-soft'
                           : owned
@@ -402,9 +471,11 @@ export default function BenefitsClient() {
                   type="button"
                   disabled={wearing}
                   onClick={() => wear(null)}
-                  className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line bg-well p-4 text-center text-ink-muted hover:text-ink hover:border-line-strong transition-colors cursor-pointer disabled:cursor-not-allowed"
+                  className="group frame-tile flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line bg-well p-4 pt-5 text-center text-ink-muted hover:text-ink hover:border-line-strong transition-colors cursor-pointer disabled:cursor-not-allowed"
                 >
-                  <span className="flex size-12 items-center justify-center rounded-full bg-overlay text-body">🙂</span>
+                  <span className="relative flex size-12 items-center justify-center rounded-full border-2 border-dashed border-line-strong transition-transform group-hover:-translate-y-0.5">
+                    <AvatarFace user={user} />
+                  </span>
                   <p className="text-label font-semibold">今天不戴</p>
                 </button>
               )}
@@ -419,13 +490,13 @@ export default function BenefitsClient() {
             const busy = redeeming === benefit.id;
             return (
               <div
-                key={benefit.id}
-                className={`mt-3 flex items-center gap-4 rounded-2xl border p-4 transition-colors ${
-                  soon ? 'border-line bg-well opacity-70' : 'border-line bg-well hover:border-warning-line'
+                key={`${category}-${benefit.id}`}
+                className={`mt-3 flex items-center gap-4 rounded-2xl border p-4 transition-colors animate-fade-in ${
+                  soon ? 'border-line bg-well opacity-70' : 'border-line bg-well hover:border-warning-line group'
                 }`}
               >
-                <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl border ${
-                  soon ? 'border-line bg-scrim text-ink-subtle' : 'border-warning-line bg-warning-soft text-warning'
+                <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl border transition-transform ${
+                  soon ? 'border-line bg-scrim text-ink-subtle' : 'border-warning-line bg-warning-soft text-warning group-hover:-translate-y-0.5 group-hover:rotate-3'
                 }`}>
                   <Icon className="size-5" />
                 </span>

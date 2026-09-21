@@ -607,7 +607,8 @@
     0 0 14px -2px color-mix(in srgb, var(--frame-hue, transparent) 55%, transparent);
 }
 
-.avatar-frame--zodiac-aries      { --frame-hue: #f4623a; }.avatar-frame--zodiac-taurus     { --frame-hue: #c08552; }
+.avatar-frame--zodiac-aries      { --frame-hue: #f4623a; }
+.avatar-frame--zodiac-taurus     { --frame-hue: #c08552; }
 .avatar-frame--zodiac-gemini     { --frame-hue: #f5d560; }
 .avatar-frame--zodiac-cancer     { --frame-hue: #45c4b0; }
 .avatar-frame--zodiac-leo        { --frame-hue: #ffab2e; }
@@ -625,10 +626,135 @@
 .avatar-frame--gold { --frame-hue: var(--warning); }
 .avatar-frame--cyan { --frame-hue: var(--accent-primary); }
 
-/* 星座符号要跟描边同色，且必须走文字呈现（VS16），
+/* 头像本体：描边套在它外面，所以它必须是圆角裁切的独立一层，
+   不能把 overflow-hidden 放在描边上——那会把光晕和火星一起裁掉。 */
+.avatar-frame-face {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-size: var(--text-label);
+  font-weight: 700;
+}
+
+/* 星座符号是钉在框下沿的徽章，不是头像本身。必须走文字呈现（VS16），
    否则 Chromium 会把它换成紫底 emoji 方块，把描边设计整个盖掉。 */
-.avatar-frame-glyph {
+.avatar-frame-emblem {
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 9999px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
   color: var(--frame-hue, var(--text-primary));
-  font-size: 17px;
+  font-size: 10px;
   line-height: 1;
+}
+
+/* ------------------------------------------------------------
+   戴上头像框的动效
+   ------------------------------------------------------------ */
+@keyframes frameWearPop {
+  0% { transform: scale(0.84); }
+  45% { transform: scale(1.09); }
+  100% { transform: scale(1); }
+}
+
+@keyframes frameHaloBurst {
+  0% { opacity: 0.85; transform: scale(0.86); }
+  100% { opacity: 0; transform: scale(1.9); }
+}
+
+@keyframes frameSparkOut {
+  0% { opacity: 0; transform: rotate(var(--spark-angle, 0deg)) translateY(-20px) scale(0.4); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--spark-angle, 0deg)) translateY(-34px) scale(1); }
+}
+
+@keyframes frameAura {
+  0%, 100% { opacity: 0.16; transform: scale(0.95); }
+  50% { opacity: 0.5; transform: scale(1.05); }
+}
+
+@keyframes glyphWiggle {
+  0%, 100% { transform: translateX(-50%) rotate(0deg); }
+  30% { transform: translateX(-50%) rotate(-14deg) scale(1.14); }
+  65% { transform: translateX(-50%) rotate(9deg) scale(1.06); }
+}
+
+@keyframes coinBump {
+  0% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-3px) scale(1.12); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 刚戴上的一下：描边扣上去 + 一圈光晕散开 + 六点火星 */
+.avatar-frame--pop {
+  animation: frameWearPop 560ms var(--ease-enter) both;
+}
+
+.avatar-frame-burst {
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 2px solid var(--frame-hue, var(--accent-primary));
+  animation: frameHaloBurst 620ms var(--ease-enter) both;
+  pointer-events: none;
+}
+
+.avatar-frame-sparks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.avatar-frame-sparks i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  margin: -1.5px 0 0 -1.5px;
+  border-radius: 9999px;
+  background-color: var(--frame-hue, var(--accent-primary));
+  animation: frameSparkOut 620ms var(--ease-enter) both;
+}
+
+/* 戴着的时候，框一直很慢地呼吸一下 */
+.avatar-frame--live::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 1.5px solid var(--frame-hue, transparent);
+  animation: frameAura 2800ms var(--ease-standard) infinite;
+  pointer-events: none;
+}
+
+.frame-tile:hover .avatar-frame-emblem {
+  animation: glyphWiggle 620ms var(--ease-enter);
+}
+
+.coin-bump {
+  animation: coinBump 420ms var(--ease-enter) both;
+}
+
+.animate-toast-in {
+  animation: toastIn var(--motion-slow) var(--ease-enter) both;
 }
