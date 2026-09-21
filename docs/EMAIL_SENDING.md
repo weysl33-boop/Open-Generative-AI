@@ -1,9 +1,9 @@
 # 邮件发信（SMTP）设置与统计
 
-单一入口：后台「系统集成 → 邮件发信设置」`/admin/email`。凭据、连接检查、测试发信、
+单一入口：后台「系统与安全 → 邮件发信设置」`/admin/system/email`。凭据、连接检查、测试发信、
 发信统计与逐封内容明细都在这一个页面上，不再拆成登录页的分段标签或多张卡片。
 
-旧地址 `/admin/providers/email` 与 `/admin/login?category=email` 一律重定向到本页。
+旧地址 `/admin/email` 与 `/admin/providers/email` 一律重定向到本页。
 
 ## 通道约束
 

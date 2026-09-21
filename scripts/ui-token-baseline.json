@@ -164,11 +164,11 @@
     "pure-white-black": 8,
     "transition-all": 2
   },
-  "app/admin/login/SmsProvidersClient.js": {
+  "app/admin/system/login/SmsProvidersClient.js": {
     "alpha-on-var-colour": 1,
     "off-system-type-ramp": 1
   },
-  "app/admin/login/SocialProviderCard.js": {
+  "app/admin/system/login/SocialProviderCard.js": {
     "alpha-on-var-colour": 3,
     "arbitrary-geometry": 3,
     "arbitrary-type": 16,

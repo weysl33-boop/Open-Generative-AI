@@ -4,5 +4,5 @@ import { PERMISSIONS } from '@/lib/admin/permissions';
 
 export default async function SocialProvidersPage() {
   await requireAdminPagePermission(PERMISSIONS.providersRead);
-  redirect('/admin/login?category=social');
+  redirect('/admin/system/login?category=social');
 }

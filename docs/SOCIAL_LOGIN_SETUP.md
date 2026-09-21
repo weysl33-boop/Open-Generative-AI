@@ -12,7 +12,7 @@ Use the public origin configured by `PUBLIC_APP_URL` (or the canonical public ho
 <PUBLIC_APP_URL>/api/auth/oauth/douyin/callback
 ```
 
-The exact full callback URL is also shown on each channel card under **Admin → 登录配置 → 登录方式与连通性 → 社交登录** (`/admin/login?category=social`). Register the callback with the matching provider application before testing.
+The exact full callback URL is also shown on each channel card under **Admin → 系统与安全 → 登录方式与连通性 → 社交登录** (`/admin/system/login?category=social`). Register the callback with the matching provider application before testing.
 
 ## Provider setup
 
@@ -30,16 +30,16 @@ The channel's health probe checks that credentials exist and that the provider g
 
 ## Admin: one page for every login method
 
-Social and SMS login (configuration **and** connectivity checks) live in a single admin submenu: **登录配置 → 登录方式与连通性** at `/admin/login`. Categories switch through the shared card rail (`SegmentedControl`), and each pill carries a status dot that reflects how many channels in that category are actually usable:
+Social and SMS login (configuration **and** connectivity checks) live in a single admin submenu: **系统与安全 → 登录方式与连通性** at `/admin/system/login`. Categories switch through the shared card rail (`SegmentedControl`), and each pill carries a status dot that reflects how many channels in that category are actually usable:
 
 | Category | Deep link | What it manages | Connectivity check |
 | --- | --- | --- | --- |
-| 社交登录 | `/admin/login?category=social` | Domestic/overseas channel visibility per region | Per-channel credential + gateway probe |
-| 短信登录 | `/admin/login?category=sms` | Provider keys, routing rules, captcha risk settings | Per-provider health probe, real test send, recent delivery logs |
+| 社交登录 | `/admin/system/login?category=social` | Domestic/overseas channel visibility per region | Per-channel credential + gateway probe |
+| 短信登录 | `/admin/system/login?category=sms` | Provider keys, routing rules, captcha risk settings | Per-provider health probe, real test send, recent delivery logs |
 
-Email SMTP is **not** a login tab: it has its own single settings page **系统集成 → 邮件发信设置** at `/admin/email`, which also carries send statistics and the per-message delivery log. See `docs/EMAIL_SENDING.md`.
+Email SMTP is **not** a login tab: it has its own single settings page **系统与安全 → 邮件发信设置** at `/admin/system/email`, which also carries send statistics and the per-message delivery log. See `docs/EMAIL_SENDING.md`.
 
-The old pages (`/admin/providers/social`, `/admin/providers/sms`, `/admin/providers/email`) stay as redirect shims so bookmarks keep working — the first two preselect the right category, the email one lands on `/admin/email`. `/admin/providers/ai` is unchanged: it remains the only place to rotate env-based provider keys.
+The old pages (`/admin/providers/social`, `/admin/providers/sms`, `/admin/providers/email`, plus `/admin/login` and `/admin/email`) stay as redirect shims so bookmarks keep working — the social/sms ones preselect the right category, and `/admin/login?category=` is forwarded for any known category. `/admin/providers/ai` is unchanged: it remains the only place to rotate env-based provider keys.
 
 ## Admin: region split for social login
 

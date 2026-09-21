@@ -4,5 +4,5 @@ import { PERMISSIONS } from '@/lib/admin/permissions';
 
 export default async function EmailProviderPage() {
   await requireAdminPagePermission(PERMISSIONS.providersRead);
-  redirect('/admin/email');
+  redirect('/admin/system/email');
 }

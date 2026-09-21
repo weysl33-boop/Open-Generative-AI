@@ -10,7 +10,7 @@ const source = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
 test('QQ Exmail uses the fixed official TLS endpoint and keeps credentials server-side', () => {
   const config = source('lib/emailConfig.js');
   const service = source('lib/emailService.js');
-  const client = source('app/admin/email/EmailSettingsClient.js');
+  const client = source('app/admin/system/email/EmailSettingsClient.js');
   assert.match(config, /smtp\.exmail\.qq\.com/);
   assert.match(config, /port:\s*465/);
   assert.match(config, /getProviderSecret\(EMAIL_SMTP_PROVIDER, 'smtp_password'\)/);
@@ -63,14 +63,15 @@ test('email admin write, health and real-send endpoints require provider permiss
 
 test('SMTP settings live on one page that also shows send statistics and per-message detail', () => {
   const navigation = source('lib/admin/navigation.js');
-  const page = source('app/admin/email/page.js');
-  const form = source('app/admin/email/EmailSettingsClient.js');
+  const page = source('app/admin/system/email/page.js');
+  const form = source('app/admin/system/email/EmailSettingsClient.js');
 
-  assert.match(navigation, /href:\s*'\/admin\/email',\s*label:\s*'邮件发信设置'/);
-  assert.match(navigation, /'\/admin\/providers\/email':\s*'\/admin\/email'/);
+  assert.match(navigation, /href:\s*'\/admin\/system\/email',\s*label:\s*'邮件发信设置'/);
+  assert.match(navigation, /'\/admin\/providers\/email':\s*'\/admin\/system\/email'/);
+  assert.match(navigation, /'\/admin\/email':\s*'\/admin\/system\/email'/);
   // 邮箱 SMTP 不再作为登录页的一个分段，也不再有独立子页。
   assert.doesNotMatch(navigation, /href:\s*'\/admin\/providers\/(social|sms|email)',\s*label:/);
-  assert.doesNotMatch(source('app/admin/login/LoginMethodsClient.js'), /EmailSmtpConfigClient|邮箱登录/);
+  assert.doesNotMatch(source('app/admin/system/login/LoginMethodsClient.js'), /EmailSmtpConfigClient|邮箱登录/);
 
   // 一个页面、一个表单：配置 + 密码 + 检查 + 测试发信全在这里。
   assert.match(form, /保存发信设置/);

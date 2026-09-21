@@ -16,15 +16,16 @@ test('Admin navigation config keeps login under one submenu entry', async () => 
   if (sharedNavigationExists) {
     assert.match(content, /ADMIN_NAV_GROUPS/);
     const { ADMIN_NAV_GROUPS } = await import('../../lib/admin/navigation.js');
-    const loginConfig = ADMIN_NAV_GROUPS.find((group) => group.id === 'login-config');
-    assert.ok(loginConfig, '缺少登录配置分组');
-    assert.equal(loginConfig.items.length, 1, '登录配置必须收敛为一个子菜单项');
-    assert.equal(loginConfig.items[0].href, '/admin/login');
-    assert.equal(loginConfig.items[0].label, '登录方式与连通性');
-    assert.equal(loginConfig.items[0].permission, 'providers.read');
+    const systemGroup = ADMIN_NAV_GROUPS.find((group) => group.id === 'system');
+    assert.ok(systemGroup, '缺少系统与安全分组');
+    const loginMethods = systemGroup.items.filter((item) => item.id === 'login-methods');
+    assert.equal(loginMethods.length, 1, '登录方式必须收敛为一个子菜单项');
+    assert.equal(loginMethods[0].href, '/admin/system/login');
+    assert.equal(loginMethods[0].label, '登录方式与连通性');
+    assert.equal(loginMethods[0].permission, 'providers.read');
   } else {
     assert.match(content, /label:\s*'登录配置'/);
-    assert.ok(content.includes('/admin/login'), '登录配置缺少集中入口');
+    assert.ok(content.includes('/admin/system/login'), '登录配置缺少集中入口');
   }
 });
 
@@ -70,8 +71,8 @@ test('Secret PUT route supports batch secrets update for client_id and client_se
 });
 
 test('Social providers admin page and card component exist and are well structured', async () => {
-  const pageContent = await readCode('app/admin/login/page.js');
-  const cardContent = await readCode('app/admin/login/SocialProviderCard.js');
+  const pageContent = await readCode('app/admin/system/login/page.js');
+  const cardContent = await readCode('app/admin/system/login/SocialProviderCard.js');
   assert.match(pageContent, /LoginMethodsPage/);
   assert.match(pageContent, /kind === 'social'/);
   assert.match(cardContent, /SocialProviderCard/);
@@ -91,7 +92,7 @@ test('Providers repo encryption key has multi-level fallback and uses ops_bill s
 });
 
 test('Health check probes in SocialProviderCard and ProviderCard include Idempotency-Key and error handling', async () => {
-  const socialCard = await readCode('app/admin/login/SocialProviderCard.js');
+  const socialCard = await readCode('app/admin/system/login/SocialProviderCard.js');
   const genericCard = await readCode('app/admin/providers/ProviderCard.js');
   const secretRoute = await readCode('app/api/admin/providers/[id]/secret/route.js');
   
