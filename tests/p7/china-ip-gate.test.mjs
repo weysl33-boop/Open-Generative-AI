@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -9,6 +10,13 @@ import {
   isChinaIp,
   isIpInWhitelist,
   updateCachedConfig,
+  invalidateChinaIpConfigCache,
+  saveChinaIpBlockStateToFile,
+  getChinaIpBlockConfig,
+  getChinaIpBlockStateFile,
+  getIpLibraryStatus,
+  loadChinaIpRanges,
+  ipToInt,
 } from '../../lib/security/chinaIpBlock.js';
 import { evaluateChinaIpGate, isExemptPath } from '../../lib/security/chinaIpGate.js';
 
@@ -139,6 +147,30 @@ test('P7 payment and provider callbacks survive the gate', () => {
   }
 });
 
+test('P7 exemptions stay confined to API callbacks, never pages or ordinary endpoints', async () => {
+  // 豁免表是门禁唯一的旁路：一条过宽的前缀就能让整个功能形同虚设，
+  // 所以钉死"页面与常规接口永远在门禁内"，加宽豁免必须先让这条断言变红。
+  armGate({ enabled: true });
+  for (const pathname of [
+    '/', '/login', '/studio', '/admin/settings',
+    '/api/auth/login', '/api/auth/me', '/api/user/profile',
+    '/api/admin/settings', '/api/generations/gen_123',
+  ]) {
+    assert.equal(isExemptPath(pathname), false, pathname);
+    assert.equal(
+      evaluateChinaIpGate(makeRequest(pathname, { 'x-real-ip': CN_IP })).blocked,
+      true,
+      pathname,
+    );
+  }
+
+  const src = await source('lib/security/chinaIpGate.js');
+  const [, prefixList] = src.match(/const EXEMPT_PREFIXES = \[([^\]]*)\]/);
+  for (const literal of prefixList.match(/'[^']+'/g) ?? []) {
+    assert.ok(literal.slice(1, -1).startsWith('/api/'), literal);
+  }
+});
+
 test('P7 block_api=false keeps mainland API access alive while pages stay blocked', () => {
   armGate({ enabled: true, block_api: false });
   const api = evaluateChinaIpGate(makeRequest('/api/user/profile', { 'x-real-ip': CN_IP }));
@@ -216,4 +248,70 @@ test('P7 the admin settings page exposes the switch and its runtime truth', asyn
   assert.match(editor, /data\?\.data\?\.warning/);
   // 运行时镜像是机器状态，绝不允许进版本库：一份残留的 enabled:true 会让默认关闭失效。
   assert.match(gitignore, /^data\/ip_block_state\.json$/m);
+});
+
+test('P7 saving the switch in the console reaches the request path through the runtime mirror', async () => {
+  // 后台点"保存"到 middleware 生效之间隔着一次落盘与一次缓存过期。
+  // 这一段跑在临时工作目录里：绝不往仓库 data/ 写运行时镜像。
+  const sandbox = await fs.mkdtemp(path.join(os.tmpdir(), 'ip-gate-'));
+  const originalCwd = process.cwd();
+  try {
+    process.chdir(sandbox);
+    await fs.mkdir(path.join(sandbox, 'data'), { recursive: true });
+    await fs.writeFile(
+      path.join(sandbox, 'data', 'china_ip_ranges.json'),
+      JSON.stringify({
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        source: 'sandbox',
+        v4Ranges: [[ipToInt('223.104.0.0'), ipToInt('223.104.255.255')]],
+        v6Ranges: [],
+      }),
+    );
+    loadChinaIpRanges(true);
+    // data/ 的运行时副本必须优先于随代码发布的基线库，否则后台同步永远不生效。
+    assert.equal(getIpLibraryStatus().source, 'sandbox');
+    assert.equal(isChinaIp(CN_IP), true);
+
+    // 没有镜像文件就是关闭：一次发布不会误伤境内。
+    invalidateChinaIpConfigCache();
+    assert.equal(getChinaIpBlockConfig().enabled, false);
+    assert.equal(evaluateChinaIpGate(makeRequest('/', { 'x-real-ip': CN_IP })).reason, 'disabled');
+
+    const saved = saveChinaIpBlockStateToFile({ enabled: true, action: 'forbidden' });
+    assert.equal(saved.error, undefined);
+    assert.ok(saved.config.enabled);
+
+    // 模拟 middleware 进程在下一轮轮询里重新读盘。
+    invalidateChinaIpConfigCache();
+    const mainland = evaluateChinaIpGate(makeRequest('/studio', { 'x-real-ip': CN_IP }));
+    assert.equal(mainland.blocked, true);
+    assert.equal(mainland.reason, 'china-ip');
+    assert.equal(evaluateChinaIpGate(makeRequest('/', { 'x-real-ip': FOREIGN_IP })).reason, 'non-china');
+
+    // 关开关与加白名单同样只能经由落盘生效。
+    saveChinaIpBlockStateToFile({ enabled: true, whitelist_ips: CN_IP });
+    invalidateChinaIpConfigCache();
+    assert.equal(evaluateChinaIpGate(makeRequest('/', { 'x-real-ip': CN_IP })).reason, 'whitelist');
+
+    saveChinaIpBlockStateToFile({ enabled: false });
+    invalidateChinaIpConfigCache();
+    assert.equal(evaluateChinaIpGate(makeRequest('/', { 'x-real-ip': CN_IP })).reason, 'disabled');
+
+    // 镜像写坏时按关闭处理：一次坏文件不能把整站锁死。
+    await fs.writeFile(getChinaIpBlockStateFile(), '{ not json');
+    invalidateChinaIpConfigCache();
+    assert.equal(evaluateChinaIpGate(makeRequest('/', { 'x-real-ip': CN_IP })).reason, 'disabled');
+  } finally {
+    process.chdir(originalCwd);
+    await fs.rm(sandbox, { recursive: true, force: true });
+    invalidateChinaIpConfigCache();
+    loadChinaIpRanges(true);
+  }
+
+  // 回到真实工作目录：随代码发布的基线库必须真的在版本库里，
+  // 否则一次纯净 checkout 的部署会静默地"拦截已开启但永不命中"。
+  const baseline = getIpLibraryStatus();
+  assert.equal(baseline.loaded, true);
+  assert.ok(baseline.v4Ranges > 4000, `baseline v4 ranges: ${baseline.v4Ranges}`);
+  assert.ok(baseline.v6Ranges > 2000, `baseline v6 ranges: ${baseline.v6Ranges}`);
 });
