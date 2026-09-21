@@ -128,6 +128,10 @@ export default function UserDetailTabs({ detail }) {
             <h3 className="text-sm font-bold text-ink mb-4">基本资料</h3>
             <div className="space-y-3 text-xs">
               <div className="flex justify-between border-b border-line-subtle pb-2">
+                <span className="text-ink-subtle">用户 UID</span>
+                <CopyableId id={user.user_number} strong />
+              </div>
+              <div className="flex justify-between border-b border-line-subtle pb-2">
                 <span className="text-ink-subtle">显示名称</span>
                 <span className="font-semibold text-ink">{user.display_name || '—'}</span>
               </div>
@@ -142,7 +146,7 @@ export default function UserDetailTabs({ detail }) {
                 </span>
               </div>
               <div className="flex justify-between border-b border-line-subtle pb-2">
-                <span className="text-ink-subtle">用户 ID</span>
+                <span className="text-ink-subtle">内部记录 ID</span>
                 <CopyableId id={user.id} />
               </div>
               <div className="flex justify-between border-b border-line-subtle pb-2">

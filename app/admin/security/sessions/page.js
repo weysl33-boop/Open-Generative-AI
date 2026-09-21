@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import { listActiveSessions } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { roleLabel } from '@/lib/admin/permissions';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { UserSubject } from '@/components/admin/UserSubject';
 import AdminActionForm from '@/components/admin/AdminActionForm';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
@@ -21,15 +21,15 @@ export default async function SessionsPage({ searchParams }) {
   const columns = [
     {
       key: 'email',
-      label: '账户邮箱 / 角色',
+      label: '账户 / 角色',
       render: (row) => (
         <div>
-          <p className="font-semibold text-ink">{row.email}</p>
+          <UserSubject row={row} href={`/admin/users/${row.user_id}`} />
           <div className="mt-1 flex items-center gap-2">
             <StatusBadge tone={row.role === 'user' ? 'neutral' : 'info'}>
               {roleLabel(row.role)}
             </StatusBadge>
-            <CopyableId id={row.user_id} label="用户 ID" />
+            <CopyableId id={row.user_id} label="内部记录 ID" />
           </div>
         </div>
       ),
@@ -80,7 +80,7 @@ export default async function SessionsPage({ searchParams }) {
           <input
             name="q"
             defaultValue={params.get('q') || ''}
-            placeholder="搜索邮箱或用户 ID…"
+            placeholder="搜索用户 UID、邮箱或内部记录 ID…"
             className="min-w-[240px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
           />
           <button

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { listCreations } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { UserSubject } from '@/components/admin/UserSubject';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
 
@@ -24,9 +25,7 @@ export default async function GenerationsPage({ searchParams }) {
         <div>
           <CopyableId id={row.id} />
           <div className="mt-1">
-            <Link href={`/admin/users/${row.user_id}`} className="text-xs text-ink-subtle hover:text-brand-hover">
-              {row.email}
-            </Link>
+            <UserSubject row={row} href={`/admin/users/${row.user_id}`} />
           </div>
         </div>
       ),
@@ -122,7 +121,7 @@ export default async function GenerationsPage({ searchParams }) {
           <input
             name="q"
             defaultValue={params.get('q') || ''}
-            placeholder="搜索任务 ID、用户邮箱、提示词或模型…"
+            placeholder="搜索任务 ID、用户 UID、邮箱、提示词或模型…"
             className="min-w-[240px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
           />
 

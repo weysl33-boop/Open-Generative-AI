@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { listUsers } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { roleLabel } from '@/lib/admin/permissions';
-import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { Card, DataTable, PageHeader, Pagination, StatusBadge } from '@/components/admin/AdminUi';
+import { UserSubject } from '@/components/admin/UserSubject';
 import ExportButton from '@/components/admin/ExportButton';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
@@ -74,20 +75,7 @@ export default async function UsersPage({ searchParams }) {
     {
       key: 'user_info',
       label: '用户主体',
-      render: (row) => (
-        <div>
-          <p className="font-semibold text-ink">
-            {row.display_name || (row.phone ? `用户${row.phone.slice(-4)}` : row.email?.split('@')[0])}
-          </p>
-          <div className="mt-0.5 text-xs text-ink-subtle space-y-0.5">
-            {row.email && <div>✉️ {row.email}</div>}
-            {row.phone && <div>📱 {row.phone_country_code || '+86'} {row.phone}</div>}
-          </div>
-          <div className="mt-1">
-            <CopyableId id={row.id} />
-          </div>
-        </div>
-      ),
+      render: (row) => <UserSubject row={row} href={`/admin/users/${row.id}`} />,
     },
     {
       key: 'login_providers',
@@ -166,7 +154,7 @@ export default async function UsersPage({ searchParams }) {
           <input
             name="q"
             defaultValue={params.get('q') || ''}
-            placeholder="搜索手机号、邮箱、昵称或用户 ID…"
+            placeholder="搜索用户 UID、邮箱、手机号或昵称…"
             className="min-w-[240px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
           />
 

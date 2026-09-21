@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { listModerationCases } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { UserSubject } from '@/components/admin/UserSubject';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
 import AdminActionForm from '@/components/admin/AdminActionForm';
@@ -33,11 +33,7 @@ export default async function ModerationPage({ searchParams }) {
     {
       key: 'user',
       label: '作者账号',
-      render: (row) => (
-        <Link href={`/admin/users/${row.user_id}`} className="font-semibold text-ink hover:text-brand-hover">
-          {row.email}
-        </Link>
-      ),
+      render: (row) => <UserSubject row={row} href={`/admin/users/${row.user_id}`} />,
     },
     {
       key: 'preview',

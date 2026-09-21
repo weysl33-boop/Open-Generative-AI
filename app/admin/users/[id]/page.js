@@ -23,14 +23,42 @@ export default async function UserDetailPage({ params }) {
   }
 
   const { user } = detail;
-  const titleDisplay = user.display_name || user.email || (user.phone ? `${user.phone_country_code || '+86'} ${user.phone}` : user.id);
+  const uid = user.user_number || null;
+  const letter = (user.email || user.phone || uid || 'U').slice(0, 1).toUpperCase();
+  const accountLines = [
+    user.email ? `✉️ ${user.email}` : '未绑定邮箱',
+    user.phone ? `📱 ${user.phone_country_code || '+86'} ${user.phone}` : null,
+  ].filter(Boolean);
 
   return (
     <>
       <PageHeader
         eyebrow="用户全景画像"
-        title={titleDisplay}
-        description={`用户 ID: ${user.id} · 注册渠道: ${user.registration_source || 'web'} · 注册于 ${formatDate(user.created_at)}`}
+        title={
+          <span className="flex items-center gap-3">
+            <span className="border-line bg-raised text-brand flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border text-body font-bold">
+              {user.avatar_url ? (
+                <img src={user.avatar_url} alt={uid ? `UID ${uid}` : '用户头像'} className="size-full object-cover" />
+              ) : (
+                <span className="select-none">{letter}</span>
+              )}
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="text-micro shrink-0 rounded border border-line px-1.5 py-0.5 align-middle font-semibold text-ink-subtle">
+                UID
+              </span>
+              <CopyableId id={uid} strong />
+            </span>
+          </span>
+        }
+        description={
+          <>
+            <span>{accountLines.join(' · ')}</span>
+            <span className="mt-0.5 block">
+              注册渠道: {user.registration_source || 'web'} · 注册于 {formatDate(user.created_at)}
+            </span>
+          </>
+        }
       >
         <Link
           href="/admin/users"

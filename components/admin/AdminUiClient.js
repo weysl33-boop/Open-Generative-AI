@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-export function CopyableId({ id, label }) {
+export function CopyableId({ id, label, strong = false }) {
   const [copied, setCopied] = useState(false);
   if (!id) return '—';
 
@@ -21,7 +21,9 @@ export function CopyableId({ id, label }) {
       type="button"
       onClick={copy}
       title="点击复制完整 ID"
-      className="group inline-flex items-center gap-1 font-mono text-xs text-ink-muted transition hover:text-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring rounded"
+      className={`group inline-flex items-center gap-1 font-mono transition hover:text-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring rounded ${
+        strong ? 'text-sm font-semibold text-ink' : 'text-xs text-ink-muted'
+      }`}
     >
       <span>{display}</span>
       <span className="text-micro text-ink-subtle group-hover:text-brand">

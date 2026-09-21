@@ -1,6 +1,7 @@
 import { listAdmins } from '@/lib/services/adminRead';
 import { roleLabel } from '@/lib/admin/permissions';
 import { Card, PageHeader, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { UserSubject } from '@/components/admin/UserSubject';
 import AdminRoleModifier from './AdminRoleModifier';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
@@ -37,9 +38,9 @@ export default async function AdminsPage() {
                 className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-base p-4 transition-all hover:border-line-strong"
               >
                 <div>
-                  <p className="text-sm font-semibold text-ink">{admin.email}</p>
+                  <UserSubject row={admin} href={`/admin/users/${admin.id}`} />
                   <div className="mt-1 flex items-center gap-2">
-                    <CopyableId id={admin.id} />
+                    <CopyableId id={admin.id} label="内部记录 ID" />
                     <span className="text-ink-subtle">·</span>
                     <span className="text-xs text-ink-muted">创建于 {formatDate(admin.created_at)}</span>
                   </div>

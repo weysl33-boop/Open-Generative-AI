@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getFailureClusters, listFailedCreations } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { UserSubject } from '@/components/admin/UserSubject';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
 import AdminActionForm from '@/components/admin/AdminActionForm';
@@ -26,9 +27,7 @@ export default async function FailedGenerationsPage({ searchParams }) {
         <div>
           <CopyableId id={row.id} />
           <div className="mt-1">
-            <Link href={`/admin/users/${row.user_id}`} className="text-xs text-ink-subtle hover:text-brand-hover">
-              {row.email}
-            </Link>
+            <UserSubject row={row} href={`/admin/users/${row.user_id}`} />
           </div>
         </div>
       ),

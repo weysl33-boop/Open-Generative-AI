@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { listCreditLedger } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { Card, DataTable, PageHeader, Pagination, CopyableId } from '@/components/admin/AdminUi';
+import { UserSubject } from '@/components/admin/UserSubject';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
 
@@ -22,9 +22,7 @@ export default async function CreditsPage({ searchParams }) {
       label: '目标用户',
       render: (row) => (
         <div>
-          <Link href={`/admin/users/${row.user_id}`} className="font-semibold text-ink hover:text-brand-hover">
-            {row.email}
-          </Link>
+          <UserSubject row={row} href={`/admin/users/${row.user_id}`} />
           <div className="mt-1">
             <CopyableId id={row.id} label="流水 ID" />
           </div>
@@ -132,7 +130,7 @@ export default async function CreditsPage({ searchParams }) {
           <input
             name="q"
             defaultValue={params.get('q') || ''}
-            placeholder="搜索用户邮箱、变动原因或关联单号…"
+            placeholder="搜索用户 UID、邮箱、变动原因或关联单号…"
             className="min-w-[240px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
           />
           <button

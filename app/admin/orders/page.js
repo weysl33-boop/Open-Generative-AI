@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { listOrders } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { UserSubject } from '@/components/admin/UserSubject';
 import AdminActionForm from '@/components/admin/AdminActionForm';
 import ExportButton from '@/components/admin/ExportButton';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
@@ -36,11 +36,7 @@ export default async function OrdersPage({ searchParams }) {
     {
       key: 'user',
       label: '支付用户',
-      render: (row) => (
-        <Link href={`/admin/users/${row.user_id}`} className="font-semibold text-ink hover:text-brand-hover">
-          {row.email}
-        </Link>
-      ),
+      render: (row) => <UserSubject row={row} href={`/admin/users/${row.user_id}`} />,
     },
     { key: 'provider', label: '渠道' },
     {
@@ -110,7 +106,7 @@ export default async function OrdersPage({ searchParams }) {
           <input
             name="q"
             defaultValue={params.get('q') || ''}
-            placeholder="搜索订单号、外部流水号或邮箱…"
+            placeholder="搜索订单号、外部流水号、用户 UID 或邮箱…"
             className="min-w-[240px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
           />
 

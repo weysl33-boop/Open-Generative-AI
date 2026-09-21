@@ -53,7 +53,7 @@ export default function AdminRoleModifier() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-xs font-medium text-ink-muted mb-1.5">
-          目标用户 ID (usr_xxx)
+          目标用户内部记录 ID (usr_xxx)
         </label>
         <Input
           type="text"
