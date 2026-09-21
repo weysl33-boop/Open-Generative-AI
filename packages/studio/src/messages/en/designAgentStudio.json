@@ -1,0 +1,7 @@
+{
+  "auth": {
+    "heading": "Sign in to use the Design Agent",
+    "description": "Sessions, agent skills and generated results belong to your KoyoSIM account. The canvas stays closed until you sign in.",
+    "cta": "Log in"
+  }
+}

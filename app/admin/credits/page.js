@@ -41,7 +41,7 @@ export default async function CreditsPage({ searchParams }) {
           return <span className="rounded-md border border-brand-line bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-hover">⚡ 通用充值积分</span>;
         }
         if (type === 'currency' || type === 'k_coin') {
-          return <span className="rounded-md border border-warning-line bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning">🪙 平台 K 币</span>;
+          return <span className="rounded-md border border-warning-line bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning">🪙 平台硬币</span>;
         }
         return <span className="rounded-md border border-success-line bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-success">🎁 每日免费</span>;
       },
@@ -92,7 +92,7 @@ export default async function CreditsPage({ searchParams }) {
       <PageHeader
         eyebrow="计费与资产中枢"
         title="额度与资产账本"
-        description="不可篡改的追加型资产流水明细。区分订阅专属额度、通用充值积分与平台 K 币流动。"
+        description="不可篡改的追加型资产流水明细。区分订阅专属额度、通用充值积分与平台硬币流动。"
       />
 
       {/* 资产三元架构概览卡片 */}
@@ -117,10 +117,10 @@ export default async function CreditsPage({ searchParams }) {
 
         <Card className="border-warning-soft bg-warning-soft">
           <div className="flex items-center gap-2 text-warning font-bold text-sm">
-            <span>🪙 平台 K 币钱包 (K-Coins)</span>
+            <span>🪙 平台硬币钱包 (硬币)</span>
           </div>
           <p className="mt-2 text-xs text-ink-muted leading-relaxed">
-            网站独有的通用结算代币（1 元 = 10 K 币），支持复式记账与安全支付密码，专门用于购买订阅套餐、兑换积分及创作者生态结算。
+            网站独有的通用结算代币（1 元 = 10 硬币），支持复式记账与安全支付密码，专门用于购买订阅套餐、兑换积分及创作者生态结算。
           </p>
         </Card>
       </div>

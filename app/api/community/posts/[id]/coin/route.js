@@ -1,6 +1,7 @@
 import { getUserFromRequest, json } from '@/lib/services/auth';
 import { getPostCoinStatus } from '@/lib/services/community';
 import { tipPostCoins } from '@/lib/financial/currencyService';
+import { guardMutation } from '@/lib/security/requestGuard';
 
 export const runtime = 'nodejs';
 
@@ -24,13 +25,16 @@ export async function GET(request, { params }) {
   });
 }
 
-// POST: 给作品投币 (1 或 2 币)
+// POST: 给作品投币 (1 或 2 枚，投出即消耗)
 export async function POST(request, { params }) {
   const { id: postId } = await params;
   const user = await getUserFromRequest(request);
   if (!user) {
     return json({ error: '请先登录后再投币' }, { status: 401 });
   }
+
+  const guarded = guardMutation(request, { maxBytes: 8 * 1024 });
+  if (guarded) return guarded;
 
   let body = {};
   try {
@@ -39,7 +43,7 @@ export async function POST(request, { params }) {
 
   const amount = parseInt(body.amount || 1, 10);
   if (amount !== 1 && amount !== 2) {
-    return json({ error: '单次投币仅支持 1 或 2 枚 K 币' }, { status: 400 });
+    return json({ error: '单次投币仅支持 1 或 2 枚硬币' }, { status: 400 });
   }
 
   try {

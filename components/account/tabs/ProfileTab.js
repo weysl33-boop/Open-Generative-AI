@@ -893,7 +893,7 @@ export default function ProfileTab({
           <div className="min-w-0">
             <p className="text-sm font-semibold text-danger">注销账户</p>
             <p className="mt-0.5 text-xs text-ink-muted">
-              注销后作品库、剩余 K 币与积分资产将被永久清除且不可恢复。
+              注销后作品库、剩余硬币与积分资产将被永久清除且不可恢复。
             </p>
           </div>
           <AlertDialog>

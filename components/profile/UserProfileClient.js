@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Sparkles, Heart, WandSparkles, MessageCircle, Share2, Shield, EyeOff, Hash, UserPlus, UserCheck, Calendar, ArrowLeft } from 'lucide-react';
 import StudioHeader from '@/components/site/StudioHeader';
+import { avatarFrameClasses } from '@/lib/benefits/catalog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -128,7 +129,7 @@ export default function UserProfileClient({ creator }) {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
             <div className="flex items-center gap-5">
               {/* 头像 */}
-              <div className="size-20 sm:size-24 rounded-full overflow-hidden bg-overlay border-2 border-line flex items-center justify-center text-2xl font-bold text-success shrink-0 shadow-inner">
+              <div className={`size-20 sm:size-24 rounded-full overflow-hidden bg-overlay flex items-center justify-center text-2xl font-bold text-success shrink-0 shadow-inner ${avatarFrameClasses(creator.avatarFrame) || 'border-2 border-line'}`}>
                 {creator.avatarUrl ? (
                   <img src={creator.avatarUrl} alt={creator.displayName} className="size-full object-cover" />
                 ) : (

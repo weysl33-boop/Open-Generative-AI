@@ -37,12 +37,12 @@ const tKo = createTranslator('ko-KR');
 const tZhTw = createTranslator('zh-TW');
 const tEs = createTranslator('es');
 
-assert.strictEqual(tEn('financial.kcoin'), 'K-Coin');
-assert.strictEqual(tZh('financial.kcoin'), 'K 币');
-assert.strictEqual(tJa('financial.kcoin'), 'Kコイン');
-assert.strictEqual(tKo('financial.kcoin'), 'K-코인');
-assert.strictEqual(tZhTw('financial.kcoin'), 'K 幣');
-assert.strictEqual(tEs('financial.kcoin'), 'Moneda K-Coin');
+assert.strictEqual(tEn('financial.kcoin'), 'Coin');
+assert.strictEqual(tZh('financial.kcoin'), '硬币');
+assert.strictEqual(tJa('financial.kcoin'), 'コイン');
+assert.strictEqual(tKo('financial.kcoin'), '코인');
+assert.strictEqual(tZhTw('financial.kcoin'), '硬幣');
+assert.strictEqual(tEs('financial.kcoin'), 'Moneda');
 assert.strictEqual(tEn('api.unauthorized'), 'Unauthorized, please login first');
 assert.strictEqual(tZh('api.unauthorized'), '未授权，请先登录');
 assert.strictEqual(tEs('api.unauthorized'), 'No autorizado, por favor inicia sesión primero');

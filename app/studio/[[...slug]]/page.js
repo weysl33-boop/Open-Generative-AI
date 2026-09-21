@@ -1,14 +1,19 @@
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
 import StandaloneShell from '@/components/StandaloneShell';
 import { assertOnboardingComplete } from '@/lib/onboarding/guard';
 import { getLocaleConfig, normalizeLocale } from '@/lib/locales';
+import { isStudioSlug } from '@/lib/studio-routes';
 
 export const metadata = {
   title: 'Studio — koyosim',
 };
 
 export default async function StudioPage({ params }) {
+  const resolvedParams = (await params) || {};
+  const slug = resolvedParams.slug;
+  if (!isStudioSlug(slug)) notFound();
+
   await assertOnboardingComplete();
 
   const cookieStore = await cookies();
@@ -22,8 +27,6 @@ export default async function StudioPage({ params }) {
   if (targetLocale !== 'en') {
     const config = getLocaleConfig(targetLocale);
     if (config?.rootPath) {
-      const resolvedParams = (await params) || {};
-      const slug = resolvedParams.slug;
       const slugPath = Array.isArray(slug) && slug.length > 0 ? `/${slug.join('/')}` : '';
       redirect(`${config.rootPath}/studio${slugPath}`);
     }

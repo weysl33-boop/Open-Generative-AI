@@ -3,6 +3,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, LogOut, User } from 'lucide-react';
+import { avatarFrameClasses } from '@/lib/benefits/catalog';
 
 export const NAV_ITEMS = [
   { id: 'activity', label: '创作活跃与偏好', group: 1 },
@@ -10,6 +11,7 @@ export const NAV_ITEMS = [
   { id: 'settings', label: '设置', group: 1 },
   { id: 'membership', label: '会员订阅', group: 2, badge: 'PRO' },
   { id: 'points-details', label: '积分详情', group: 2 },
+  { id: 'feedback', label: '建议与漏洞提交', group: 2 },
   { id: 'usage', label: '使用明细', group: 2 },
   { id: 'order-invoices', label: '订单发票', group: 2 },
   { id: 'price-details', label: '价格详情', group: 2 },
@@ -149,7 +151,7 @@ export default function AccountLayout({
 
             {/* 用户头像与信息 */}
             <div className="flex items-center gap-3 mb-5 px-1">
-              <div className="w-[42px] h-[42px] rounded-full overflow-hidden bg-overlay border border-line flex items-center justify-center shrink-0">
+              <div className={`w-[42px] h-[42px] rounded-full overflow-hidden bg-overlay flex items-center justify-center shrink-0 ${avatarFrameClasses(user?.avatarFrame || user?.avatar_frame) || 'border border-line'}`}>
                 {user?.photo_url || user?.avatar || user?.avatar_url ? (
                   <img
                     src={user.photo_url || user.avatar || user.avatar_url}

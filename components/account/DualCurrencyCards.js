@@ -82,16 +82,16 @@ export default function DualCurrencyCards({
           iconBg="bg-warning-soft border-warning-line"
           iconColor="text-warning"
           icon={Zap}
-          label="K 币余额"
+          label="硬币余额"
           badge="算力货币"
           description="用于高质量生图、视频与模型推理"
           value={Number(credits).toLocaleString()}
-          unit="K 币"
+          unit="硬币"
           action="立即充值"
           onAction={onOpenRecharge}
         >
           <div className="mt-3.5 flex flex-wrap gap-2 border-t border-line-subtle pt-2.5 text-[11px] text-ink-subtle">
-            <span>实时入账：{Number(credits).toLocaleString()} K 币</span>
+            <span>实时入账：{Number(credits).toLocaleString()} 硬币</span>
             <span>·</span>
             <span>支持多模型推理与高清画质消耗</span>
           </div>

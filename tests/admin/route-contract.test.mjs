@@ -95,9 +95,11 @@ test('旧路由重定向：目标真实存在、无自环、无链式循环', as
     assert.ok(!visited.has(to) || to === from, `疑似重定向环: ${to}`);
     visited.add(from);
 
-    const targetInNav = ADMIN_NAV_GROUPS.some((g) => g.items.some((i) => i.href === to));
+    // 目标允许带 query（/admin/login?category=sms），存在性只看路径部分。
+    const toPath = to.split('?')[0];
+    const targetInNav = ADMIN_NAV_GROUPS.some((g) => g.items.some((i) => i.href === toPath));
     assert.ok(
-      targetInNav || (await pageExists(to)),
+      targetInNav || (await pageExists(toPath)),
       `旧路由 ${from} 的目标 ${to} 既不在菜单也没有页面`
     );
 
@@ -154,7 +156,10 @@ test('Active 匹配采用路由段语义：子路径保持高亮、相似前缀�
     ['/admin/users/usr_123', 'users'],
     ['/admin/users-permissions', 'ops-overview'], // 不能误配 users；/admin 前缀兜底
     ['/admin/providers/payments', 'payment-channels'],
-    ['/admin/providers/social', 'social-login'],
+    ['/admin/login', 'login-methods'],
+    ['/admin/providers/social', null],
+    ['/admin/providers/sms', null],
+    ['/admin/providers/email', null],
     ['/admin/security/sessions', 'sessions'],
     ['/admin/forbidden', null],
     ['/admin/nope', null],

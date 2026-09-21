@@ -39,6 +39,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 import UserDropdownMenu from './UserDropdownMenu';
 import AccountModal from './account/AccountModal';
 import { getCommonCopy, getLocaleConfig, localizeStudioPath, normalizeLocale } from '@/lib/locales';
+import { STUDIO_TAB_IDS } from '@/lib/studio-routes';
 import {
   AlertCircle,
   Check,
@@ -453,7 +454,7 @@ export default function StandaloneShell({ locale = 'en' }) {
     if (slug.includes('design-agent')) return 'design-agent';
     if (slug.includes('apps')) return 'apps';
     const firstSegment = slug[0];
-    if (firstSegment && TABS.find(t => t.id === firstSegment)) return firstSegment;
+    if (firstSegment && STUDIO_TAB_IDS.includes(firstSegment)) return firstSegment;
     return 'image';
   };
   
@@ -465,6 +466,7 @@ export default function StandaloneShell({ locale = 'en' }) {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [hasMounted, setHasMounted] = useState(false);
   const [accountUser, setAccountUser] = useState(null);
+  const [accountChecked, setAccountChecked] = useState(false);
   const [accountCredits, setAccountCredits] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const pendingAuthResolverRef = useRef(null);
@@ -488,7 +490,7 @@ export default function StandaloneShell({ locale = 'en' }) {
   }, []);
 
   useEffect(() => {
-    refreshAccount();
+    refreshAccount().finally(() => setAccountChecked(true));
   }, [refreshAccount]);
 
   // 全站用户资料与头像变更事件总线监听 (即时响应无需整页刷新)
@@ -1455,6 +1457,7 @@ export default function StandaloneShell({ locale = 'en' }) {
           <WorkflowStudio
             apiKey={apiKey}
             signedIn={!!accountUser}
+            onRequireAuth={() => setShowAuthModal(true)}
             isHeaderVisible={isHeaderVisible}
             onToggleHeader={setIsHeaderVisible}
             onGenerationStart={makeGenerationStartCallback('workflows')}
@@ -1474,6 +1477,10 @@ export default function StandaloneShell({ locale = 'en' }) {
 
             <DesignAgentStudio
               apiKey={apiKey}
+              locale={locale}
+              signedIn={!!accountUser}
+              authChecked={accountChecked}
+              onRequireAuth={() => setShowAuthModal(true)}
               isHeaderVisible={isHeaderVisible}
               onToggleHeader={setIsHeaderVisible}
               onGenerationStart={makeGenerationStartCallback('design-agent')}

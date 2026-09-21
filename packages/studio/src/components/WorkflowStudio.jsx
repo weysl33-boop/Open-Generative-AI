@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   getTemplateWorkflows,
@@ -30,7 +30,7 @@ const WorkflowUI = dynamic(() => import("./WorkflowUI"), {
   ),
 });
 
-function WorkflowCard({ workflow, onClick, activeTab, onRename, onDelete }) {
+function WorkflowCard({ workflow, onClick, activeTab, deletingId, onRename, onDelete }) {
   const [showOptions, setShowOptions] = useState(false);
 
   return (
@@ -93,12 +93,13 @@ function WorkflowCard({ workflow, onClick, activeTab, onRename, onDelete }) {
               </button>
               <button
                 onClick={() => onDelete(workflow.id)}
-                className="w-full px-4 py-2 text-left text-[11px] font-bold text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2"
+                disabled={deletingId !== null}
+                className="w-full px-4 py-2 text-left text-[11px] font-bold text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
                 </svg>
-                Delete
+                {deletingId === workflow.id ? "Deleting..." : "Delete"}
               </button>
             </div>
           )}
@@ -128,6 +129,7 @@ function WorkflowCard({ workflow, onClick, activeTab, onRename, onDelete }) {
 export default function WorkflowStudio({
   apiKey,
   signedIn = false,
+  onRequireAuth,
   isHeaderVisible = true,
   onToggleHeader,
   onGenerationStart,
@@ -170,6 +172,8 @@ export default function WorkflowStudio({
   const [activeMainTab, setActiveMainTab] = useState("templates"); // 'templates' | 'my-workflows' | 'published'
   const [renamingWorkflow, setRenamingWorkflow] = useState(null);
   const [newWorkflowName, setNewWorkflowName] = useState("");
+  const [renaming, setRenaming] = useState(false);
+  const renamingRef = useRef(false);
   const [isDeletingId, setIsDeletingId] = useState(null);
   const [inputSchema, setInputSchema] = useState(null);
   const [nodeSchemas, setNodeSchemas] = useState(null);
@@ -178,6 +182,11 @@ export default function WorkflowStudio({
   const [isExecuting, setIsExecuting] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [createError, setCreateError] = useState(null);
+  const [creating, setCreating] = useState(false);
+  // React state can't block two clicks in the same tick, so the in-flight
+  // claim is a ref; `creating` only drives the disabled/loading cue.
+  const creatingRef = useRef(false);
   
 
   // Handlers defined early so they can be used in effects
@@ -263,20 +272,32 @@ export default function WorkflowStudio({
   const handleCreateWorkflow = useCallback(
     async (fromUrl = false) => {
       try {
-        setLoading(true);
         if (!fromUrl) {
-          const payload = {
-            workflow_id: null,
-            name: "Untitled Workflow",
-            edges: [],
-            data: { nodes: [] },
-          };
-          const response = await createWorkflow(apiKey, payload);
-          // Route to /workflow/[id] so useParams().id works in the builder library.
-          // That page has no white-label session of its own, so hand off our token
-          // via sessionStorage — it reads "wl_workflow_token" on mount.
-          if (apiKey) sessionStorage.setItem("wl_workflow_token", apiKey);
-          router.push(`/workflow/${response.workflow_id}/builder`);
+          if (!apiKey && !signedIn) {
+            onRequireAuth?.();
+            return;
+          }
+          if (creatingRef.current) return;
+          creatingRef.current = true;
+          setCreating(true);
+          setCreateError(null);
+          try {
+            const payload = {
+              workflow_id: null,
+              name: "Untitled Workflow",
+              edges: [],
+              data: { nodes: [] },
+            };
+            const response = await createWorkflow(apiKey, payload);
+            // Route to /workflow/[id] so useParams().id works in the builder library.
+            // That page has no white-label session of its own, so hand off our token
+            // via sessionStorage — it reads "wl_workflow_token" on mount.
+            if (apiKey) sessionStorage.setItem("wl_workflow_token", apiKey);
+            router.push(`/workflow/${response.workflow_id}/builder`);
+          } finally {
+            creatingRef.current = false;
+            setCreating(false);
+          }
           return;
         }
 
@@ -286,15 +307,23 @@ export default function WorkflowStudio({
         setWorkflowDef({ nodes: [], edges: [] });
         setActiveSubTab("builder");
       } catch (err) {
-        setError("Failed to initialize workflow: " + err.message);
+        // muapi.createWorkflow throws an already-prefixed message; re-prefixing
+        // here produced "Failed to create workflow: Failed to create workflow: …".
+        const message = err?.message || "Unknown error";
+        setCreateError(
+          message.startsWith("Failed to create workflow")
+            ? message
+            : `Failed to create workflow: ${message}`
+        );
       } finally {
         setLoading(false);
       }
     },
-    [apiKey, router],
+    [apiKey, signedIn, onRequireAuth, router],
   );
 
   const handleDeleteWorkflow = async (wfId) => {
+    if (isDeletingId) return;
     if (!confirm("Are you sure you want to delete this workflow?")) return;
     setIsDeletingId(wfId);
     try {
@@ -313,6 +342,9 @@ export default function WorkflowStudio({
     if (!renamingWorkflow || !newWorkflowName.trim()) return;
 
     const wfId = renamingWorkflow.id;
+    if (renamingRef.current) return;
+    renamingRef.current = true;
+    setRenaming(true);
     try {
       await updateWorkflowName(apiKey, wfId, newWorkflowName);
       setWorkflows((prev) =>
@@ -325,6 +357,9 @@ export default function WorkflowStudio({
     } catch (err) {
       console.error("Rename failed:", err);
       alert("Failed to rename workflow");
+    } finally {
+      renamingRef.current = false;
+      setRenaming(false);
     }
   };
 
@@ -882,7 +917,8 @@ export default function WorkflowStudio({
             </div>
             <button
               onClick={() => handleCreateWorkflow()}
-              className="px-6 py-3 bg-brand text-black text-xs font-black uppercase tracking-widest rounded-lg hover:bg-white transition-all transform hover:scale-105 active:scale-95 shadow-elevation-3 flex items-center gap-2"
+              disabled={creating}
+              className="px-6 py-3 bg-brand text-black text-xs font-black uppercase tracking-widest rounded-lg hover:bg-white transition-all transform hover:scale-105 active:scale-95 shadow-elevation-3 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand"
             >
               <svg
                 width="14"
@@ -893,11 +929,12 @@ export default function WorkflowStudio({
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className={creating ? "animate-spin" : undefined}
               >
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
-              Create Workflow
+              {creating ? "Creating..." : "Create Workflow"}
             </button>
           </div>
 
@@ -935,6 +972,21 @@ export default function WorkflowStudio({
           </div>
         </div>
 
+        {createError && (
+          <div
+            role="alert"
+            className="mb-6 flex items-center gap-4 rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-4"
+          >
+            <span className="flex-1 text-sm font-medium text-ink">{createError}</span>
+            <button
+              onClick={() => handleCreateWorkflow()}
+              disabled={creating}
+              className="px-4 py-2 text-xs font-black uppercase tracking-widest text-brand hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {creating ? "Retrying..." : "Retry"}
+            </button>
+          </div>
+        )}
         {loading ? (
           <div className="py-20 flex items-center justify-center">
             <div className="w-10 h-10 border-4 border-white/5 border-t-[#22d3ee] rounded-full animate-spin" />
@@ -952,6 +1004,7 @@ export default function WorkflowStudio({
                    setNewWorkflowName(wf.name);
                 }}
                 onDelete={handleDeleteWorkflow}
+                deletingId={isDeletingId}
               />
             ))}
             {!loading && workflows.length === 0 && (
@@ -999,9 +1052,10 @@ export default function WorkflowStudio({
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-brand text-black px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white transition-all transform hover:scale-105 active:scale-95"
+                  disabled={!newWorkflowName.trim() || renaming}
+                  className="flex-1 bg-brand text-black px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand disabled:hover:scale-100"
                 >
-                  Save Name
+                  {renaming ? "Saving..." : "Save Name"}
                 </button>
               </div>
             </div>

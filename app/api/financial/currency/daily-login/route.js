@@ -1,5 +1,6 @@
 ﻿import { getUserFromRequest, json } from '@/lib/services/auth';
 import { getDailyLoginStatus, claimDailyLoginCoin } from '@/lib/financial/currencyService';
+import { guardMutation } from '@/lib/security/requestGuard';
 
 export const runtime = 'nodejs';
 
@@ -13,12 +14,14 @@ export async function GET(request) {
   return json(status);
 }
 
-// POST: 领取今日登录奖励 1 K币 (参考 B 站硬币机制)
+// POST: 领取今日登录奖励 1 硬币 (参考 B 站硬币机制)
 export async function POST(request) {
   const user = await getUserFromRequest(request);
   if (!user) {
     return json({ error: '请先登录后再领取登录奖励' }, { status: 401 });
   }
+  const guarded = guardMutation(request, { maxBytes: 4 * 1024 });
+  if (guarded) return guarded;
   try {
     const result = await claimDailyLoginCoin(user.id);
     return json(result);
