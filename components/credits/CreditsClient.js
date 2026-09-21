@@ -701,22 +701,22 @@ export default function CreditsClient() {
                 ) : (
                   <div className="divide-y divide-line-subtle">
                     {filteredLedger.map((item, idx) => {
-                      const isPositive = item.amount > 0 || String(item.amount || '').startsWith('+');
+                      const isPositive = String(item.delta || '').trim().startsWith('+');
                       return (
                         <div key={item.id || idx} className="flex items-center justify-between gap-4 px-6 py-4 hover:bg-wash transition-colors">
-                          <div className="flex items-center gap-3">
-                            <div className={`flex size-8 items-center justify-center rounded-xl border text-xs font-bold ${
+                          <div className="flex min-w-0 items-center gap-3">
+                            <div className={`flex size-8 shrink-0 items-center justify-center rounded-xl border text-xs font-bold ${
                               isPositive ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-white/10 bg-white/5 text-ink-muted'
                             }`}>
                               {isPositive ? '+' : '-'}
                             </div>
-                            <div>
-                              <p className="text-xs font-semibold text-ink">{item.title || item.description || '资产变动'}</p>
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-semibold text-ink">{item.title || '资产变动'}</p>
                               <p className="text-[11px] text-ink-subtle font-mono mt-0.5">{item.time || item.created_at || '刚刚'}</p>
                             </div>
                           </div>
-                          <div className={`font-mono text-sm font-bold ${isPositive ? 'text-success' : 'text-ink'}`}>
-                            {isPositive ? `+${item.amount}` : item.amount} {item.unit || '点'}
+                          <div className={`shrink-0 whitespace-nowrap font-mono text-sm font-bold ${isPositive ? 'text-success' : 'text-ink'}`}>
+                            {item.delta || '—'}
                           </div>
                         </div>
                       );

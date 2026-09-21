@@ -12,7 +12,7 @@ export async function GET(request) {
     const items = rows.map((row) => ({
       id: row.id,
       type: Number(row.delta) > 0 ? (row.action_type === 'DAILY_CHECKIN' ? 'checkin' : 'recharge') : 'task',
-      title: row.description || (Number(row.delta) > 0 ? '算力入账' : '模型任务消耗'),
+      title: row.reason || (Number(row.delta) > 0 ? '算力入账' : '模型任务消耗'),
       delta: Number(row.delta) > 0 ? `+${row.delta} 积分` : `${row.delta} 积分`,
       balanceAfter: `${row.balance_after} 积分`,
       time: new Date(row.created_at).toLocaleString('zh-CN', {
