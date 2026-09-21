@@ -63,7 +63,7 @@ module.exports = {
 
         // Feedback — every translucent variant is an explicit token,
         // because Tailwind cannot apply /alpha to a var() colour.
-        success: { DEFAULT: 'var(--success)', soft: 'var(--success-soft)', line: 'var(--success-line)' },
+        success: { DEFAULT: 'var(--success)', soft: 'var(--success-soft)', line: 'var(--success-line)', mid: 'var(--success-mid)' },
         warning: { DEFAULT: 'var(--warning)', soft: 'var(--warning-soft)', line: 'var(--warning-line)' },
         danger: {
           DEFAULT: 'var(--danger)',

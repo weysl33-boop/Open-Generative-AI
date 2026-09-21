@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ArrowUpRight, Gift, Plus, Sparkles, Zap } from 'lucide-react';
 import DualCurrencyCards from '../DualCurrencyCards';
 import { Badge } from '@/components/ui/badge';
@@ -8,38 +8,55 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export default function WalletTab({ credits = 0, points = 120, planName, onOpenRecharge, onOpenCheckIn }) {
+export default function WalletTab({ credits = 0, points = 0, planName, checkedInToday = false, onOpenRecharge, onOpenCheckIn }) {
   const [filter, setFilter] = useState('all');
   const [ledger, setLedger] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [checkIn, setCheckIn] = useState(null);
+  const [claiming, setClaiming] = useState(false);
 
-  useEffect(() => {
-    let mounted = true;
-    async function loadLedger() {
-      try {
-        const res = await fetch('/api/financial/credits/ledger');
-        if (res.ok) {
-          const data = await res.json();
-          if (mounted && data.ledger) {
-            setLedger(data.ledger);
-          }
-        }
-      } catch (err) {
-        console.error('加载积分账本失败:', err);
-      } finally {
-        if (mounted) setLoading(false);
+  const loadLedger = useCallback(async () => {
+    try {
+      const res = await fetch('/api/financial/credits/ledger', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setLedger(data.ledger || []);
       }
+    } catch (err) {
+      console.error('加载积分账本失败:', err);
+    } finally {
+      setLoading(false);
     }
-    loadLedger();
-    return () => { mounted = false; };
   }, []);
 
-  // 判断用户今日是否已有签到流水
-  const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '/');
-  const checkedInToday = ledger.some(
-    (item) => (item.title?.includes('签到') || item.type === 'checkin') &&
-              (item.time?.includes(todayStr) || item.time?.includes(new Date().toLocaleDateString()))
-  );
+  const loadCheckIn = useCallback(async () => {
+    try {
+      const res = await fetch('/api/financial/credits/checkin', { cache: 'no-store' });
+      if (res.ok) setCheckIn(await res.json());
+    } catch (err) {
+      console.error('加载签到记录失败:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLedger();
+    loadCheckIn();
+  }, [loadLedger, loadCheckIn]);
+
+  // 签到状态以服务端账本为准：父级 /api/auth/me 的 creditBuckets.isCheckedInToday
+  // 先给一个初值，接口回来后用 7 天窗口里的今日格覆盖。
+  const signedInToday = checkIn ? checkIn.todayChecked : checkedInToday;
+
+  const handleCheckIn = async () => {
+    if (claiming || signedInToday) return;
+    setClaiming(true);
+    try {
+      await onOpenCheckIn?.();
+      await Promise.all([loadCheckIn(), loadLedger()]);
+    } finally {
+      setClaiming(false);
+    }
+  };
 
   const filtered = ledger.filter(
     (item) => filter === 'all' || (filter === 'recharge' ? item.type !== 'task' : item.type === 'task')
@@ -57,8 +74,10 @@ export default function WalletTab({ credits = 0, points = 120, planName, onOpenR
         points={points}
         planName={planName}
         onOpenRecharge={onOpenRecharge}
-        onOpenCheckIn={onOpenCheckIn}
-        checkedInToday={checkedInToday}
+        onOpenCheckIn={handleCheckIn}
+        checkedInToday={signedInToday}
+        claiming={claiming}
+        checkIn={checkIn}
       />
 
       <div className="rounded-xl border border-line-subtle bg-raised p-0 shadow-elevation-1 overflow-hidden">

@@ -1,12 +1,46 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Check, Crown, Gift, Gem, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-function AssetCard({ tone, iconBg, iconColor, icon: Icon, label, badge, description, value, unit, action, onAction, children }) {
+const WEEKDAY_SHORT = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+// 最近 7 天签到格：连签的那几天格子写「第 N 天」，其余只写日期，
+// 这样「昨天签了 → 今天这格就是第 2 天」在界面上自洽，不需要用户自己数。
+function CheckInStrip({ days = [], today, streak = 0 }) {
+  // 今天没签时，活的连签结束在昨天那一格（与服务端的 runEnd 同一口径）。
+  const runEnd = days.length - 1 - (days[days.length - 1]?.checkedIn ? 0 : 1);
+  const runStart = runEnd - streak + 1;
+  return (
+    <ol className="mt-2.5 flex items-end justify-between gap-1">
+      {days.map((day, index) => {
+        const isToday = day.date === today;
+        const inRun = streak > 0 && day.checkedIn && index >= runStart;
+        return (
+          <li key={day.date} className="flex min-w-0 flex-col items-center gap-1">
+            <span
+              className={`flex size-7 items-center justify-center rounded-md border font-mono text-micro tabular-nums ${
+                day.checkedIn
+                  ? 'border-success-line bg-success-soft text-success'
+                  : 'border-line bg-wash text-ink-subtle'
+              } ${isToday ? 'outline outline-1 outline-offset-1 outline-brand' : ''}`}
+            >
+              {inRun ? index - runStart + 1 : (day.checkedIn ? <Check className="size-3" /> : Number(day.date.slice(8)))}
+            </span>
+            <span className={`text-micro ${isToday ? 'text-ink' : 'text-ink-subtle'}`}>
+              {isToday ? '今天' : WEEKDAY_SHORT[new Date(`${day.date}T00:00:00`).getDay()]}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function AssetCard({ tone, iconBg, iconColor, icon: Icon, label, badge, description, value, unit, action, actionDisabled, onAction, children }) {
   return (
     <div className="relative overflow-hidden rounded-xl border border-line-subtle bg-base/85 p-5 shadow-elevation-1 transition-all hover:border-line-strong backdrop-blur-sm">
       <div className="flex flex-row items-start justify-between gap-3 pb-3.5">
@@ -28,7 +62,8 @@ function AssetCard({ tone, iconBg, iconColor, icon: Icon, label, badge, descript
           type="button"
           size="sm"
           variant="outline"
-          className="h-8 border-line bg-wash text-ink hover:border-brand-ring hover:bg-brand-soft hover:text-brand cursor-pointer active:scale-95 transition-all"
+          disabled={actionDisabled}
+          className="h-8 border-line bg-wash text-ink hover:border-brand-ring hover:bg-brand-soft hover:text-brand cursor-pointer active:scale-95 transition-all disabled:cursor-default disabled:opacity-60"
           onClick={onAction}
         >
           <span>{action}</span>
@@ -48,31 +83,40 @@ function AssetCard({ tone, iconBg, iconColor, icon: Icon, label, badge, descript
 
 export default function DualCurrencyCards({
   credits = 0,
-  points = 120,
+  points = 0,
   planName = '免费体验版',
   planId = 'free',
   onOpenRecharge,
   onOpenCheckIn,
   checkedInToday = false,
+  claiming = false,
+  checkIn = null,
   className = '',
 }) {
-  const [signedIn, setSignedIn] = useState(checkedInToday);
-  const [pointsBonusAnim, setPointsBonusAnim] = useState(false);
+  const [bonusAnim, setBonusAnim] = useState(false);
+  const previousSignedIn = useRef(checkedInToday);
 
+  // 只有服务端确认入账之后才飘这一次 +N：原来的乐观动画在签到失败时也会飘，
+  // 而失败恰恰是常态（重复点击），于是界面写着到账、账本里却没有这笔。
   useEffect(() => {
-    setSignedIn(checkedInToday);
+    const justSignedIn = !previousSignedIn.current && checkedInToday;
+    previousSignedIn.current = checkedInToday;
+    if (!justSignedIn) return undefined;
+    setBonusAnim(true);
+    const timer = window.setTimeout(() => setBonusAnim(false), 1800);
+    return () => window.clearTimeout(timer);
   }, [checkedInToday]);
 
-  const signIn = () => {
-    if (signedIn) {
-      onOpenCheckIn?.();
-      return;
-    }
-    setSignedIn(true);
-    setPointsBonusAnim(true);
-    window.setTimeout(() => setPointsBonusAnim(false), 1800);
-    onOpenCheckIn?.();
-  };
+  const reward = checkIn?.rewardCredits;
+  const signedInLabel = checkedInToday
+    ? '今日已签到'
+    : (reward ? `每日签到 +${reward}` : '每日签到领积分');
+  let checkInHeadline = '每日签到免费领 · 抵扣基础对话与灵感生成';
+  if (checkIn && checkIn.streak > 0) {
+    checkInHeadline = checkIn.todayChecked
+      ? `已连续签到 ${checkIn.streak} 天`
+      : `已连续签到 ${checkIn.streak} 天 · 今天签到即连续 ${checkIn.streak + 1} 天`;
+  }
 
   return (
     <section className={`flex flex-col gap-4 ${className}`}>
@@ -105,18 +149,22 @@ export default function DualCurrencyCards({
           label="我的积分"
           badge="成长激励"
           description="签到、分享创作赚取，可抵扣轻量任务"
-          value={(Number(points) + (signedIn && !checkedInToday ? 20 : 0)).toLocaleString()}
+          value={Number(points).toLocaleString()}
           unit="积分"
-          action={signedIn ? '今日已签到' : '每日签到 +20'}
-          onAction={signIn}
+          action={signedInLabel}
+          actionDisabled={checkedInToday || claiming}
+          onAction={onOpenCheckIn}
         >
-          <div className="relative mt-3.5 flex items-center justify-between gap-2 border-t border-line-subtle pt-2.5 text-[11px] text-ink-subtle">
-            <span>每日签到免费领 · 抵扣基础对话与灵感生成</span>
-            {pointsBonusAnim && (
-              <span className="absolute -top-3 right-1 text-xs font-semibold text-success animate-fade-in-up">
-                +20 积分
+          <div className="relative mt-3.5 border-t border-line-subtle pt-2.5">
+            {bonusAnim && reward ? (
+              <span className="absolute -top-3 right-1 text-caption font-semibold text-success animate-fade-in">
+                {`+${reward} 积分`}
               </span>
-            )}
+            ) : null}
+            <p className="text-caption text-ink-subtle">{checkInHeadline}</p>
+            {checkIn?.days?.length ? (
+              <CheckInStrip days={checkIn.days} today={checkIn.today} streak={checkIn.streak} />
+            ) : null}
           </div>
         </AssetCard>
       </div>

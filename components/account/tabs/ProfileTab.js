@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -72,6 +72,16 @@ export default function ProfileTab({
       return Object.fromEntries(COUNTRY_CODES.map((code) => [code, code]));
     }
   }, [user?.locale]);
+
+  // 选项按当前语言的排序规则排，不再沿用注册时手写的字序；
+  // 库里存着的历史脏码不在候选表内时也要能显示，否则永远顶着「未设置」。
+  const countryOptions = useMemo(() => {
+    const codes = [...COUNTRY_CODES];
+    if (profileCountry && !codes.includes(profileCountry)) codes.unshift(profileCountry);
+    return codes
+      .map((code) => ({ code, name: countryNames[code] || code }))
+      .sort((a, b) => a.name.localeCompare(b.name, user?.locale || 'zh-CN', { sensitivity: 'base' }));
+  }, [countryNames, profileCountry, user?.locale]);
 
   const [currentProviders, setCurrentProviders] = useState(user?.loginProviders || ['phone']);
   const [currentAccounts, setCurrentAccounts] = useState(user?.authAccounts || []);
@@ -505,23 +515,26 @@ export default function ProfileTab({
     <div className="flex flex-col gap-6 w-full">
       {/* 顶部标题区 */}
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-ink">个人资料与账号体系</h1>
-        <p className="mt-1 text-xs text-ink-muted">管理您的不可变数字 UID、基本资料及多登录凭据绑定。</p>
+        <h1 className="text-page-title font-bold tracking-tight text-ink">个人资料与账号</h1>
+        <p className="mt-1 text-xs text-ink-muted">完善昵称、头像与偏好信息，并管理可用于登录的手机号、邮箱和第三方账号。</p>
       </div>
 
       {/* 个人基本信息卡片 (展示不可更改的随机数字根 UID) */}
+      {/* 这里不用 CardHeader / CardContent：项目的 cn 是纯拼接，不做冲突消解，
+          而 .flex-col / .p-5 在产物 CSS 里排在 .flex-row / .p-0 之后，
+          传进去的覆盖类必输 —— 标题会被排成居中竖列、内边距也收不掉。 */}
       <Card padding="lg">
-        <CardHeader className="p-0 pb-5 flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-sm font-semibold text-ink">个人基本信息</CardTitle>
-            <p className="mt-0.5 text-xs text-ink-muted">您的数字 ID 为全局唯一不可变凭证，与 QQ 号逻辑一致。</p>
+        <div className="flex items-start justify-between gap-3 pb-5">
+          <div className="min-w-0">
+            <h3 className="text-card-title font-semibold text-ink">个人基本信息</h3>
+            <p className="mt-0.5 text-xs text-ink-muted">数字 ID 全站唯一、终身不变，可用于登录与客服核对。</p>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-success-line bg-success-soft text-success text-xs font-mono">
+          <div className="flex shrink-0 items-center gap-1.5 px-3 py-1 rounded-full border border-success-line bg-success-soft text-success text-xs font-mono">
             <Hash className="size-3.5" />
             <span>UID: {userId}</span>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
+        </div>
+        <div>
           <form onSubmit={onSaveProfile} className="flex max-w-xl flex-col gap-4">
             {/* 创作者个性化头像更换模块 */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl bg-well border border-line-subtle">
@@ -608,8 +621,8 @@ export default function ProfileTab({
 
             <label className="flex flex-col gap-1.5 text-xs font-medium text-ink">
               <span className="flex items-center justify-between">
-                <span>用户唯一数字 ID (不可修改)</span>
-                <span className="text-caption text-ink-subtle">终身绑定 · 支持直接登录</span>
+                <span>数字 ID（不可修改）</span>
+                <span className="text-caption text-ink-subtle">可用于登录与客服核对</span>
               </span>
               <Input
                 value={`#${userId}`}
@@ -619,17 +632,20 @@ export default function ProfileTab({
             </label>
 
             <label className="flex flex-col gap-1.5 text-xs font-medium text-ink">
-              展示昵称
+              <span className="flex items-center justify-between">
+                <span>展示昵称</span>
+                <span className="text-caption text-ink-subtle">{`${profileName.trim().length}/30`}</span>
+              </span>
               <Input
                 value={profileName}
                 onChange={(event) => setProfileName(event.target.value)}
                 maxLength={30}
-                placeholder="请输入创作者昵称"
+                placeholder="其他创作者看到的名字"
               />
             </label>
 
             {/* 引导页只收昵称与头像，国家与性别留到这里补全。
-                下拉里没有空值项，所以选定之后只能改选别的，回不到未填状态。 */}
+                接口把空串按「未提交」处理，所以这两项选定后只能改选、不能清空。 */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5 text-xs font-medium text-ink">
                 <span className="flex items-center justify-between">
@@ -637,19 +653,27 @@ export default function ProfileTab({
                     <Globe2 className="size-3.5 text-ink-muted" />
                     国家或地区
                   </span>
-                  {!profileCountry && <span className="text-caption text-warning">待补全</span>}
+                  {!profileCountry && (
+                    <span className="rounded-full border border-line bg-well px-1.5 py-0.5 text-micro font-normal text-ink-subtle">
+                      未设置
+                    </span>
+                  )}
                 </span>
                 <Select value={profileCountry || ''} onValueChange={setProfileCountry}>
                   <SelectTrigger size="md" aria-label="国家或地区">
                     <SelectValue placeholder="请选择国家或地区" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {COUNTRY_CODES.map((code) => (
-                      <SelectItem key={code} value={code}>{countryNames[code]}</SelectItem>
+                  {/* 旗帜 emoji 在 Windows 上没有字库承接，只会渲染成「AE」这样的裸码位，
+                      看起来像乱码，所以选项只留中文名；弹层宽度对齐触发器。 */}
+                  <SelectContent className="min-w-72">
+                    {countryOptions.map((option) => (
+                      <SelectItem key={option.code} value={option.code}>
+                        {option.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <span className="text-caption text-ink-subtle">用于内容合规与本地化，选定后不可清空。</span>
+                <span className="text-caption text-ink-subtle">用于内容合规与本地化，可改选不可清空。</span>
               </div>
 
               <div className="flex flex-col gap-1.5 text-xs font-medium text-ink">
@@ -658,7 +682,11 @@ export default function ProfileTab({
                     <UserRound className="size-3.5 text-ink-muted" />
                     性别
                   </span>
-                  {!profileGender && <span className="text-caption text-warning">待补全</span>}
+                  {!profileGender && (
+                    <span className="rounded-full border border-line bg-well px-1.5 py-0.5 text-micro font-normal text-ink-subtle">
+                      未设置
+                    </span>
+                  )}
                 </span>
                 <Select value={profileGender || ''} onValueChange={setProfileGender}>
                   <SelectTrigger size="md" aria-label="性别">
@@ -670,7 +698,7 @@ export default function ProfileTab({
                     ))}
                   </SelectContent>
                 </Select>
-                <span className="text-caption text-ink-subtle">仅用于偏好推荐，可随时改选，选定后不可清空。</span>
+                <span className="text-caption text-ink-subtle">仅用于内容偏好推荐，可改选不可清空。</span>
               </div>
             </div>
 
@@ -697,18 +725,18 @@ export default function ProfileTab({
               </Button>
             </div>
           </form>
-        </CardContent>
+        </div>
       </Card>
 
       {/* 账号权限与多渠道绑定/解绑卡片 (满足要求：可解绑手机号、邮箱、社交登录) */}
       <Card padding="lg">
-        <CardHeader className="p-0 pb-4">
-          <CardTitle className="text-sm font-semibold text-ink">登录凭证与第三方绑定</CardTitle>
+        <div className="pb-4">
+          <h3 className="text-card-title font-semibold text-ink">登录凭证与第三方绑定</h3>
           <p className="mt-0.5 text-xs text-ink-muted">
             支持绑定或解绑任意登录渠道；系统内置防孤儿账号保护，保障随时可登录。
           </p>
-        </CardHeader>
-        <CardContent className="p-0">
+        </div>
+        <div>
           <div className="divide-y divide-line-subtle">
             {/* 手机号 */}
             <SettingRow
@@ -829,18 +857,18 @@ export default function ProfileTab({
               );
             })}
           </div>
-        </CardContent>
+        </div>
       </Card>
 
       {/* 账户安全卡片 */}
       <Card padding="lg">
-        <CardHeader className="p-0 pb-4">
-          <CardTitle className="text-sm font-semibold text-ink">独立登录密码</CardTitle>
+        <div className="pb-4">
+          <h3 className="text-card-title font-semibold text-ink">独立登录密码</h3>
           <p className="mt-0.5 text-xs text-ink-muted">
             设置密码后，可使用您的数字 UID ({userId}) 直接输入密码登录系统。
           </p>
-        </CardHeader>
-        <CardContent className="p-0">
+        </div>
+        <div>
           <form onSubmit={handlePasswordChange} className="flex max-w-sm flex-col gap-3">
             <label className="flex flex-col gap-1.5 text-xs font-medium text-ink">
               当前密码 (初次设置可留空)
@@ -884,7 +912,7 @@ export default function ProfileTab({
               {pwdBusy ? '正在更新…' : '设置/更新登录密码'}
             </Button>
           </form>
-        </CardContent>
+        </div>
       </Card>
 
       {/* 注销账户警告 */}

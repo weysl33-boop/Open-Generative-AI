@@ -4,6 +4,7 @@ import React, { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, LogOut, User } from 'lucide-react';
 import { avatarFrameClasses } from '@/lib/benefits/catalog';
+import UserHoverCard from './UserHoverCard';
 
 export const NAV_ITEMS = [
   { id: 'activity', label: '创作活跃与偏好', group: 1 },
@@ -31,8 +32,26 @@ export default function AccountLayout({
 }) {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = React.useState(false);
+  const [userCardOpen, setUserCardOpen] = React.useState(false);
+  const userCardTimer = React.useRef(null);
   const userEmail = user?.email || user?.phone || '创作者';
   const userName = user?.displayName || user?.display_name || user?.name || (userEmail.includes('@') ? userEmail.split('@')[0] : userEmail);
+
+  // 头像卡片要能承接从头像移入浮层的鼠标，因此关慢一点（留 160ms 跨隙时间）；
+  // 浮层不能放在侧栏里渲染 —— aside 的 overflow-y-auto 会把它裁掉。
+  const openUserCard = React.useCallback(() => {
+    if (userCardTimer.current) clearTimeout(userCardTimer.current);
+    setUserCardOpen(true);
+  }, []);
+
+  const scheduleUserCardClose = React.useCallback(() => {
+    if (userCardTimer.current) clearTimeout(userCardTimer.current);
+    userCardTimer.current = setTimeout(() => setUserCardOpen(false), 160);
+  }, []);
+
+  useEffect(() => () => {
+    if (userCardTimer.current) clearTimeout(userCardTimer.current);
+  }, []);
 
   // 关闭悬浮窗：清理 URL 参数并优先调用传入的 onClose 回调
   const handleClose = useCallback(() => {
@@ -140,6 +159,17 @@ export default function AccountLayout({
           <X className="size-4.5" />
         </button>
 
+        {/* 头像资料浮层：挂在悬浮窗根节点，绕开侧栏的 overflow 裁剪 */}
+        {userCardOpen && (
+          <div
+            className="absolute left-5 top-40 z-popover md:left-56 md:top-24 animate-fade-in"
+            onMouseEnter={openUserCard}
+            onMouseLeave={scheduleUserCardClose}
+          >
+            <UserHoverCard user={user} />
+          </div>
+        )}
+
         {/* 左侧侧边栏 (Sidebar) */}
         <aside className="w-full md:w-[220px] shrink-0 border-b md:border-b-0 md:border-r border-line-subtle bg-well/90 p-5 lg:p-6 flex flex-col justify-between select-none overflow-y-auto custom-scrollbar">
           <div>
@@ -149,9 +179,18 @@ export default function AccountLayout({
             {/* 分割线 1 */}
             <div className="h-[1px] bg-wash-strong mt-5 mb-5" />
 
-            {/* 用户头像与信息 */}
-            <div className="flex items-center gap-3 mb-5 px-1">
-              <div className={`w-[42px] h-[42px] rounded-full overflow-hidden bg-overlay flex items-center justify-center shrink-0 ${avatarFrameClasses(user?.avatarFrame || user?.avatar_frame) || 'border border-line'}`}>
+            {/* 用户头像与信息：悬停 / 聚焦弹出资料卡，点击直达创作活跃页 */}
+            <button
+              type="button"
+              onClick={() => onTabChange?.('activity')}
+              onMouseEnter={openUserCard}
+              onMouseLeave={scheduleUserCardClose}
+              onFocus={openUserCard}
+              onBlur={scheduleUserCardClose}
+              aria-expanded={userCardOpen}
+              className="mb-5 flex w-full items-center gap-3 rounded-lg px-1 text-start cursor-pointer hover:bg-wash transition-colors"
+            >
+              <span className={`w-[42px] h-[42px] rounded-full overflow-hidden bg-overlay flex items-center justify-center shrink-0 ${avatarFrameClasses(user?.avatarFrame || user?.avatar_frame) || 'border border-line'}`}>
                 {user?.photo_url || user?.avatar || user?.avatar_url ? (
                   <img
                     src={user.photo_url || user.avatar || user.avatar_url}
@@ -161,16 +200,16 @@ export default function AccountLayout({
                 ) : (
                   <User className="w-5 h-5 text-ink-muted" />
                 )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <p className="text-[13px] text-ink font-semibold truncate">{userName}</p>
-                </div>
-                <p className="text-[11px] text-ink-muted font-mono truncate">
+              </span>
+              <span className="min-w-0 flex-1 flex flex-col">
+                <span className="flex items-center gap-1.5">
+                  <span className="text-body-sm text-ink font-semibold truncate block">{userName}</span>
+                </span>
+                <span className="text-caption text-ink-muted font-mono truncate block">
                   UID: {user?.id || ''}
-                </p>
-              </div>
-            </div>
+                </span>
+              </span>
+            </button>
 
             {/* 分组 1: 编辑资料 / 设置 */}
             <div className="flex flex-col gap-1">

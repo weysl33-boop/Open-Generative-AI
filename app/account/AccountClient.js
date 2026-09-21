@@ -27,6 +27,7 @@ function AccountContent({ onClose, initialTabProp, onTabChange: onTabChangeProp 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [credits, setCredits] = useState(0);
   const [points, setPoints] = useState(0);
+  const [checkedInToday, setCheckedInToday] = useState(false);
   const [currentTab, setCurrentTab] = useState(initialAction);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
@@ -46,8 +47,12 @@ function AccountContent({ onClose, initialTabProp, onTabChange: onTabChangeProp 
         if (data.user) {
           setUser(data.user);
           setCredits(data.entitlements?.credits ?? data.user.credits ?? 0);
-          if (data.entitlements?.creditBuckets) {
-            setPoints(data.entitlements.creditBuckets.gift ?? data.entitlements.creditBuckets.promotional ?? 0);
+          // creditBuckets 就是 getCreditWallet() 的返回：dailyFree 才是签到落账的那一桶。
+          // 之前读的 gift / promotional 两个键从来不存在，「我的积分」因此恒为 0。
+          const buckets = data.entitlements?.creditBuckets || data.user.creditBuckets || null;
+          if (buckets) {
+            setPoints(Number(buckets.dailyFree ?? 0));
+            setCheckedInToday(Boolean(buckets.isCheckedInToday));
           }
           setProfileName(data.user.displayName || data.user.display_name || data.user.name || '');
           setProfileBio(data.user.bio || '');
@@ -235,17 +240,18 @@ function AccountContent({ onClose, initialTabProp, onTabChange: onTabChangeProp 
           <WalletTab
             credits={credits}
             points={points}
+            checkedInToday={checkedInToday}
             planName={user?.role === 'admin' ? '管理特权' : '创作者计划'}
             onOpenRecharge={() => router.push('/pricing#credit-packs')}
             onOpenCheckIn={async () => {
               try {
                 const res = await fetch('/api/financial/credits/checkin', { method: 'POST' });
-                const data = await res.json();
+                const data = await res.json().catch(() => null);
                 if (res.ok) {
-                  setMessage(data.message || '签到成功，积分已入账！');
+                  setMessage(`签到成功，${data?.rewardCredits ?? 0} 算力积分已入账（今日有效）`);
                   await loadAccount();
                 } else {
-                  setMessage(data.error || '今日已完成签到，请明日再来');
+                  setMessage(data?.error || '签到暂未成功，请稍后重试');
                 }
               } catch {
                 setMessage('网络连接异常，签到失败');

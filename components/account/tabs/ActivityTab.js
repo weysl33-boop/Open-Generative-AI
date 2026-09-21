@@ -1,11 +1,32 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Sparkles, HelpCircle, Eye, EyeOff } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const MONTH_LABELS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+// 星期轴只有 4 个标签，但必须占满 7 行：留空的那些行就是对齐锚点，
+// 用 justify-between + 固定高度去凑会在网格行数变化时整体飘移。
+const WEEKDAY_LABELS = ['周日', '', '周二', '', '周四', '', '周六'];
+
+// 活跃强度 0-4：四级递进的绿，与底部图例共用同一组令牌，
+// 避免出现「图例五个色、网格只有一种绿」的两套真相。
+const HEAT_LEVEL_TONES = [
+  'bg-overlay',
+  'bg-success-soft',
+  'bg-success-line',
+  'bg-success-mid',
+  'bg-success',
+];
+
+// 悬浮卡左右两端都不能超出滚动容器，否则第一列与最后一列会被裁掉。
+const TOOLTIP_EDGE = 56;
+
+function formatHeatDate(dateKey) {
+  const parts = String(dateKey || '').split('-');
+  if (parts.length !== 3) return String(dateKey || '');
+  return `${Number(parts[1])}月${Number(parts[2])}日`;
+}
 
 export default function ActivityTab({ user }) {
   const [data, setData] = useState(null);
@@ -14,11 +35,25 @@ export default function ActivityTab({ user }) {
   const [isPublic, setIsPublic] = useState(true);
   const [savingPrivacy, setSavingPrivacy] = useState(false);
   const [hoveredDay, setHoveredDay] = useState(null);
+  const gridRef = useRef(null);
   const [toastMessage, setToastMessage] = useState('');
 
   const showToast = (msg) => {
     setToastMessage(msg);
     window.setTimeout(() => setToastMessage(''), 3000);
+  };
+
+  const showDayTooltip = (event, day) => {
+    const cell = event.currentTarget;
+    const grid = gridRef.current;
+    const rawX = cell.offsetLeft + cell.offsetWidth / 2;
+    const limit = grid ? grid.clientWidth - TOOLTIP_EDGE : rawX;
+    setHoveredDay({
+      date: day.date,
+      count: day.count,
+      x: Math.max(TOOLTIP_EDGE, Math.min(rawX, limit)),
+      y: cell.offsetTop,
+    });
   };
 
   const fetchDashboardData = useCallback(async () => {
@@ -84,9 +119,11 @@ export default function ActivityTab({ user }) {
 
   const currentUser = data?.user || {
     id: user?.id || '',
+    displayName: user?.displayName || '',
     daysActive: 1,
     badgeTitle: '#探险家',
   };
+  const greetingName = currentUser.displayName || user?.displayName || '创作者';
   const metrics = data?.metrics || { totalCreations: 0, activeDays: 0, totalCredits: 0 };
   const weeks = data?.heatmap?.weeks || [];
   const topModels = data?.topModels || [];
@@ -97,8 +134,8 @@ export default function ActivityTab({ user }) {
       {/* 1. 顶部问候栏与隐私控制 (严格对齐 Trae 布局视觉) */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-line-subtle pb-5">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2.5">
-            <span>你好！用户{currentUser.id}</span>
+          <h1 className="text-page-title font-bold tracking-tight flex items-center gap-2.5">
+            <span>你好！{greetingName}</span>
           </h1>
           <p className="mt-1.5 text-xs text-ink-muted">
             这是您使用 koyosim 的第 <span className="font-semibold text-ink">{currentUser.daysActive}</span> 天。
@@ -138,11 +175,11 @@ export default function ActivityTab({ user }) {
 
       {/* 2. 主面板：AI 创作活跃天数 (参考 Trae 跃天数热力图贡献网格) */}
       <Card className="rounded-2xl border border-line bg-raised p-6 shadow-elevation-1 overflow-hidden">
-        <CardHeader className="p-0 pb-4 flex flex-row items-center justify-between">
+        <div className="flex items-center justify-between gap-3 pb-4">
           <div className="flex items-center gap-1.5">
-            <CardTitle className="text-sm font-semibold text-ink tracking-wide">
+            <h3 className="text-sm font-semibold text-ink tracking-wide">
               AI 创作活跃天数
-            </CardTitle>
+            </h3>
             <span title="统计过去 52 周每日的作品生成与交互活跃记录" className="cursor-help text-ink-muted hover:text-ink">
               <HelpCircle className="size-3.5" />
             </span>
@@ -150,66 +187,77 @@ export default function ActivityTab({ user }) {
           <div className="text-xs text-ink-muted">
             过去 365 天累计活动 <span className="font-semibold text-success font-mono">{data?.heatmap?.totalContributions || 0}</span> 次
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="p-0 space-y-6">
+        <div className="space-y-6">
           {/* 热力图主体滚动容器 */}
           <div className="overflow-x-auto custom-scrollbar pb-2">
-            <div className="min-w-[760px]">
-              {/* 月份刻度 */}
-              <div className="flex text-micro text-ink-muted pl-6 mb-1 select-none">
-                {MONTH_LABELS.map((m, i) => (
-                  <div key={i} className="flex-1 text-left font-mono">
-                    {m}
-                  </div>
-                ))}
-              </div>
-
-              {/* 网格行（7行表示周日到周六） */}
+            <div className="min-w-[760px] pt-8">
               <div className="flex gap-1.5 items-start">
-                {/* 星期标签 */}
-                <div className="flex flex-col justify-between text-micro text-ink-muted h-[100px] pr-1.5 select-none shrink-0 py-0.5">
-                  <span>周日</span>
-                  <span>周二</span>
-                  <span>周四</span>
-                  <span>周六</span>
+                {/* 星期轴：首格垫高到与月份刻度带同高，其余 7 行与网格同 pitch，留空的行就是对齐锚点 */}
+                <div className="flex shrink-0 flex-col gap-1 pr-1.5 select-none">
+                  <div className="h-3" />
+                  {WEEKDAY_LABELS.map((label, index) => (
+                    <span key={index} className="flex h-2.5 items-center text-micro text-ink-muted font-mono">
+                      {label}
+                    </span>
+                  ))}
                 </div>
 
-                {/* 52 周列网格 */}
-                <div className="flex gap-1 flex-1">
-                  {weeks.map((week, wIndex) => (
-                    <div key={week.weekIndex ?? wIndex} className="flex flex-col gap-1">
-                      {week.days.map((day, dIndex) => {
-                        const levelColors = [
-                          'bg-overlay hover:border-line-strong',
-                          'bg-success border-success-line text-success',
-                          'bg-success border-success-line text-success',
-                          'bg-success border-success-line text-ink',
-                          'bg-success border-success text-ink-on-accent',
-                        ];
-                        const bgClass = levelColors[day.level] || levelColors[0];
+                <div className="flex flex-col gap-1">
+                  {/* 月份刻度一列一格，标签只在月份首次出现的那一列落字；
+                      12 个等宽标签配 52 列网格永远对不上。 */}
+                  <div className="flex h-3 gap-1 select-none">
+                    {weeks.map((week, wIndex) => (
+                      <div key={week.weekIndex ?? wIndex} className="relative w-2.5 shrink-0">
+                        {week.monthLabel && (
+                          <span className="absolute left-0 top-0 whitespace-nowrap text-micro text-ink-muted font-mono">
+                            {week.monthLabel}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
 
-                        return (
+                  {/* 52 周列网格：格子边长与图例方块一致，52 列才能整幅落在面板内，
+                      不必横向滚动就能看到最近一周。 */}
+                  <div ref={gridRef} className="relative flex gap-1">
+                    {weeks.map((week, wIndex) => (
+                      <div key={week.weekIndex ?? wIndex} className="flex flex-col gap-1">
+                        {week.days.map((day, dIndex) => (
                           <div
                             key={day.date || dIndex}
-                            className={`w-3 h-3 rounded-[2.5px] transition-all cursor-pointer border border-transparent ${bgClass}`}
-                            onMouseEnter={() => setHoveredDay(day)}
+                            className={`w-2.5 h-2.5 rounded-xs border border-transparent cursor-pointer ${
+                              HEAT_LEVEL_TONES[day.level] || HEAT_LEVEL_TONES[0]
+                            } hover:outline hover:outline-1 hover:outline-offset-1 hover:outline-ink`}
+                            onMouseEnter={(event) => showDayTooltip(event, day)}
                             onMouseLeave={() => setHoveredDay(null)}
-                            title={`${day.date}: 生成与互动 ${day.count} 次`}
                           />
-                        );
-                      })}
-                    </div>
-                  ))}
+                        ))}
+                      </div>
+                    ))}
+
+                    {hoveredDay && (
+                      <div
+                        className="pointer-events-none absolute z-tooltip -mt-1.5 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-sm border border-line-strong bg-overlay-glass px-2 py-1 text-micro text-ink shadow-elevation-3"
+                        style={{ left: `${hoveredDay.x}px`, top: `${hoveredDay.y}px` }}
+                      >
+                        <span className="font-mono">{formatHeatDate(hoveredDay.date)}</span>
+                        <span> · 创作 </span>
+                        <span className="font-mono text-success">{hoveredDay.count}</span>
+                        <span> 次</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* 底部图例与悬停详情 */}
-              <div className="flex items-center justify-between mt-3 pt-2 text-[11px] text-ink-muted border-t border-line-subtle">
+              <div className="flex items-center justify-between mt-3 pt-2 text-caption text-ink-muted border-t border-line-subtle">
                 <div className="h-4">
                   {hoveredDay ? (
                     <span className="text-success font-mono">
-                      {hoveredDay.date} 贡献了 {hoveredDay.count} 次创作生成
+                      {formatHeatDate(hoveredDay.date)} 贡献了 {hoveredDay.count} 次创作生成
                     </span>
                   ) : (
                     <span className="text-ink-muted">悬停方格查看每日详细创作次数</span>
@@ -218,11 +266,9 @@ export default function ActivityTab({ user }) {
 
                 <div className="flex items-center gap-1.5 select-none">
                   <span>较少</span>
-                  <span className="w-2.5 h-2.5 rounded-xs bg-overlay" />
-                  <span className="w-2.5 h-2.5 rounded-xs bg-success" />
-                  <span className="w-2.5 h-2.5 rounded-xs bg-success" />
-                  <span className="w-2.5 h-2.5 rounded-xs bg-success" />
-                  <span className="w-2.5 h-2.5 rounded-xs bg-success" />
+                  {HEAT_LEVEL_TONES.map((tone) => (
+                    <span key={tone} className={`w-2.5 h-2.5 rounded-xs ${tone}`} />
+                  ))}
                   <span>更多</span>
                 </div>
               </div>
@@ -261,23 +307,23 @@ export default function ActivityTab({ user }) {
               </p>
             </div>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
       {/* 3. 底部双卡片：最常合作的 AI 伙伴 & 最近模型调用偏好 (严格对齐 Trae 规范与空态) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 左卡片：最常合作的 AI 伙伴 */}
         <Card className="rounded-2xl border border-line bg-raised p-6 shadow-elevation-1 flex flex-col justify-between min-h-[220px]">
-          <CardHeader className="p-0 pb-3 flex flex-row items-center justify-between">
+          <div className="pb-3">
             <div className="flex items-center gap-1.5">
-              <CardTitle className="text-sm font-semibold text-ink tracking-wide">
+              <h3 className="text-sm font-semibold text-ink tracking-wide">
                 最常合作的 AI 伙伴
-              </CardTitle>
+              </h3>
               <HelpCircle className="size-3.5 text-ink-muted cursor-help" />
             </div>
-          </CardHeader>
+          </div>
 
-          <CardContent className="p-0 flex-1 flex flex-col justify-center">
+          <div className="flex-1 flex flex-col justify-center">
             {topModels.length === 0 ? (
               // Trae 同款优雅空态 (月亮/睡觉 zzZ + 您目前没有此数据)
               <div className="flex flex-col items-center justify-center py-6 text-center">
@@ -304,21 +350,21 @@ export default function ActivityTab({ user }) {
                 ))}
               </div>
             )}
-          </CardContent>
+          </div>
         </Card>
 
         {/* 右卡片：最近模型调用偏好 */}
         <Card className="rounded-2xl border border-line bg-raised p-6 shadow-elevation-1 flex flex-col justify-between min-h-[220px]">
-          <CardHeader className="p-0 pb-3 flex flex-row items-center justify-between">
+          <div className="pb-3">
             <div className="flex items-center gap-1.5">
-              <CardTitle className="text-sm font-semibold text-ink tracking-wide">
+              <h3 className="text-sm font-semibold text-ink tracking-wide">
                 最近模型调用偏好
-              </CardTitle>
+              </h3>
               <HelpCircle className="size-3.5 text-ink-muted cursor-help" />
             </div>
-          </CardHeader>
+          </div>
 
-          <CardContent className="p-0 flex-1 flex flex-col justify-center">
+          <div className="flex-1 flex flex-col justify-center">
             {preferences.length === 0 ? (
               // Trae 同款优雅空态 (月亮/睡觉 zzZ + 您目前没有此数据)
               <div className="flex flex-col items-center justify-center py-6 text-center">
@@ -355,7 +401,7 @@ export default function ActivityTab({ user }) {
                 })}
               </div>
             )}
-          </CardContent>
+          </div>
         </Card>
       </div>
 
