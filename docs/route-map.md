@@ -58,14 +58,14 @@
 | `/admin/content/effects` | `app/admin/content/effects/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
 | `/admin/coupons` | `app/admin/coupons/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/credits` | `app/admin/credits/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
-| `/admin/email` | `app/admin/email/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
+| `/admin/email` | `app/admin/email/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | `/admin/system/email` |
 | `/admin/feedback` | `app/admin/feedback/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/forbidden` | `app/admin/forbidden/page.js` | **public** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/generations` | `app/admin/generations/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/generations/failures` | `app/admin/generations/failures/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/health` | `app/admin/health/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/i18n` | `app/admin/i18n/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
-| `/admin/login` | `app/admin/login/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
+| `/admin/login` | `app/admin/login/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | `/admin/system/login?category=${category}` `/admin/system/login` |
 | `/admin/models` | `app/admin/models/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
 | `/admin/models/catalog` | `app/admin/models/catalog/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
 | `/admin/models/cost-center` | `app/admin/models/cost-center/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
@@ -79,15 +79,17 @@
 | `/admin/plans` | `app/admin/plans/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/providers` | `app/admin/providers/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | `/admin/models/providers` |
 | `/admin/providers/ai` | `app/admin/providers/ai/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
-| `/admin/providers/email` | `app/admin/providers/email/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | `/admin/email` |
+| `/admin/providers/email` | `app/admin/providers/email/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | `/admin/system/email` |
 | `/admin/providers/models` | `app/admin/providers/models/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | `/admin/models` |
 | `/admin/providers/payments` | `app/admin/providers/payments/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
-| `/admin/providers/sms` | `app/admin/providers/sms/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | `/admin/login?category=sms` |
-| `/admin/providers/social` | `app/admin/providers/social/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | `/admin/login?category=social` |
+| `/admin/providers/sms` | `app/admin/providers/sms/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | `/admin/system/login?category=sms` |
+| `/admin/providers/social` | `app/admin/providers/social/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | `/admin/system/login?category=social` |
 | `/admin/security/sessions` | `app/admin/security/sessions/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/settings` | `app/admin/settings/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/subscription-faq` | `app/admin/subscription-faq/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/subscriptions` | `app/admin/subscriptions/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
+| `/admin/system/email` | `app/admin/system/email/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
+| `/admin/system/login` | `app/admin/system/login/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
 | `/admin/users` | `app/admin/users/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/users/{*}` | `app/admin/users/[id]/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/webhooks` | `app/admin/webhooks/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
