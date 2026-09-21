@@ -1,0 +1,59 @@
+{
+  "loading": {
+    "remixing": "Remezclando gráficos en movimiento…",
+    "generating": "Generando gráficos en movimiento…",
+    "backend": "Renderizado de React/Remotion en Modal"
+  },
+  "card": {
+    "modeEdit": "✏ Editar",
+    "modeGenerated": "✦ Generado",
+    "download": "Descargar",
+    "remixThis": "Remezclar esta generación",
+    "legacyRemixUnavailable": "Generación heredada: remezcla no disponible. Genera un nuevo gráfico en movimiento para habilitar la edición.",
+    "delete": "Eliminar",
+    "confirmDelete": "¿Estás seguro de que deseas eliminar este elemento generado?",
+    "noPrompt": "Sin prompt",
+    "tag": "Movimiento Vibe"
+  },
+  "mobileActions": {
+    "download": "Descargar",
+    "remix": "Remezclar",
+    "delete": "Eliminar"
+  },
+  "empty": {
+    "titleLine1": "COMIENZA A CREAR CON",
+    "titleLine2": "ESTUDIO DE MOVIMIENTO VIBE",
+    "description": "Genera gráficos animados en movimiento a partir de un prompt de texto: tipografía cinética, gráficos de datos, revelaciones de logotipos y más."
+  },
+  "modeToggle": {
+    "generate": "Generar",
+    "edit": "Editar"
+  },
+  "editBanner": {
+    "editingPrefix": "Editando:",
+    "selectSource": "Selecciona una generación de origen de la galería",
+    "cancelEdit": "Cancelar Modo de Edición"
+  },
+  "placeholder": {
+    "edit": "Describe qué cambiar: 'cambia el fondo a azul marino oscuro, haz las barras doradas, añade partículas…'",
+    "generate": "Describe el gráfico en movimiento: 'Panel de ventas animado con gráficos de barras brillantes y números en aumento'"
+  },
+  "controls": {
+    "aspectRatio": "Relación de Aspecto",
+    "duration": "Duración",
+    "sourcePrefix": "Origen:",
+    "pickSource": "Elegir origen…",
+    "sourceGeneration": "Generación de Origen",
+    "shortcutHint": "Ctrl+Enter para ejecutar"
+  },
+  "errors": {
+    "staleEditUnavailable": "Esta generación no se puede remezclar: el código de animación no se guardó en el servidor. Primero genera un nuevo gráfico en movimiento y luego remezcla ese resultado.",
+    "generationFailed": "Error al generar Movimiento Vibe"
+  },
+  "generateButton": {
+    "remixing": "Remezclando...",
+    "generating": "Generando...",
+    "remix": "Remezclar",
+    "generate": "Generar"
+  }
+}

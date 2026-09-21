@@ -1,0 +1,114 @@
+name: PostgreSQL release gates
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22.x'
+  DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/open_generative_ai
+  TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/open_generative_ai_test
+  PGHOST: 127.0.0.1
+  PGPORT: '5432'
+  PGUSER: postgres
+  PGPASSWORD: postgres
+
+jobs:
+  quality-and-integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: open_generative_ai
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d open_generative_ai"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install dependencies with lockfile enforcement
+        run: npm ci
+      - name: Create isolated PostgreSQL test database
+        run: |
+          if ! psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'open_generative_ai_test'" | grep -q 1; then
+            createdb -h 127.0.0.1 -p 5432 -U postgres open_generative_ai_test
+          fi
+      - name: Formatting policy
+        run: npm run format:check
+      - name: ESLint
+        run: npm run lint
+      - name: Release safety and PostgreSQL-only guard
+        run: npm run release:check
+      - name: Secret scan
+        run: npm run security:secrets
+      - name: Launch locale validation
+        run: npm run test:i18n
+      - name: Empty and upgrade migration rehearsal
+        run: npm run migration:drill
+      - name: Apply migrations to isolated PostgreSQL test database
+        run: npm run db:migrate:test
+      - name: Repository and service tests
+        run: |
+          npm run test:p0
+          npm run test:admin
+          npm run test:p7
+          npm run test:p3
+          npm run test:p4
+          npm run test:p5
+          npm run test:p6
+      - name: PostgreSQL integration tests
+        run: npm run test:db
+      - name: Studio Vite build
+        run: npm run build:studio
+      - name: Desktop Vite build
+        run: npm run vite:build
+      - name: Next.js build and server validation
+        run: npm run build
+      - name: Dependency vulnerability scan
+        run: |
+          mkdir -p test-results/security
+          # Runtime dependencies are a hard gate. Development-only Electron
+          # packaging findings remain in the artifact for explicit review.
+          npm audit --omit=dev --audit-level=high
+          npm audit --audit-level=high --json > test-results/security/npm-audit.json || true
+          npm audit --audit-level=high || true
+      - name: Install Chromium for browser E2E
+        run: npx playwright install --with-deps chromium
+      - name: Seed isolated browser identities
+        run: npm run e2e:seed
+      - name: Browser E2E permission and page smoke tests
+        env:
+          DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
+          E2E_SESSION_FILE: e2e/.sessions.json
+        run: npm run test:e2e
+      - name: Backup and restore rehearsal
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/open_generative_ai
+        run: npm run backup:restore:drill
+      - name: Cleanup browser identities
+        if: always()
+        run: npm run e2e:clean
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p7-test-reports
+          path: test-results/
+          if-no-files-found: ignore

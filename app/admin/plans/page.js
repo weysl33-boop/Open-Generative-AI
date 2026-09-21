@@ -1,8 +1,11 @@
-import { getAllPlansConfig } from '@/lib/repositories/settings';
+import { getAllPlansConfig } from '@/lib/services/adminRead';
 import { Card, PageHeader, StatusBadge } from '@/components/admin/AdminUi';
 import PlanCardEditor from './PlanCardEditor';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 
 export default async function PlansPage() {
+  await requireAdminPagePermission(PERMISSIONS.plansRead);
   const plans = await getAllPlansConfig();
 
   return (

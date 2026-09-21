@@ -28,6 +28,11 @@ export default function DesignAgentStudio({
   }
 
   useEffect(() => {
+    if (!apiKey) return undefined;
+    return () => sessionStorage.removeItem("fromDesignAgent");
+  }, [apiKey]);
+
+  useEffect(() => {
     if (!apiKey) return;
 
     // White-label shells already know the end user's identity/credit balance (fetched via
@@ -59,7 +64,7 @@ export default function DesignAgentStudio({
   }, [apiKey, userEmail, balance]);
 
   return (
-    <div className="h-full w-full bg-black overflow-hidden design-agent-studio">
+    <div className="h-full w-full bg-canvas overflow-hidden design-agent-studio">
       <CreativeCanvas 
         user={userData}
         isAuthorized={!!userData}

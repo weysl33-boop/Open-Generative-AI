@@ -1,90 +1,208 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Menu, X, PanelLeftClose, PanelLeftOpen, LogOut } from 'lucide-react';
 import AdminNav from './AdminNav';
+import AdminBreadcrumbs from './AdminBreadcrumbs';
 import { roleLabel } from '@/lib/admin/permissions';
+import { Badge } from '@/components/ui/badge';
+import { BrandMark } from '@/components/site/StudioHeader';
+
+const COLLAPSE_STORAGE_KEY = 'ko_admin_nav_collapsed';
+
+function readCollapsed() {
+  try {
+    return window.localStorage.getItem(COLLAPSE_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeCollapsed(value) {
+  try {
+    window.localStorage.setItem(COLLAPSE_STORAGE_KEY, value ? '1' : '0');
+  } catch {}
+}
 
 export default function AdminShell({ user, children }) {
+  const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [openGroupRequest, setOpenGroupRequest] = useState(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    setCollapsed(readCollapsed());
+  }, []);
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      writeCollapsed(next);
+      return next;
+    });
+  };
+
+  // 折叠 rail 点击父级分组：恢复展开并定位到该分组
+  const expandForGroup = (groupId) => {
+    setCollapsed(false);
+    writeCollapsed(false);
+    setOpenGroupRequest(`${groupId}:${Date.now()}`);
+  };
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
+    window.location.href = '/';
+  };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
-      {/* 56px 顶栏 */}
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-white/[0.06] bg-[#0a0a0b]/90 px-4 backdrop-blur-md">
+    <div className="min-h-screen bg-canvas text-ink">
+      {/* 顶栏（--header-h 固定） */}
+      <header className="fixed inset-x-0 top-0 z-40 flex h-header-h items-center justify-between border-b border-line-subtle bg-canvas/85 px-4 backdrop-blur-md">
         <div className="flex items-center gap-3">
           {/* 移动端汉堡按钮 */}
           <button
             type="button"
             onClick={() => setMobileNavOpen(!mobileNavOpen)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 lg:hidden"
+            className="flex size-8 items-center justify-center rounded-lg border border-line-subtle bg-wash text-ink hover:bg-wash-strong focus-visible:ring-2 focus-visible:ring-brand-ring lg:hidden"
             aria-label="切换侧栏导航"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {mobileNavOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
+            {mobileNavOpen ? <X className="size-4" /> : <Menu className="size-4" />}
           </button>
 
-          <Link href="/studio" className="flex items-center gap-2.5" aria-label="返回 Studio">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#22d3ee] text-sm font-black text-black shadow-lg shadow-[#22d3ee]/20">
-              K
-            </span>
-            <span className="hidden text-sm font-bold tracking-tight sm:inline">KoyoSIM AI Studio</span>
-          </Link>
+          <BrandMark compact />
 
-          <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-xs text-white/60">
+          <span className="rounded-full border border-line-subtle bg-wash px-2.5 py-0.5 text-caption font-semibold uppercase tracking-wider text-ink-muted">
             运营管理端
           </span>
         </div>
 
-        <div className="flex items-center gap-2.5 text-xs">
-          <span className="hidden items-center gap-1.5 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-emerald-200 sm:flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_6px_#6ee7b7]" />
+        <div className="flex items-center gap-2.5 text-label">
+          <span className="hidden items-center gap-1.5 rounded-full border border-success-line bg-success-soft px-2.5 py-0.5 text-success sm:flex">
+            <span className="size-1.5 rounded-full bg-success" />
             系统在线
           </span>
 
-          <span className="rounded-md border border-cyan-300/30 bg-cyan-300/10 px-2.5 py-1 text-cyan-200 font-medium">
+          <Badge variant="accent" className="font-medium">
             {roleLabel(user?.role)}
-          </span>
+          </Badge>
 
-          <span className="hidden rounded-md border border-white/10 bg-white/5 px-3 py-1 text-white/70 md:inline">
+          <span className="hidden rounded-lg border border-line-subtle bg-wash px-2.5 py-1 font-mono text-caption text-ink-muted md:inline">
             {user?.email}
           </span>
-
-          <Link
-            href="/account"
-            className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-white/75 transition hover:border-cyan-300/40 hover:bg-cyan-300/10 hover:text-cyan-100"
-          >
-            账户
-          </Link>
         </div>
       </header>
 
-      {/* 桌面端 216px 展开侧栏 */}
-      <aside className="fixed bottom-0 left-0 top-14 hidden w-[216px] overflow-y-auto border-r border-white/[0.06] bg-[#0a0a0a] px-3 py-5 custom-scrollbar lg:block">
-        <AdminNav user={user} />
+      {/* 桌面端侧栏：Header 固定 / Navigation 滚动 / 用户区固定 */}
+      <aside
+        className={`fixed bottom-0 left-0 top-header-h z-30 hidden flex-col border-r border-line-subtle bg-canvas transition-[width] duration-base ease-standard lg:flex ${
+          collapsed ? 'w-sidebar-collapsed' : 'w-sidebar'
+        }`}
+      >
+        <div
+          className={`flex h-10 shrink-0 items-center border-b border-line-subtle px-3 ${
+            collapsed ? 'justify-center' : 'justify-between'
+          }`}
+        >
+          {!collapsed && (
+            <span className="text-micro font-semibold uppercase tracking-widest text-ink-muted">
+              导航
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? '展开侧栏' : '折叠侧栏'}
+            className="flex size-7 items-center justify-center rounded-lg border border-transparent text-ink-muted transition-colors duration-base hover:border-line-subtle hover:bg-wash hover:text-ink"
+          >
+            {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+          </button>
+        </div>
+
+        <div
+          className={`admin-sidebar-scrollbar scrollbar-none min-h-0 flex-1 overflow-y-auto py-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
+            collapsed ? 'px-1.5' : 'px-2.5'
+          }`}
+        >
+          <AdminNav
+            user={user}
+            collapsed={collapsed}
+            onRequestExpand={expandForGroup}
+            openGroupRequest={openGroupRequest}
+          />
+        </div>
+
+        <div className={`shrink-0 border-t border-line-subtle p-2.5 ${collapsed ? 'flex justify-center' : ''}`}>
+          {collapsed ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              aria-label="退出登录"
+              className="flex size-10 items-center justify-center rounded-lg border border-transparent text-ink-muted transition-colors duration-base hover:border-danger-line hover:bg-danger-soft hover:text-danger"
+            >
+              <LogOut className={`size-4 ${loggingOut ? 'animate-spin' : ''}`} />
+            </button>
+          ) : (
+            <div className="rounded-xl border border-line-subtle bg-wash p-2.5">
+              <p className="truncate text-micro font-medium text-ink" title={user?.email}>
+                {user?.email || '未登录'}
+              </p>
+              <p className="mt-0.5 text-micro text-ink-subtle">{roleLabel(user?.role)}</p>
+              <div className="mt-2 flex items-center gap-1.5">
+                <Link
+                  href="/studio"
+                  className="flex h-control-xs flex-1 items-center justify-center rounded-md border border-line-subtle bg-wash text-micro font-medium text-ink-muted transition-colors duration-base hover:border-brand-line hover:bg-brand-soft hover:text-brand"
+                >
+                  返回 Studio
+                </Link>
+                <Link
+                  href="/account"
+                  className="flex h-control-xs flex-1 items-center justify-center rounded-md border border-line-subtle bg-wash text-micro font-medium text-ink-muted transition-colors duration-base hover:border-brand-line hover:bg-brand-soft hover:text-brand"
+                >
+                  账户
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  aria-label="退出登录"
+                  className="flex size-7 items-center justify-center rounded-md border border-line-subtle bg-wash text-ink-muted transition-colors duration-base hover:border-danger-line hover:bg-danger-soft hover:text-danger"
+                >
+                  <LogOut className={`size-3.5 ${loggingOut ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </aside>
 
       {/* 移动端侧栏抽屉 */}
       {mobileNavOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 bg-scrim backdrop-blur-sm"
             onClick={() => setMobileNavOpen(false)}
           />
-          <aside className="fixed bottom-0 left-0 top-14 w-[240px] overflow-y-auto border-r border-white/10 bg-[#0a0a0a] px-4 py-6 shadow-2xl">
+          <aside className="admin-sidebar-scrollbar scrollbar-none fixed bottom-0 left-0 top-header-h w-sidebar overflow-y-auto border-r border-line bg-canvas px-2.5 py-4 shadow-elevation-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <AdminNav user={user} onItemClick={() => setMobileNavOpen(false)} />
           </aside>
         </div>
       )}
 
       {/* 主画布区域 */}
-      <main className="min-h-screen pt-14 lg:pl-[216px]">
-        <div className="mx-auto max-w-[1280px] px-4 py-8 sm:px-6 lg:px-8">
+      <main
+        className={`min-h-screen pt-header-h transition-[padding] duration-base ease-standard ${
+          collapsed ? 'lg:pl-sidebar-collapsed' : 'lg:pl-sidebar-w'
+        }`}
+      >
+        <div className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 lg:px-8">
+          {pathname !== '/admin' && <AdminBreadcrumbs pathname={pathname} />}
           {children}
         </div>
       </main>

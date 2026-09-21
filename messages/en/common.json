@@ -44,7 +44,9 @@
     "settingsTitle": "Settings and API Key",
     "dropHere": "Drop your media here",
     "dropHereHint": "Images, videos, or audio files",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "modelDirectoryUnavailable": "Model list is temporarily unavailable, so some features may be limited.",
+    "retry": "Retry"
   },
   "settingsModal": {
     "title": "Settings",

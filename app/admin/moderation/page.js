@@ -1,7 +1,9 @@
 import Link from 'next/link';
-import { listModerationCases } from '@/lib/repositories/moderation';
+import { listModerationCases } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 import AdminActionForm from '@/components/admin/AdminActionForm';
 
 function formatDate(value) {
@@ -11,6 +13,7 @@ function formatDate(value) {
 }
 
 export default async function ModerationPage({ searchParams }) {
+  await requireAdminPagePermission(PERMISSIONS.moderationRead);
   const params = toSearchParams(await searchParams);
   const result = await listModerationCases(params);
 
@@ -31,7 +34,7 @@ export default async function ModerationPage({ searchParams }) {
       key: 'user',
       label: '作者账号',
       render: (row) => (
-        <Link href={`/admin/users/${row.user_id}`} className="font-semibold text-white hover:text-cyan-200">
+        <Link href={`/admin/users/${row.user_id}`} className="font-semibold text-ink hover:text-brand-hover">
           {row.email}
         </Link>
       ),
@@ -45,12 +48,12 @@ export default async function ModerationPage({ searchParams }) {
             href={row.result_url}
             target="_blank"
             rel="noreferrer"
-            className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-cyan-200 hover:bg-cyan-300/10"
+            className="rounded-lg border border-line bg-wash px-2.5 py-1 text-xs text-brand-hover hover:bg-brand-soft"
           >
             查看文件 ↗
           </a>
         ) : (
-          <span className="text-white/30 text-xs">—</span>
+          <span className="text-ink-subtle text-xs">—</span>
         ),
     },
     {
@@ -106,7 +109,7 @@ export default async function ModerationPage({ searchParams }) {
             />
           </div>
         ) : (
-          <span className="text-xs text-white/40">已处理 ({row.resolution})</span>
+          <span className="text-xs text-ink-subtle">已处理 ({row.resolution})</span>
         ),
     },
   ];
@@ -124,7 +127,7 @@ export default async function ModerationPage({ searchParams }) {
           <select
             name="status"
             defaultValue={params.get('status') || ''}
-            className="rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-2.5 text-xs text-white/70 outline-none focus:border-cyan-300/50"
+            className="rounded-xl border border-line bg-canvas px-4 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
           >
             <option value="">全部审核状态</option>
             <option value="pending">待审核 (Pending)</option>
@@ -133,7 +136,7 @@ export default async function ModerationPage({ searchParams }) {
           </select>
           <button
             type="submit"
-            className="rounded-xl bg-cyan-300 px-5 py-2.5 text-xs font-bold text-black hover:bg-cyan-200"
+            className="rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-ink-on-accent hover:bg-brand"
           >
             筛选队列
           </button>

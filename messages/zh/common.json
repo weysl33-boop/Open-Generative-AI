@@ -44,7 +44,9 @@
     "settingsTitle": "设置与 API Key",
     "dropHere": "将媒体文件拖放到此处",
     "dropHereHint": "图片、视频或音频文件",
-    "dismiss": "关闭"
+    "dismiss": "关闭",
+    "modelDirectoryUnavailable": "模型列表暂时不可用，部分功能可能受限。",
+    "retry": "重试"
   },
   "settingsModal": {
     "title": "设置",

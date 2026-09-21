@@ -1,5 +1,7 @@
-﻿import { getUserFromRequest, json } from '@/lib/billing';
-import { createCommunityPost, listCommunityPosts } from '@/lib/repositories/community';
+import { getUserFromRequest, json } from '@/lib/services/auth';
+import { createCommunityPost, listCommunityPosts } from '@/lib/services/community';
+import { guardMutation } from '@/lib/security/requestGuard';
+import { publicErrorMessage } from '@/lib/security/publicError';
 
 export const runtime = 'nodejs';
 
@@ -37,7 +39,7 @@ export async function GET(request) {
     });
   } catch (error) {
     console.error('[community list error]', error);
-    return json({ error: '获取社区作品失败', details: error.message }, { status: 500 });
+    return json({ error: publicErrorMessage(error, '获取社区作品失败') }, { status: 500 });
   }
 }
 
@@ -46,6 +48,9 @@ export async function POST(request) {
   if (!user) {
     return json({ error: '请登录后再分享作品到社区' }, { status: 401 });
   }
+
+  const guarded = guardMutation(request, { maxBytes: 256 * 1024 });
+  if (guarded) return guarded;
 
   try {
     const body = await request.json();
@@ -85,6 +90,6 @@ export async function POST(request) {
     return json({ post }, { status: 201 });
   } catch (error) {
     console.error('[community create error]', error);
-    return json({ error: '发布到社区失败', details: error.message }, { status: 500 });
+    return json({ error: publicErrorMessage(error, '发布到社区失败') }, { status: 500 });
   }
 }

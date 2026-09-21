@@ -174,7 +174,7 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
   });
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-in fade-in duration-base">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <PageHeader
           eyebrow="计费与权益配置"
@@ -188,7 +188,7 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
             variant="outline"
             size="sm"
             onClick={handleResetToDefaults}
-            className="gap-1.5 border-white/10 bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10"
+            className="gap-1.5 border-line bg-wash text-ink hover:text-ink hover:bg-wash-press"
           >
             <RotateCcw className="size-3.5" />
             <span>恢复官方预设</span>
@@ -199,7 +199,7 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
             variant="outline"
             size="sm"
             onClick={() => handleOpenEdit(null)}
-            className="gap-1.5 border-lime-400/30 bg-lime-400/10 text-lime-400 hover:bg-lime-400/20"
+            className="gap-1.5 border-success-line bg-success-soft text-success hover:bg-success-soft"
           >
             <Plus className="size-3.5" />
             <span>新增问答项</span>
@@ -211,7 +211,7 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
             size="sm"
             onClick={handleSaveAll}
             disabled={isSaving}
-            className="gap-1.5 bg-gradient-to-r from-lime-400 to-emerald-500 text-black font-bold hover:brightness-110 shadow-md shadow-lime-400/20 active:scale-95"
+            className="gap-1.5 bg-gradient-to-r from-success to-success text-ink-inverse font-bold hover:brightness-110 shadow-elevation-2 shadow-success-soft active:scale-95"
           >
             <Save className="size-3.5" />
             <span>{isSaving ? '正在保存…' : '保存全部更改'}</span>
@@ -222,7 +222,7 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
       {/* 提示消息 */}
       {message && (
         <div
-          className={`flex items-center gap-2.5 p-3.5 rounded-xl border text-xs font-medium animate-in fade-in duration-200 ${
+          className={`flex items-center gap-2.5 p-3.5 rounded-xl border text-xs font-medium animate-in fade-in duration-base ${
             message.type === 'success'
               ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
               : 'bg-red-500/10 border-red-500/30 text-red-300'
@@ -238,16 +238,16 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
       )}
 
       {/* 1. 全局订阅说明与客服配置卡片 */}
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0c0e14] p-5 space-y-4">
-        <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
-          <Sparkles className="size-4 text-lime-400" />
+      <div className="rounded-2xl border border-line bg-base p-5 space-y-4">
+        <h3 className="text-sm font-bold text-ink tracking-tight flex items-center gap-2">
+          <Sparkles className="size-4 text-success" />
           <span>全局基础说明配置</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-              <FileText className="size-3.5 text-zinc-400" />
+            <label className="text-xs font-semibold text-ink flex items-center gap-1.5">
+              <FileText className="size-3.5 text-ink-muted" />
               <span>顶部常驻提示语 (Notice)</span>
             </label>
             <input
@@ -255,13 +255,13 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
               value={config.notice || ''}
               onChange={(e) => handleMetaChange('notice', e.target.value)}
               placeholder="例如：所有会员套餐均支持随时升级或取消..."
-              className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-lime-400/50 focus:outline-none"
+              className="w-full rounded-xl border border-line bg-scrim px-3 py-2 text-xs text-ink placeholder-ink-subtle focus:border-success-line"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-              <Mail className="size-3.5 text-zinc-400" />
+            <label className="text-xs font-semibold text-ink flex items-center gap-1.5">
+              <Mail className="size-3.5 text-ink-muted" />
               <span>官方客服与售后邮箱</span>
             </label>
             <input
@@ -269,13 +269,13 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
               value={config.supportEmail || ''}
               onChange={(e) => handleMetaChange('supportEmail', e.target.value)}
               placeholder="support@koyosim.com"
-              className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-lime-400/50 focus:outline-none"
+              className="w-full rounded-xl border border-line bg-scrim px-3 py-2 text-xs text-ink placeholder-ink-subtle focus:border-success-line"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-              <FileText className="size-3.5 text-zinc-400" />
+            <label className="text-xs font-semibold text-ink flex items-center gap-1.5">
+              <FileText className="size-3.5 text-ink-muted" />
               <span>发票与凭证说明摘要</span>
             </label>
             <input
@@ -283,19 +283,19 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
               value={config.invoiceNotice || ''}
               onChange={(e) => handleMetaChange('invoiceNotice', e.target.value)}
               placeholder="支持开具增值税电子发票..."
-              className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-lime-400/50 focus:outline-none"
+              className="w-full rounded-xl border border-line bg-scrim px-3 py-2 text-xs text-ink placeholder-ink-subtle focus:border-success-line"
             />
           </div>
         </div>
       </div>
 
       {/* 2. 问答管理列表 */}
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0c0e14] overflow-hidden">
+      <div className="rounded-2xl border border-line bg-base overflow-hidden">
         {/* 顶部工具栏 */}
-        <div className="p-4 border-b border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/[0.01]">
+        <div className="p-4 border-b border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-wash">
           <div className="flex items-center gap-2">
-            <HelpCircle className="size-4 text-[#bef264]" />
-            <h3 className="text-sm font-bold text-white">问答条目列表 ({filteredItems.length}/{config.items.length})</h3>
+            <HelpCircle className="size-4 text-warning" />
+            <h3 className="text-sm font-bold text-ink">问答条目列表 ({filteredItems.length}/{config.items.length})</h3>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
@@ -303,7 +303,7 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="rounded-lg border border-white/10 bg-black/60 px-2.5 py-1.5 text-xs text-zinc-300 focus:border-lime-400/50 focus:outline-none"
+              className="rounded-lg border border-line bg-scrim px-2.5 py-1.5 text-xs text-ink focus:border-success-line"
             >
               {CATEGORIES.map((c) => (
                 <option key={c.value} value={c.value}>
@@ -314,13 +314,13 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
 
             {/* 搜索框 */}
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-ink-subtle" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="搜索问题或解答内容..."
-                className="w-48 sm:w-60 rounded-lg border border-white/10 bg-black/60 pl-8 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:border-lime-400/50 focus:outline-none"
+                className="w-48 sm:w-60 rounded-lg border border-line bg-scrim pl-8 pr-3 py-1.5 text-xs text-ink placeholder-ink-subtle focus:border-success-line"
               />
             </div>
           </div>
@@ -328,8 +328,8 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
 
         {/* 问答表格 */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-zinc-300">
-            <thead className="bg-white/[0.02] text-zinc-400 border-b border-white/[0.06] font-medium uppercase tracking-wider text-[11px]">
+          <table className="w-full text-left text-xs text-ink">
+            <thead className="bg-wash text-ink-muted border-b border-line-subtle font-medium uppercase tracking-wider text-[11px]">
               <tr>
                 <th className="py-3 px-3 w-16 text-center">排序</th>
                 <th className="py-3 px-3 w-24">分类</th>
@@ -339,23 +339,23 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
                 <th className="py-3 px-4 w-36 text-right">操作</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.04]">
+            <tbody className="divide-y divide-line-subtle">
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-zinc-500">
+                  <td colSpan={6} className="py-12 text-center text-ink-subtle">
                     未查找到匹配的问答条目
                   </td>
                 </tr>
               ) : (
                 filteredItems.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-white/[0.02] transition-colors group">
-                    <td className="py-3 px-3 text-center font-mono text-zinc-400">
+                  <tr key={item.id} className="hover:bg-wash transition-colors group">
+                    <td className="py-3 px-3 text-center font-mono text-ink-muted">
                       <div className="flex items-center justify-center gap-1">
                         <button
                           type="button"
                           onClick={() => handleMoveOrder(idx, 'up')}
                           disabled={idx === 0}
-                          className="text-zinc-500 hover:text-white disabled:opacity-20 cursor-pointer"
+                          className="text-ink-subtle hover:text-ink disabled:opacity-20 cursor-pointer"
                           title="上移"
                         >
                           <ArrowUp className="size-3" />
@@ -365,7 +365,7 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
                           type="button"
                           onClick={() => handleMoveOrder(idx, 'down')}
                           disabled={idx === filteredItems.length - 1}
-                          className="text-zinc-500 hover:text-white disabled:opacity-20 cursor-pointer"
+                          className="text-ink-subtle hover:text-ink disabled:opacity-20 cursor-pointer"
                           title="下移"
                         >
                           <ArrowDown className="size-3" />
@@ -374,16 +374,16 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
                     </td>
 
                     <td className="py-3 px-3">
-                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-white/5 border border-white/10 text-zinc-300">
+                      <span className="inline-block px-2 py-0.5 rounded text-micro font-medium bg-wash border border-line text-ink">
                         {CATEGORIES.find((c) => c.value === item.category)?.label || item.category}
                       </span>
                     </td>
 
-                    <td className="py-3 px-4 font-semibold text-white">
+                    <td className="py-3 px-4 font-semibold text-ink">
                       {item.question}
                     </td>
 
-                    <td className="py-3 px-4 text-zinc-400 max-w-md">
+                    <td className="py-3 px-4 text-ink-muted max-w-md">
                       <p className="line-clamp-2 leading-relaxed whitespace-pre-wrap">
                         {item.answer}
                       </p>
@@ -393,10 +393,10 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
                       <button
                         type="button"
                         onClick={() => toggleItemEnabled(item.id)}
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-micro font-bold cursor-pointer transition-colors ${
                           item.enabled
-                            ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                            : 'bg-zinc-800 text-zinc-500 border border-white/5'
+                            ? 'bg-success-soft text-success border border-success-line'
+                            : 'bg-overlay text-ink-subtle border border-line-subtle'
                         }`}
                         title={item.enabled ? '已展示在前台，点击隐藏' : '已隐藏，点击启用'}
                       >
@@ -410,17 +410,17 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(item)}
-                          className="flex items-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                          className="flex items-center gap-1 px-2 py-1 rounded bg-wash hover:bg-wash-press text-ink hover:text-ink transition-colors cursor-pointer"
                           title="编辑问题与解答"
                         >
-                          <Edit3 className="size-3 text-cyan-400" />
+                          <Edit3 className="size-3 text-brand" />
                           <span>编辑</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => handleDeleteItem(item.id)}
-                          className="flex items-center gap-1 px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors cursor-pointer"
+                          className="flex items-center gap-1 px-2 py-1 rounded bg-danger-soft hover:bg-danger-hover text-danger transition-colors cursor-pointer"
                           title="删除该问答"
                         >
                           <Trash2 className="size-3" />
@@ -438,18 +438,18 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
 
       {/* 3. 新增 / 编辑弹窗 */}
       {isModalOpen && editingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-          <div className="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0d0e14] p-6 text-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-4">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Edit3 className="size-4 text-lime-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-scrim backdrop-blur-sm p-4 animate-in fade-in duration-fast">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-line bg-base p-6 text-ink shadow-elevation-4">
+            <div className="flex items-center justify-between border-b border-line pb-3 mb-4">
+              <h3 className="text-base font-bold text-ink flex items-center gap-2">
+                <Edit3 className="size-4 text-success" />
                 <span>{editingItem.id && config.items.some((x) => x.id === editingItem.id) ? '编辑常见问题' : '新增常见问题'}</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-zinc-500 hover:text-white transition-colors cursor-pointer"
-              >
+                className="text-ink-subtle hover:text-ink transition-colors cursor-pointer"
+                aria-label="关闭">
                 <X className="size-4" />
               </button>
             </div>
@@ -457,11 +457,11 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
             <form onSubmit={handleSaveItemModal} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-zinc-300">分类领域</label>
+                  <label className="text-xs font-semibold text-ink">分类领域</label>
                   <select
                     value={editingItem.category}
                     onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-xs text-white focus:border-lime-400/50 focus:outline-none"
+                    className="w-full rounded-xl border border-line bg-scrim px-3 py-2 text-xs text-ink focus:border-success-line"
                   >
                     {CATEGORIES.filter((c) => c.value !== 'all').map((c) => (
                       <option key={c.value} value={c.value}>
@@ -472,37 +472,37 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-zinc-300">展示排序号</label>
+                  <label className="text-xs font-semibold text-ink">展示排序号</label>
                   <input
                     type="number"
                     value={editingItem.order}
                     onChange={(e) => setEditingItem({ ...editingItem, order: Number(e.target.value) || 1 })}
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-xs text-white focus:border-lime-400/50 focus:outline-none"
+                    className="w-full rounded-xl border border-line bg-scrim px-3 py-2 text-xs text-ink focus:border-success-line"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-zinc-300">问题标题 (Question)</label>
+                <label className="text-xs font-semibold text-ink">问题标题 (Question)</label>
                 <input
                   type="text"
                   required
                   value={editingItem.question}
                   onChange={(e) => setEditingItem({ ...editingItem, question: e.target.value })}
                   placeholder="例如：订阅后切换套餐，算力及权益会怎么变化？"
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-lime-400/50 focus:outline-none"
+                  className="w-full rounded-xl border border-line bg-scrim px-3 py-2 text-xs text-ink placeholder-ink-subtle focus:border-success-line"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-zinc-300">解答正文 (Answer - 支持分行与段落)</label>
+                <label className="text-xs font-semibold text-ink">解答正文 (Answer - 支持分行与段落)</label>
                 <textarea
                   rows={8}
                   required
                   value={editingItem.answer}
                   onChange={(e) => setEditingItem({ ...editingItem, answer: e.target.value })}
                   placeholder="详细说明政策细节与规则，支持换行排版..."
-                  className="w-full rounded-xl border border-white/10 bg-black/50 p-3 text-xs text-white placeholder-zinc-500 focus:border-lime-400/50 focus:outline-none leading-relaxed"
+                  className="w-full rounded-xl border border-line bg-scrim p-3 text-xs text-ink placeholder-ink-subtle focus:border-success-line leading-relaxed"
                 />
               </div>
 
@@ -512,20 +512,20 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
                   id="enabledCheck"
                   checked={editingItem.enabled}
                   onChange={(e) => setEditingItem({ ...editingItem, enabled: e.target.checked })}
-                  className="size-4 rounded border-white/20 bg-black/60 text-lime-400 focus:ring-lime-400/40"
+                  className="size-4 rounded border-line-strong bg-scrim text-success focus:ring-success-line"
                 />
-                <label htmlFor="enabledCheck" className="text-xs text-zinc-300 cursor-pointer">
+                <label htmlFor="enabledCheck" className="text-xs text-ink cursor-pointer">
                   在前台订阅弹窗中正式公开显示
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.08]">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-line">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setIsModalOpen(false)}
-                  className="border-white/10 text-zinc-300"
+                  className="border-line text-ink"
                 >
                   取消
                 </Button>
@@ -533,7 +533,7 @@ export default function SubscriptionFaqManagerClient({ initialConfig, defaultCon
                   type="submit"
                   variant="primary"
                   size="sm"
-                  className="bg-lime-400 text-black font-bold hover:bg-lime-300"
+                  className="bg-success text-ink-on-accent font-bold hover:bg-success"
                 >
                   确定更新
                 </Button>

@@ -1,4 +1,4 @@
-import { getModelById, getVideoModelById, getI2IModelById, getI2VModelById, getV2VModelById, getRecastModelById, getLipSyncModelById, getAudioModelById, getMotionControlModelById } from './models.js';
+import { getModelById, getVideoModelById, getI2IModelById, getI2VModelById, getV2VModelById, getRecastModelById, getLipSyncModelById, getAudioModelById, getMotionControlModelById, t2iModels, i2iModels } from './models.js';
 import {
     buildVideoToolPayload,
     serializeVideoToolOptions,
@@ -9,6 +9,7 @@ import { pollForGenerationResult } from './utils/generationLifecycle.js';
 import { getModelMediaCapabilities, mapReferenceParams } from './modelCapabilities.js';
 import { buildSupplementalInputPayload } from './modelParameters.js';
 import { getGroupedVideoConfiguration } from './groupedVideoModels.js';
+import { submitPlatformGeneration } from './platformGeneration.js';
 
 // In an http(s) browser we route through the host app's proxy (Next.js routes
 // under /api/* re-issue the call server-side) so api.muapi.ai CORS is bypassed.
@@ -52,6 +53,13 @@ async function pollForResult(requestId, key, maxAttempts = 900, interval = 2000)
     });
 }
 
+function getHostedStudioId() {
+    if (typeof window === 'undefined') return 'studio';
+    const segments = String(window.location?.pathname || '').split('/').filter(Boolean);
+    const studioIndex = segments.lastIndexOf('studio');
+    return studioIndex >= 0 ? (segments[studioIndex + 1] || 'image') : 'studio';
+}
+
 function normalizePredictionResult(submitData, result, outputUrl) {
     const requestId = submitData?.request_id || submitData?.id || result?.request_id || result?.id;
     return {
@@ -61,7 +69,7 @@ function normalizePredictionResult(submitData, result, outputUrl) {
     };
 }
 
-async function submitAndPoll(endpoint, payload, key, onRequestId, maxAttempts = 60) {
+async function submitAndPoll(endpoint, payload, key, onRequestId, maxAttempts = 60, platformModelId = endpoint) {
     // The shell opens the account dialog only when a model request is about
     // to consume quota. It resolves after login so the original request can
     // continue without making the user click Generate a second time.
@@ -69,6 +77,19 @@ async function submitAndPoll(endpoint, payload, key, onRequestId, maxAttempts = 
     if (accountGate) {
         const user = await accountGate();
         if (!user) throw new Error('Generation cancelled: account login is required.');
+        // Hosted KoyoSIM generation must use the server-owned quote, wallet
+        // reservation, idempotency, worker and settlement path. Never forward a
+        // browser API key or fall back to the legacy provider proxy here.
+        return submitPlatformGeneration({
+            modelId: platformModelId,
+            studioId: getHostedStudioId(),
+            prompt: payload?.prompt || '',
+            parameters: payload,
+            label: payload?.label,
+            onRequestId,
+            maxAttempts,
+            onAuthRequired: notifyAuthRequired,
+        });
     }
     let requestKey = key;
     if (!requestKey && typeof window !== 'undefined' && window.__KOYOSIM_REQUIRE_API_KEY__) {
@@ -101,8 +122,104 @@ async function submitAndPoll(endpoint, payload, key, onRequestId, maxAttempts = 
     return normalizePredictionResult(submitData, result, outputUrl);
 }
 
+export function resolveModelQualityOrResolution(modelOrId, selectedQuality) {
+    let model = modelOrId;
+    if (typeof modelOrId === 'string') {
+        model = getModelById(modelOrId) || getI2IModelById(modelOrId) ||
+            (Array.isArray(t2iModels) ? t2iModels.find(m => m.id === modelOrId || m.endpoint === modelOrId) : null) ||
+            (Array.isArray(i2iModels) ? i2iModels.find(m => m.id === modelOrId || m.endpoint === modelOrId) : null);
+    }
+    if (!model || !model.inputs) return null;
+
+    let field = null;
+    let inputDef = null;
+    if (model.inputs.quality) {
+        field = 'quality';
+        inputDef = model.inputs.quality;
+    } else if (model.inputs.resolution) {
+        field = 'resolution';
+        inputDef = model.inputs.resolution;
+    }
+    if (!field || !inputDef) return null;
+
+    const enumList = Array.isArray(inputDef.enum) ? inputDef.enum : [];
+    const defaultVal = inputDef.default || enumList[0] || null;
+
+    if (!selectedQuality) {
+        return {
+            field,
+            value: defaultVal,
+            toString() { return this.value || ''; },
+            valueOf() { return this.value || ''; }
+        };
+    }
+
+    // Exact match in enum
+    if (enumList.includes(selectedQuality)) {
+        return {
+            field,
+            value: selectedQuality,
+            toString() { return this.value || ''; },
+            valueOf() { return this.value || ''; }
+        };
+    }
+
+    const raw = String(selectedQuality).trim();
+    const lower = raw.toLowerCase();
+
+    // Categorize input into quality tiers:
+    // Tier 1: 1k, 1.5k, 720, basic, low, 标清, standard
+    // Tier 2: 2k, 1080, medium, 高清, 中
+    // Tier 3: 4k, 8k, high, ultra, 超清
+    const isTier1 = /1k|1\.5k|720|basic|low|标清|standard/i.test(lower);
+    const isTier3 = /4k|8k|ultra|超清/i.test(lower) || (lower === 'high' && !/medium|中/i.test(lower));
+    const isTier2 = /2k|1080|medium|中/i.test(lower) || (/高清/i.test(raw) && !/超清/i.test(raw));
+
+    // Check target enum patterns
+    const hasBasicHigh = enumList.includes('basic') && enumList.includes('high');
+    const hasLowMedHigh = enumList.includes('low') && enumList.includes('high');
+    const hasLowerK = enumList.some(e => /^\d+k$/i.test(e) && e === e.toLowerCase());
+    const hasUpperK = enumList.some(e => /^\d+K$/.test(e));
+
+    let mappedValue = null;
+
+    if (hasBasicHigh) {
+        if (isTier1) mappedValue = 'basic';
+        else mappedValue = 'high';
+    } else if (hasLowMedHigh) {
+        if (isTier1) mappedValue = 'low';
+        else if (isTier3) mappedValue = 'high';
+        else mappedValue = enumList.includes('medium') ? 'medium' : 'high';
+    } else if (hasLowerK) {
+        if (isTier1) mappedValue = enumList.includes('1k') ? '1k' : defaultVal;
+        else if (isTier3) mappedValue = enumList.includes('4k') ? '4k' : (enumList.includes('2k') ? '2k' : defaultVal);
+        else mappedValue = enumList.includes('2k') ? '2k' : (enumList.includes('1k') ? '1k' : defaultVal);
+    } else if (hasUpperK) {
+        if (isTier1) mappedValue = enumList.includes('1K') ? '1K' : defaultVal;
+        else if (isTier3) mappedValue = enumList.includes('4K') ? '4K' : (enumList.includes('2K') ? '2K' : defaultVal);
+        else mappedValue = enumList.includes('2K') ? '2K' : (enumList.includes('1K') ? '1K' : defaultVal);
+    }
+
+    // Direct case-insensitive match check
+    if (!mappedValue) {
+        const caseMatch = enumList.find(e => e.toLowerCase() === lower);
+        if (caseMatch) mappedValue = caseMatch;
+    }
+
+    if (!mappedValue || !enumList.includes(mappedValue)) {
+        mappedValue = defaultVal;
+    }
+
+    return {
+        field,
+        value: mappedValue,
+        toString() { return this.value || ''; },
+        valueOf() { return this.value || ''; }
+    };
+}
+
 export async function generateImage(apiKey, params) {
-    const modelInfo = getModelById(params.model);
+    const modelInfo = getModelById(params.model) || (Array.isArray(t2iModels) ? t2iModels.find(m => m.endpoint === params.model || m.id === params.model) : null);
     const endpoint = modelInfo?.endpoint || params.model;
     const payload = {
         ...buildSupplementalInputPayload(modelInfo, params),
@@ -110,8 +227,22 @@ export async function generateImage(apiKey, params) {
     };
     if (modelInfo) Object.assign(payload, buildImageSizePayload(modelInfo, params.aspect_ratio));
     else if (params.aspect_ratio) payload.aspect_ratio = params.aspect_ratio;
-    if (params.resolution) payload.resolution = params.resolution;
-    if (params.quality) payload.quality = params.quality;
+    if (params.width) payload.width = params.width;
+    if (params.height) payload.height = params.height;
+    if (modelInfo && !modelInfo.inputs?.width && !modelInfo.inputs?.height) {
+        delete payload.width;
+        delete payload.height;
+    }
+    const resolvedQuality = resolveModelQualityOrResolution(
+        modelInfo,
+        params.quality || params.resolution || params.selectedQuality
+    );
+    if (resolvedQuality?.field && resolvedQuality?.value) {
+        payload[resolvedQuality.field] = resolvedQuality.value;
+    } else {
+        delete payload.quality;
+        delete payload.resolution;
+    }
     if (params.image_url) { 
         payload.image_url = params.image_url; 
         payload.strength = params.strength || 0.6; 
@@ -121,11 +252,11 @@ export async function generateImage(apiKey, params) {
         payload.image_url = null;
     }
     if (params.seed && params.seed !== -1) payload.seed = params.seed;
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 60);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 60, modelInfo?.id || endpoint);
 }
 
 export async function generateI2I(apiKey, params) {
-    const modelInfo = getI2IModelById(params.model);
+    const modelInfo = getI2IModelById(params.model) || (Array.isArray(i2iModels) ? i2iModels.find(m => m.endpoint === params.model || m.id === params.model) : null);
     const endpoint = modelInfo?.endpoint || params.model;
     const imageField = modelInfo?.imageField || 'image_url';
     const imagesList = normalizePrimaryImageUrls(params.images_list, params.image_url);
@@ -146,12 +277,26 @@ export async function generateI2I(apiKey, params) {
     }
     if (modelInfo) Object.assign(payload, buildImageSizePayload(modelInfo, params.aspect_ratio));
     else if (params.aspect_ratio) payload.aspect_ratio = params.aspect_ratio;
-    if (params.resolution) payload.resolution = params.resolution;
-    if (params.quality) payload.quality = params.quality;
+    if (params.width) payload.width = params.width;
+    if (params.height) payload.height = params.height;
+    if (modelInfo && !modelInfo.inputs?.width && !modelInfo.inputs?.height) {
+        delete payload.width;
+        delete payload.height;
+    }
+    const resolvedQuality = resolveModelQualityOrResolution(
+        modelInfo,
+        params.quality || params.resolution || params.selectedQuality
+    );
+    if (resolvedQuality?.field && resolvedQuality?.value) {
+        payload[resolvedQuality.field] = resolvedQuality.value;
+    } else {
+        delete payload.quality;
+        delete payload.resolution;
+    }
     if (modelInfo?.inputs?.name) {
         payload.name = params.name || modelInfo.inputs.name.default;
     }
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 60);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 60, modelInfo?.id || endpoint);
 }
 
 export async function decomposeLayers(apiKey, params) {
@@ -162,7 +307,7 @@ export async function decomposeLayers(apiKey, params) {
         resolution: params.resolution || 'auto',
         output_format: params.output_format || 'png'
     };
-    const result = await submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 300);
+    const result = await submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 300, endpoint);
     const rawImages = result.images || result.output?.images || result.outputs || (result.url ? [result.url] : []);
     const images = Array.isArray(rawImages) ? rawImages : [rawImages];
     return { ...result, images };
@@ -191,7 +336,7 @@ export async function generateVideo(apiKey, params) {
     if (!mediaCapabilities.video.field && params.video_files?.length > 0) payload.video_files = params.video_files;
     Object.assign(payload, serializeVideoToolOptions(modelInfo, params.options));
     payload = includeRequiredArrayDefaults(modelInfo, payload);
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, modelInfo?.id || endpoint);
 }
 
 export async function generateI2V(apiKey, params) {
@@ -213,7 +358,7 @@ export async function generateI2V(apiKey, params) {
         payload.name = params.name || modelInfo.inputs.name.default;
     }
     payload = includeRequiredArrayDefaults(modelInfo, payload);
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, modelInfo?.id || endpoint);
 }
 
 export async function generateMarketingStudioAd(apiKey, params) {
@@ -225,7 +370,7 @@ export async function generateMarketingStudioAd(apiKey, params) {
         images_list: params.images_list || [],
         video_files: params.video_files || []
     };
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, endpoint);
 }
 
 export async function processV2V(apiKey, params) {
@@ -248,7 +393,7 @@ export async function processV2V(apiKey, params) {
         }
     }
     payload = includeRequiredArrayDefaults(modelInfo, payload);
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, modelInfo?.id || endpoint);
 }
 
 export async function estimateV2VCost(params, signal) {
@@ -308,7 +453,7 @@ export async function processRecast(apiKey, params) {
     if (params.character_orientation) {
         payload.character_orientation = params.character_orientation;
     }
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, modelInfo?.id || endpoint);
 }
 
 export async function processMotionControl(apiKey, params) {
@@ -355,7 +500,7 @@ export async function processMotionControl(apiKey, params) {
         if (params.seed !== undefined && params.seed !== -1) payload.seed = Number(params.seed);
     }
 
-    return submitAndPoll(model, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(model, payload, apiKey, params.onRequestId, 900, model);
 }
 
 export async function processLipSync(apiKey, params) {
@@ -368,7 +513,7 @@ export async function processLipSync(apiKey, params) {
     if (modelInfo?.hasPrompt) payload.prompt = params.prompt || '';
     if (params.resolution) payload.resolution = params.resolution;
     if (params.seed !== undefined && params.seed !== -1) payload.seed = params.seed;
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, modelInfo?.id || endpoint);
 }
 
 export async function generateAudio(apiKey, params) {
@@ -382,7 +527,7 @@ export async function generateAudio(apiKey, params) {
             payload[key] = params[key];
         }
     }
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, modelInfo?.id || modelId);
 }
 
 export async function uploadFile(apiKey, file, onProgress) {
@@ -472,8 +617,14 @@ export async function getTemplateWorkflows(apiKey) {
             'x-api-key': apiKey
         }
     });
+    // The template catalogue is optional upstream content: a 404 means "no
+    // published templates", which must render an empty gallery rather than an error.
+    if (response.status === 404) {
+        return [];
+    }
     if (!response.ok) {
         const errText = await response.text();
+        notifyAuthRequired(response.status, errText);
         throw new Error(`Failed to fetch template workflows: ${response.status} - ${errText.slice(0, 100)}`);
     }
     return await response.json();
@@ -1025,7 +1176,7 @@ export async function runClipping(apiKey, params) {
         aspect_ratio: params.aspect_ratio || "9:16",
         return_coordinates_only: !!params.return_coordinates_only
     };
-    return submitAndPoll("ai-clipping", payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll("ai-clipping", payload, apiKey, params.onRequestId, 900, "ai-clipping");
 }
 
 export async function runMotionGraphics(apiKey, params) {
@@ -1034,7 +1185,7 @@ export async function runMotionGraphics(apiKey, params) {
         aspect_ratio: params.aspect_ratio || "16:9",
         duration_seconds: params.duration_seconds || 6,
     };
-    return submitAndPoll("motion-graphics", payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll("motion-graphics", payload, apiKey, params.onRequestId, 900, "motion-graphics");
 }
 
 export async function runMotionGraphicsEdit(apiKey, params) {
@@ -1044,7 +1195,7 @@ export async function runMotionGraphicsEdit(apiKey, params) {
         aspect_ratio: params.aspect_ratio || "16:9",
         duration_seconds: params.duration_seconds || 6,
     };
-    return submitAndPoll("motion-graphics-edit", payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll("motion-graphics-edit", payload, apiKey, params.onRequestId, 900, "motion-graphics-edit");
 }
 
 export async function upscaleImage(apiKey, { model, image_url, resolution, upscale_factor, onRequestId }) {
@@ -1057,17 +1208,17 @@ export async function upscaleImage(apiKey, { model, image_url, resolution, upsca
     } else if (model === "ai-image-upscaler") {
         endpoint = "ai-image-upscale";
     }
-    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90);
+    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90, model);
 }
 
 export async function removeBackground(apiKey, { image_url, onRequestId }) {
     const endpoint = "ai-background-remover";
     const payload = { image_url };
-    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90);
+    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90, endpoint);
 }
 
 export async function expandImage(apiKey, { image_url, onRequestId }) {
     const endpoint = "ai-image-extension";
     const payload = { image_url };
-    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90);
+    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90, endpoint);
 }

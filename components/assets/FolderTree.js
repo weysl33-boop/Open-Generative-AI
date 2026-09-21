@@ -52,15 +52,15 @@ export default function FolderTree({
           className={`
             w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all
             ${selectedFolderId === 'all'
-              ? 'bg-gradient-to-r from-[#22d3ee]/15 to-purple-500/10 text-[#22d3ee] border border-[#22d3ee]/25 shadow-[0_0_12px_rgba(34,211,238,0.1)]'
-              : 'text-white/70 hover:bg-white/[0.04] hover:text-white border border-transparent'}
+              ? 'bg-brand-soft text-brand border border-brand-line'
+              : 'text-ink-muted hover:bg-wash hover:text-ink border border-transparent'}
           `}
         >
           <div className="flex items-center gap-2.5">
-            <Layers className="w-4 h-4 text-[#22d3ee]" />
+            <Layers className="w-4 h-4 text-brand" />
             <span>全部素材</span>
           </div>
-          <span className="text-[11px] text-white/40 px-1.5 py-0.5 rounded bg-white/[0.05]">
+          <span className="text-[11px] text-ink-subtle px-1.5 py-0.5 rounded bg-wash">
             {counts.total || 0}
           </span>
         </button>
@@ -71,15 +71,15 @@ export default function FolderTree({
           className={`
             w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all
             ${selectedFolderId === 'unorganized'
-              ? 'bg-gradient-to-r from-[#22d3ee]/15 to-purple-500/10 text-[#22d3ee] border border-[#22d3ee]/25 shadow-[0_0_12px_rgba(34,211,238,0.1)]'
-              : 'text-white/70 hover:bg-white/[0.04] hover:text-white border border-transparent'}
+              ? 'bg-brand-soft text-brand border border-brand-line'
+              : 'text-ink-muted hover:bg-wash hover:text-ink border border-transparent'}
           `}
         >
           <div className="flex items-center gap-2.5">
-            <Inbox className="w-4 h-4 text-amber-400" />
+            <Inbox className="w-4 h-4 text-warning" />
             <span>未分类素材</span>
           </div>
-          <span className="text-[11px] text-white/40 px-1.5 py-0.5 rounded bg-white/[0.05]">
+          <span className="text-[11px] text-ink-subtle px-1.5 py-0.5 rounded bg-wash">
             {counts.unorganized || 0}
           </span>
         </button>
@@ -90,30 +90,30 @@ export default function FolderTree({
           className={`
             w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all
             ${selectedFolderId === 'favorites'
-              ? 'bg-gradient-to-r from-[#22d3ee]/15 to-purple-500/10 text-[#22d3ee] border border-[#22d3ee]/25 shadow-[0_0_12px_rgba(34,211,238,0.1)]'
-              : 'text-white/70 hover:bg-white/[0.04] hover:text-white border border-transparent'}
+              ? 'bg-brand-soft text-brand border border-brand-line'
+              : 'text-ink-muted hover:bg-wash hover:text-ink border border-transparent'}
           `}
         >
           <div className="flex items-center gap-2.5">
             <Star className="w-4 h-4 text-yellow-400 fill-yellow-400/20" />
             <span>我的收藏</span>
           </div>
-          <span className="text-[11px] text-white/40 px-1.5 py-0.5 rounded bg-white/[0.05]">
+          <span className="text-[11px] text-ink-subtle px-1.5 py-0.5 rounded bg-wash">
             {counts.favorites || 0}
           </span>
         </button>
       </div>
 
       {/* 自定分类文件夹标题与新建 */}
-      <div className="flex items-center justify-between px-2 pb-2 mb-1 border-b border-white/[0.06]">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-white/40">
+      <div className="flex items-center justify-between px-2 pb-2 mb-1 border-b border-line-subtle">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">
           分类文件夹 (两级)
         </span>
         <button
           type="button"
           onClick={() => onCreateFolder(null)}
           title="新建一级分类文件夹"
-          className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-[#22d3ee] hover:bg-[#22d3ee]/10 transition-colors font-medium"
+          className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-brand hover:bg-brand/10 transition-colors font-medium"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>新建</span>
@@ -138,15 +138,15 @@ export default function FolderTree({
                   className={`
                     w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-all text-left
                     ${isSelected
-                      ? 'bg-gradient-to-r from-[#22d3ee]/15 to-purple-500/10 text-[#22d3ee] border border-[#22d3ee]/25 font-semibold shadow-[0_0_10px_rgba(34,211,238,0.08)]'
-                      : 'text-white/75 hover:bg-white/[0.04] hover:text-white border border-transparent font-medium'}
+                      ? 'bg-brand-soft text-brand border border-brand-line font-semibold'
+                      : 'text-ink hover:bg-wash hover:text-ink border border-transparent font-medium'}
                   `}
                 >
                   <div className="flex items-center gap-2 min-w-0 pr-2">
                     {hasChildren ? (
                       <span
                         onClick={(e) => toggleExpand(folder.id, e)}
-                        className="p-0.5 text-white/40 hover:text-white transition-colors"
+                        className="p-0.5 text-ink-subtle hover:text-ink transition-colors"
                       >
                         {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                       </span>
@@ -162,7 +162,7 @@ export default function FolderTree({
                   </div>
 
                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <span className="text-[11px] text-white/35 group-hover:hidden">
+                    <span className="text-[11px] text-ink-subtle group-hover:hidden">
                       {folder.asset_count || 0}
                     </span>
 
@@ -172,7 +172,7 @@ export default function FolderTree({
                         type="button"
                         onClick={() => onCreateFolder(folder)}
                         title="新建二级子文件夹"
-                        className="p-1 rounded text-white/50 hover:bg-white/10 hover:text-[#22d3ee] transition-colors"
+                        className="p-1 rounded text-ink-subtle hover:bg-wash-press hover:text-brand transition-colors"
                       >
                         <FolderPlus className="w-3.5 h-3.5" />
                       </button>
@@ -180,7 +180,7 @@ export default function FolderTree({
                         type="button"
                         onClick={() => onEditFolder(folder)}
                         title="重命名"
-                        className="p-1 rounded text-white/50 hover:bg-white/10 hover:text-white transition-colors"
+                        className="p-1 rounded text-ink-subtle hover:bg-wash-press hover:text-ink transition-colors"
                       >
                         <Edit2 className="w-3 h-3" />
                       </button>
@@ -188,7 +188,7 @@ export default function FolderTree({
                         type="button"
                         onClick={() => onDeleteFolder(folder)}
                         title="删除文件夹"
-                        className="p-1 rounded text-white/50 hover:bg-rose-500/20 hover:text-rose-400 transition-colors"
+                        className="p-1 rounded text-ink-subtle hover:bg-danger-hover hover:text-danger transition-colors"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -199,7 +199,7 @@ export default function FolderTree({
 
               {/* 二级子文件夹节点 (深度为 2) */}
               {hasChildren && isExpanded && (
-                <div className="ml-4 pl-2.5 border-l border-white/[0.08] space-y-1">
+                <div className="ml-4 pl-2.5 border-l border-line space-y-1">
                   {folder.children.map((sub) => {
                     const isSubSelected = selectedFolderId === sub.id;
                     return (
@@ -210,12 +210,12 @@ export default function FolderTree({
                           className={`
                             w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-all text-left
                             ${isSubSelected
-                              ? 'bg-[#22d3ee]/15 text-[#22d3ee] border border-[#22d3ee]/25 font-semibold'
-                              : 'text-white/60 hover:bg-white/[0.04] hover:text-white border border-transparent font-normal'}
+                              ? 'bg-brand/15 text-brand border border-line-accent/25 font-semibold'
+                              : 'text-ink-muted hover:bg-wash hover:text-ink border border-transparent font-normal'}
                           `}
                         >
                           <div className="flex items-center gap-2 min-w-0 pr-1">
-                            <CornerDownRight className="w-3 h-3 text-white/25 flex-shrink-0" />
+                            <CornerDownRight className="w-3 h-3 text-ink-subtle flex-shrink-0" />
                             <Folder
                               className="w-3.5 h-3.5 flex-shrink-0"
                               style={{ color: sub.color || folder.color || '#22d3ee' }}
@@ -224,7 +224,7 @@ export default function FolderTree({
                           </div>
 
                           <div className="flex items-center gap-1 flex-shrink-0">
-                            <span className="text-[10px] text-white/30 group-hover:hidden">
+                            <span className="text-micro text-ink-subtle group-hover:hidden">
                               {sub.asset_count || 0}
                             </span>
 
@@ -233,7 +233,7 @@ export default function FolderTree({
                                 type="button"
                                 onClick={() => onEditFolder(sub)}
                                 title="重命名"
-                                className="p-1 rounded text-white/50 hover:bg-white/10 hover:text-white transition-colors"
+                                className="p-1 rounded text-ink-subtle hover:bg-wash-press hover:text-ink transition-colors"
                               >
                                 <Edit2 className="w-2.5 h-2.5" />
                               </button>
@@ -241,7 +241,7 @@ export default function FolderTree({
                                 type="button"
                                 onClick={() => onDeleteFolder(sub)}
                                 title="删除子文件夹"
-                                className="p-1 rounded text-white/50 hover:bg-rose-500/20 hover:text-rose-400 transition-colors"
+                                className="p-1 rounded text-ink-subtle hover:bg-danger-hover hover:text-danger transition-colors"
                               >
                                 <Trash2 className="w-2.5 h-2.5" />
                               </button>
@@ -258,12 +258,12 @@ export default function FolderTree({
         })}
 
         {folderTree.length === 0 && (
-          <div className="p-4 text-center border border-dashed border-white/[0.06] rounded-xl my-2">
-            <p className="text-xs text-white/40 mb-2">暂无自定义分类</p>
+          <div className="p-4 text-center border border-dashed border-line-subtle rounded-xl my-2">
+            <p className="text-xs text-ink-subtle mb-2">暂无自定义分类</p>
             <button
               type="button"
               onClick={() => onCreateFolder(null)}
-              className="text-[11px] text-[#22d3ee] hover:underline"
+              className="text-[11px] text-brand hover:underline"
             >
               + 创建第一个文件夹
             </button>

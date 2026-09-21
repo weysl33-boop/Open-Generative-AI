@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { createOAuthUser, bindOAuthUser, createSession, setSessionCookie } from '@/lib/services/auth';
+import { createOAuthUser, bindOAuthUser, createSession, requiresOnboarding, setSessionCookie } from '@/lib/services/auth';
 import {
   exchangeOAuthCode,
   fetchOAuthProfile,
   getOAuthProvider,
+  getResolvedOAuthConfig,
   getPublicAppOrigin,
   getRedirectUri,
-  readOAuthState,
+  readOAuthCallbackState,
 } from '@/lib/oauth';
 import { publicErrorMessage } from '@/lib/security/publicError';
 
@@ -16,7 +17,14 @@ function htmlResponse(request, { ok, returnTo, message }) {
   const origin = getPublicAppOrigin(request);
   const safePath = returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/studio';
   const target = `${origin}${safePath}${safePath.includes('?') ? '&' : '?'}auth=${ok ? 'success' : 'error'}${message ? `&msg=${encodeURIComponent(message)}` : ''}`;
-  const payload = JSON.stringify({ type: 'koyosim-auth-complete', ok, message: message || null });
+  const payload = JSON.stringify({ type: 'koyosim-auth-complete', ok, message: message || null })
+    .replace(/[<>&\u2028\u2029]/g, (character) => ({
+      '<': '\\u003c',
+      '>': '\\u003e',
+      '&': '\\u0026',
+      '\u2028': '\\u2028',
+      '\u2029': '\\u2029',
+    })[character]);
   
   const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KoyoSIM AI Studio</title>
   <style>
@@ -45,17 +53,23 @@ function htmlResponse(request, { ok, returnTo, message }) {
 
 export async function GET(request, { params }) {
   const provider = String((await params).provider || '').toLowerCase();
-  const state = readOAuthState(request.cookies.get('ko_oauth_state')?.value);
+  const state = readOAuthCallbackState(
+    request.cookies.get('ko_oauth_state')?.value,
+    request.nextUrl.searchParams.get('state'),
+    provider,
+  );
   const returnTo = state?.returnTo || '/account';
   try {
-    if (!state || state.provider !== provider || !getOAuthProvider(provider)) throw new Error('OAuth state 无效或已过期');
+    if (!state || !getOAuthProvider(provider)) throw new Error('OAuth state 无效或已过期');
     const error = request.nextUrl.searchParams.get('error');
     if (error) throw new Error(request.nextUrl.searchParams.get('error_description') || error);
     const code = request.nextUrl.searchParams.get('code');
     if (!code) throw new Error('OAuth 未返回授权码');
 
-    const token = await exchangeOAuthCode(provider, code, getRedirectUri(request, provider), state.verifier);
-    const profile = await fetchOAuthProfile(provider, token.access_token);
+    const config = await getResolvedOAuthConfig(provider);
+    if (!config?.configured) throw new Error('OAuth provider credentials are not configured');
+    const token = await exchangeOAuthCode(provider, code, getRedirectUri(request, provider), state.verifier, config);
+    const profile = await fetchOAuthProfile(provider, token, config);
     if (!profile.id) throw new Error('OAuth 未返回用户标识');
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || null;
 
@@ -88,12 +102,16 @@ export async function GET(request, { params }) {
     });
     if (user?.error) throw Object.assign(new Error(user.message || '账户已被封禁或异常'), { code: user.error });
     const session = await createSession(user.id);
-    const response = htmlResponse(request, { ok: true, returnTo });
+    // 未完成引导的用户先落到引导页，而不是他原本要去的页面。
+    const landing = await requiresOnboarding(user.id) ? '/onboarding' : returnTo;
+    const response = htmlResponse(request, { ok: true, returnTo: landing });
     setSessionCookie(response, session.token, session.expires);
     response.cookies.set('ko_oauth_state', '', { httpOnly: true, path: '/', maxAge: 0 });
     return response;
   } catch (error) {
-    console.error(`[auth/oauth/${provider}]`, { code: error.code || 'OAUTH_CALLBACK_FAILED', error });
+    console.error(`[auth/oauth/${provider}]`, {
+      code: error.code || 'OAUTH_CALLBACK_FAILED',
+    });
     const response = htmlResponse(request, { ok: false, returnTo, message: publicErrorMessage(error, '第三方登录失败，请重试') });
     response.cookies.set('ko_oauth_state', '', { httpOnly: true, path: '/', maxAge: 0 });
     return response;

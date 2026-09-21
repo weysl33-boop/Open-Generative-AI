@@ -31,18 +31,18 @@ export default function LiveLogViewer() {
 
   return (
     <Card className="mt-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-4 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-subtle pb-4 mb-4">
         <div>
-          <h2 className="text-sm font-bold text-white">服务端实时运行与异常日志 (Tail 100)</h2>
-          <p className="mt-1 text-xs text-white/40 font-mono">{logSource || 'PM2 Daemon Logs'}</p>
+          <h2 className="text-sm font-bold text-ink">服务端实时运行与异常日志 (Tail 100)</h2>
+          <p className="mt-1 text-xs text-ink-subtle font-mono">{logSource || 'PM2 Daemon Logs'}</p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-lg bg-black/40 p-1 text-xs">
+          <div className="flex rounded-lg bg-scrim p-1 text-xs">
             <button
               type="button"
               onClick={() => setLogType('out')}
               className={`rounded px-3 py-1 font-semibold transition ${
-                logType === 'out' ? 'bg-cyan-300/20 text-cyan-200' : 'text-white/50 hover:text-white'
+                logType === 'out' ? 'bg-cyan-300/20 text-cyan-200' : 'text-ink-subtle hover:text-ink'
               }`}
             >
               标准输出 (Out)
@@ -51,7 +51,7 @@ export default function LiveLogViewer() {
               type="button"
               onClick={() => setLogType('error')}
               className={`rounded px-3 py-1 font-semibold transition ${
-                logType === 'error' ? 'bg-red-400/20 text-red-300' : 'text-white/50 hover:text-white'
+                logType === 'error' ? 'bg-red-400/20 text-red-300' : 'text-ink-subtle hover:text-ink'
               }`}
             >
               异常报错 (Error)
@@ -61,14 +61,14 @@ export default function LiveLogViewer() {
             type="button"
             disabled={loading}
             onClick={() => fetchLogs()}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70 hover:bg-white/10 transition"
+            className="rounded-lg border border-line bg-wash px-3 py-1.5 text-xs text-ink-muted hover:bg-wash-press transition"
           >
             {loading ? '刷新中…' : '🔄 刷新'}
           </button>
         </div>
       </div>
 
-      <div className="max-h-[380px] overflow-y-auto rounded-xl border border-white/[0.08] bg-[#020202] p-4 font-mono text-xs text-emerald-300/90 leading-relaxed custom-scrollbar whitespace-pre-wrap">
+      <div className="max-h-[380px] overflow-y-auto rounded-xl border border-line bg-canvas p-4 font-mono text-xs text-success leading-relaxed custom-scrollbar whitespace-pre-wrap">
         {logs || '暂无日志'}
       </div>
     </Card>

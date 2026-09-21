@@ -93,22 +93,22 @@ export default function PricingManagerClient({ initialPricing = [] }) {
 
       {/* 搜索栏 */}
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-white">模型定价规则表</h2>
+        <h2 className="text-base font-semibold text-ink">模型定价规则表</h2>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-gray-500" />
+          <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-ink-subtle" />
           <input
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             placeholder="搜索模型标识或名称..."
-            className="w-64 rounded-lg border border-white/[0.1] bg-white/[0.03] pl-9 pr-3 py-1.5 text-xs text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
+            className="w-64 rounded-lg border border-line bg-wash pl-9 pr-3 py-1.5 text-xs text-ink placeholder-ink-subtle focus:border-brand"
           />
         </div>
       </div>
 
       {/* 定价表格 */}
-      <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#0d0e12]/90 shadow-xl backdrop-blur-md">
+      <div className="overflow-x-auto rounded-2xl border border-line bg-base/90 shadow-elevation-3 backdrop-blur-md">
         <table className="w-full text-left text-xs">
-          <thead className="border-b border-white/[0.08] bg-white/[0.02] uppercase tracking-[0.06em] text-gray-400">
+          <thead className="border-b border-line bg-wash uppercase tracking-[0.06em] text-ink-muted">
             <tr>
               <th className="px-4 py-3.5">模型标识</th>
               <th className="px-4 py-3.5">前台显示名</th>
@@ -121,24 +121,24 @@ export default function PricingManagerClient({ initialPricing = [] }) {
               <th className="px-4 py-3.5 text-right">操作</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.06]">
+          <tbody className="divide-y divide-line-subtle">
             {filteredList.map((p) => (
-              <tr key={p.modelId} className="hover:bg-white/[0.02] transition-colors">
-                <td className="px-4 py-3 font-mono text-white font-medium">{p.modelId}</td>
-                <td className="px-4 py-3 text-gray-200 font-semibold">{p.modelName}</td>
-                <td className="px-4 py-3 capitalize text-gray-400">{p.category}</td>
+              <tr key={p.modelId} className="hover:bg-wash transition-colors">
+                <td className="px-4 py-3 font-mono text-ink font-medium">{p.modelId}</td>
+                <td className="px-4 py-3 text-ink font-semibold">{p.modelName}</td>
+                <td className="px-4 py-3 capitalize text-ink-muted">{p.category}</td>
                 <td className="px-4 py-3">
-                  <span className={`inline-flex items-center rounded px-2 py-0.5 font-medium ${p.pricingType === 'formula' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'}`}>
+                  <span className={`inline-flex items-center rounded px-2 py-0.5 font-medium ${p.pricingType === 'formula' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'bg-brand-soft text-brand border border-brand-soft'}`}>
                     {p.pricingType === 'formula' ? '公式动态计费' : '固定点数计费'}
                   </span>
                 </td>
-                <td className="px-4 py-3 font-mono font-bold text-cyan-400">
-                  {p.baseCredits} <span className="text-[10px] text-gray-500 font-normal">pts</span>
+                <td className="px-4 py-3 font-mono font-bold text-brand">
+                  {p.baseCredits} <span className="text-micro text-ink-subtle font-normal">pts</span>
                 </td>
-                <td className="px-4 py-3 font-mono text-gray-300">
+                <td className="px-4 py-3 font-mono text-ink">
                   {p.minCredits} pts
                 </td>
-                <td className="px-4 py-3 font-mono text-gray-300">
+                <td className="px-4 py-3 font-mono text-ink">
                   {(p.minGrossMarginRate * 100).toFixed(0)}%
                 </td>
                 <td className="px-4 py-3">
@@ -149,8 +149,8 @@ export default function PricingManagerClient({ initialPricing = [] }) {
                 <td className="px-4 py-3 text-right">
                   <button
                     onClick={() => setEditingPricing(p)}
-                    className="rounded p-1 text-gray-400 hover:bg-white/[0.06] hover:text-cyan-400 transition-colors"
-                  >
+                    className="rounded p-1 text-ink-muted hover:bg-wash-strong hover:text-brand transition-colors"
+                    aria-label="编辑">
                     <Edit3 className="size-3.5" />
                   </button>
                 </td>
@@ -162,18 +162,18 @@ export default function PricingManagerClient({ initialPricing = [] }) {
 
       {/* 编辑弹窗 */}
       {editingPricing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-white/[0.12] bg-[#0d0e12] p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white">配置模型定价: {editingPricing.modelName}</h3>
-            <p className="mt-1 text-xs text-gray-400 font-mono">ID: {editingPricing.modelId}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-line bg-base p-6 shadow-elevation-4">
+            <h3 className="text-lg font-bold text-ink">配置模型定价: {editingPricing.modelName}</h3>
+            <p className="mt-1 text-xs text-ink-muted font-mono">ID: {editingPricing.modelId}</p>
 
             <form onSubmit={handleSavePricing} className="mt-5 space-y-4 text-xs">
               <div>
-                <label className="block text-gray-300 font-medium mb-1">计费模式</label>
+                <label className="block text-ink font-medium mb-1">计费模式</label>
                 <select
                   name="pricingType"
                   defaultValue={editingPricing.pricingType}
-                  className="w-full rounded-lg border border-white/[0.1] bg-[#161820] px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
+                  className="w-full rounded-lg border border-line bg-raised px-3 py-2 text-ink focus:border-brand"
                 >
                   <option value="fixed">固定点数 (Fixed Credits)</option>
                   <option value="formula">公式动态计费 (Formula Driven)</option>
@@ -181,36 +181,36 @@ export default function PricingManagerClient({ initialPricing = [] }) {
               </div>
 
               <div>
-                <label className="block text-gray-300 font-medium mb-1">基准积分点数 (Base Credits)</label>
+                <label className="block text-ink font-medium mb-1">基准积分点数 (Base Credits)</label>
                 <input
                   name="baseCredits"
                   type="number"
                   defaultValue={editingPricing.baseCredits}
                   required
-                  className="w-full rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 py-2 text-white focus:border-cyan-500 focus:outline-none font-mono"
+                  className="w-full rounded-lg border border-line bg-wash px-3 py-2 text-ink focus:border-brand font-mono"
                 />
-                <p className="mt-1 text-[11px] text-gray-500">固定计费的每次单价，或公式计费的基础底价。</p>
+                <p className="mt-1 text-[11px] text-ink-subtle">固定计费的每次单价，或公式计费的基础底价。</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-gray-300 font-medium mb-1">最低保底点数</label>
+                  <label className="block text-ink font-medium mb-1">最低保底点数</label>
                   <input
                     name="minCredits"
                     type="number"
                     defaultValue={editingPricing.minCredits}
                     required
-                    className="w-full rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 py-2 text-white focus:border-cyan-500 focus:outline-none font-mono"
+                    className="w-full rounded-lg border border-line bg-wash px-3 py-2 text-ink focus:border-brand font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-300 font-medium mb-1">最低毛利率要求 (%)</label>
+                  <label className="block text-ink font-medium mb-1">最低毛利率要求 (%)</label>
                   <input
                     name="minGrossMarginRate"
                     type="number"
                     defaultValue={(editingPricing.minGrossMarginRate * 100).toFixed(0)}
                     required
-                    className="w-full rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 py-2 text-white focus:border-cyan-500 focus:outline-none font-mono"
+                    className="w-full rounded-lg border border-line bg-wash px-3 py-2 text-ink focus:border-brand font-mono"
                   />
                 </div>
               </div>
@@ -221,26 +221,26 @@ export default function PricingManagerClient({ initialPricing = [] }) {
                   name="isActive"
                   id="pricingActive"
                   defaultChecked={editingPricing.isActive}
-                  className="size-4 rounded border-white/[0.2] bg-white/[0.05] text-cyan-500 focus:ring-0"
+                  className="size-4 rounded border-line-strong bg-wash text-brand-active focus:ring-0"
                 />
-                <label htmlFor="pricingActive" className="text-gray-300 cursor-pointer">
+                <label htmlFor="pricingActive" className="text-ink cursor-pointer">
                   启用该模型定价标准
                 </label>
               </div>
 
-              <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-white/[0.08]">
+              <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-line">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => setEditingPricing(null)}
-                  className="text-gray-400 hover:text-white"
+                  className="text-ink-muted hover:text-ink"
                 >
                   取消
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSaving}
-                  className="bg-cyan-500 hover:bg-cyan-400 text-black font-semibold"
+                  className="bg-brand-active hover:bg-brand text-ink-on-accent font-semibold"
                 >
                   {isSaving ? <Loader2 className="mr-1.5 size-3.5 animate-spin" /> : null}
                   保存定价

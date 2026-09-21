@@ -1,20 +1,114 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { ImageStudio, VideoStudio, ClippingStudio, MotionControlStudio, VibeMotionStudio, LipSyncStudio, RecastStudio, CinemaStudio, AudioStudio, MarketingStudio, WorkflowStudio, AgentStudio, AppsStudio, AiInfluencerStudio, LayersStudio, getUserBalance } from 'studio';
-
-const DesignAgentStudio = dynamic(() => import('studio').then(mod => mod.DesignAgentStudio), {
-  ssr: false,
-  loading: () => <div className="h-full w-full bg-black flex items-center justify-center text-white/20">Loading Design Studio...</div>
-});
+import { getUserBalance, applyActiveModelDirectory } from 'studio';
+import { Spinner } from 'studio/ui/feedback';
+import { Button, IconButton } from 'studio/ui/button';
+import { Modal, ModalContent } from 'studio/ui/overlay';
 import axios from 'axios';
-import ApiKeyModal from './ApiKeyModal';
 import AuthModal from './AuthModal';
-import HeadshotStudio from './HeadshotStudio';
+import { StudioResourceBoundary } from './StudioResourceBoundary';
+
+// Each workbench is a heavy subtree (Konva canvases, pollers, editors). Loading
+// them through the `studio` barrel mounted all seventeen on every /studio visit,
+// so each one is fetched as its own chunk and mounted only while it is active.
+const studioFallback = () => (
+  <div className="bg-canvas flex h-full w-full items-center justify-center"><Spinner className="text-brand" /></div>
+);
+const dynamicStudio = (loader) => dynamic(loader, { ssr: false, loading: studioFallback });
+const ImageStudio = dynamicStudio(() => import('studio/ImageStudio'));
+const VideoStudio = dynamicStudio(() => import('studio/VideoStudio'));
+const AudioStudio = dynamicStudio(() => import('studio/AudioStudio'));
+const LayersStudio = dynamicStudio(() => import('studio/LayersStudio'));
+const ClippingStudio = dynamicStudio(() => import('studio/ClippingStudio'));
+const MotionControlStudio = dynamicStudio(() => import('studio/MotionControlStudio'));
+const VibeMotionStudio = dynamicStudio(() => import('studio/VibeMotionStudio'));
+const LipSyncStudio = dynamicStudio(() => import('studio/LipSyncStudio'));
+const RecastStudio = dynamicStudio(() => import('studio/RecastStudio'));
+const CinemaStudio = dynamicStudio(() => import('studio/CinemaStudio'));
+const MarketingStudio = dynamicStudio(() => import('studio/MarketingStudio'));
+const WorkflowStudio = dynamicStudio(() => import('studio/WorkflowStudio'));
+const AgentStudio = dynamicStudio(() => import('studio/AgentStudio'));
+const AppsStudio = dynamicStudio(() => import('studio/AppsStudio'));
+const AiInfluencerStudio = dynamicStudio(() => import('studio/AiInfluencerStudio'));
+const DesignAgentStudio = dynamicStudio(() => import('studio/DesignAgentStudio'));
+const HeadshotStudio = dynamicStudio(() => import('./HeadshotStudio'));
 import LanguageSwitcher from './LanguageSwitcher';
-import { getCommonCopy, getLocaleConfig, localizeStudioPath } from '@/lib/locales';
+import UserDropdownMenu from './UserDropdownMenu';
+import AccountModal from './account/AccountModal';
+import { getCommonCopy, getLocaleConfig, localizeStudioPath, normalizeLocale } from '@/lib/locales';
+import {
+  AlertCircle,
+  Check,
+  ChevronDown,
+  Flame,
+  FolderOpen,
+  Menu,
+  PanelLeft,
+  Sparkles,
+  Wand2,
+  Box,
+  Bot,
+  Compass,
+  ExternalLink,
+  Workflow,
+  X,
+  Zap,
+} from 'lucide-react';
+import { useBranding } from '@/lib/hooks/useBranding';
+
+function DynamicVectorIcon({ iconName, color = 'currentColor', className = 'w-5 h-5' }) {
+  switch (iconName) {
+    case 'sparkles':
+      return <Sparkles className={className} style={{ color }} />;
+    case 'wand':
+      return <Wand2 className={className} style={{ color }} />;
+    case 'zap':
+      return <Zap className={className} style={{ color }} />;
+    case 'cube':
+      return <Box className={className} style={{ color }} />;
+    case 'layers':
+    default:
+      return (
+        <svg
+          className={className}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={color}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+      );
+  }
+}
+
+function DynamicNavIcon({ iconName, color, className = 'w-3.5 h-3.5' }) {
+  switch (iconName) {
+    case 'flame':
+      return <Flame className={className} style={color ? { color } : undefined} />;
+    case 'folder':
+      return <FolderOpen className={className} style={color ? { color } : undefined} />;
+    case 'workflow':
+      return <Workflow className={className} style={color ? { color } : undefined} />;
+    case 'bot':
+      return <Bot className={className} style={color ? { color } : undefined} />;
+    case 'zap':
+      return <Zap className={className} style={color ? { color } : undefined} />;
+    case 'sparkles':
+      return <Sparkles className={className} style={color ? { color } : undefined} />;
+    case 'compass':
+      return <Compass className={className} style={color ? { color } : undefined} />;
+    case 'external':
+      return <ExternalLink className={className} style={color ? { color } : undefined} />;
+    default:
+      return null;
+  }
+}
 
 // Tab/category ids, icons, and English `label` fallbacks are stable
 // identifiers, not locale copy — the actual rendered label is resolved
@@ -224,7 +318,7 @@ const NAVIGATION_CATEGORIES = [
   {
     id: 'images',
     label: 'Images',
-    tabIds: ['image', 'headshot', 'layers', 'cinema', 'design-agent', 'ai-influencer'],
+    tabIds: ['image', 'headshot', 'layers', 'design-agent', 'ai-influencer'],
     icon: (
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -313,11 +407,20 @@ const persistNotifications = (notifications) => {
 export default function StandaloneShell({ locale = 'en' }) {
   const params = useParams();
   const router = useRouter();
+  const pathname = usePathname() || '';
   const slug = params?.slug || [];
   const idFromParams = params?.id;
   const tabFromParams = params?.tab;
+  const { brand: siteBrand, navigation: siteNavigation } = useBranding();
+  const [logoImgError, setLogoImgError] = useState(false);
 
+  useEffect(() => {
+    setLogoImgError(false);
+  }, [siteBrand?.logoUrl]);
+
+  const isZh = normalizeLocale(locale) === 'zh-CN';
   const copy = getCommonCopy(locale);
+  const nativeLocaleName = getLocaleConfig(locale).nativeName;
   const tabLabel = useCallback(
     (tabId) => copy.tabs?.[tabId] || TABS.find((t) => t.id === tabId)?.label || tabId,
     [copy],
@@ -388,6 +491,24 @@ export default function StandaloneShell({ locale = 'en' }) {
     refreshAccount();
   }, [refreshAccount]);
 
+  // 全站用户资料与头像变更事件总线监听 (即时响应无需整页刷新)
+  useEffect(() => {
+    const handleProfileUpdated = (e) => {
+      if (e.detail?.avatarUrl !== undefined || e.detail?.user) {
+        if (e.detail.user) {
+          setAccountUser((prev) => (prev ? { ...prev, ...e.detail.user } : e.detail.user));
+        } else if (e.detail.avatarUrl !== undefined) {
+          setAccountUser((prev) =>
+            prev ? { ...prev, avatar_url: e.detail.avatarUrl, avatar: e.detail.avatarUrl } : prev
+          );
+        }
+      }
+      refreshAccount();
+    };
+    window.addEventListener('user-profile-updated', handleProfileUpdated);
+    return () => window.removeEventListener('user-profile-updated', handleProfileUpdated);
+  }, [refreshAccount]);
+
   // 全局额度守卫：当点击消耗模型额度的动作时被触发
   const requireAccountGate = useCallback(() => {
     return new Promise(async (resolve, reject) => {
@@ -401,23 +522,29 @@ export default function StandaloneShell({ locale = 'en' }) {
         resolve(currentUser);
         return;
       }
-      if (apiKey) {
-        resolve({ id: 'byok', email: 'byok@local', role: 'byok' });
-        return;
-      }
       // 2. 未登录，挂起 Promise 并打开 AuthModal 弹窗
       pendingAuthResolverRef.current = { resolve, reject };
       setShowAuthModal(true);
     });
-  }, [accountUser, apiKey, refreshAccount]);
+  }, [accountUser, refreshAccount]);
+
+  // muapi 层遇到 401/403 只派发 muapi:auth-required，此前无人监听，token 过期后页面
+  // 只是静默显示空数据；接回现有 AuthModal 才会真正提示重新登录。
+  useEffect(() => {
+    const handleAuthRequired = () => {
+      setApiKey(null);
+      setAccountUser(null);
+      setAccountCredits(null);
+      setShowAuthModal(true);
+    };
+    window.addEventListener('muapi:auth-required', handleAuthRequired);
+    return () => window.removeEventListener('muapi:auth-required', handleAuthRequired);
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.__KOYOSIM_REQUIRE_ACCOUNT__ = requireAccountGate;
       window.__KOYOSIM_REQUIRE_API_KEY__ = async () => {
-        if (apiKey) return apiKey;
-        const cookieKey = document.cookie.match(/muapi_key=([^;]+)/)?.[1];
-        if (cookieKey) return cookieKey;
         const user = await requireAccountGate();
         return user ? 'koyosim-account-session' : null;
       };
@@ -428,103 +555,16 @@ export default function StandaloneShell({ locale = 'en' }) {
         delete window.__KOYOSIM_REQUIRE_API_KEY__;
       }
     };
-  }, [requireAccountGate, apiKey]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const searchParams = new URLSearchParams(window.location.search);
-    const remixPrompt = searchParams.get('remixPrompt');
-    if (remixPrompt) {
-      pushNotification({
-        type: 'success',
-        tabId: activeTab,
-        label: '即梦社区同款',
-        message: `已自动载入同款提示词: "${remixPrompt.slice(0, 25)}..."`,
-      });
-      setTimeout(() => {
-        const textareas = document.querySelectorAll('textarea');
-        if (textareas.length > 0) {
-          const target = textareas[0];
-          target.value = remixPrompt;
-          target.dispatchEvent(new Event('input', { bubbles: true }));
-          target.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      }, 600);
-    }
-  }, [activeTab, pushNotification]);
-
-  const handleAuthSuccess = useCallback((user, entitlements) => {
-    setAccountUser(user);
-    setAccountCredits(entitlements?.credits ?? 10);
-    setShowAuthModal(false);
-    if (pendingAuthResolverRef.current) {
-      const { resolve } = pendingAuthResolverRef.current;
-      pendingAuthResolverRef.current = null;
-      resolve(user);
-    }
-  }, []);
-
-  const handleAuthClose = useCallback(() => {
-    setShowAuthModal(false);
-    if (pendingAuthResolverRef.current) {
-      const { reject } = pendingAuthResolverRef.current;
-      pendingAuthResolverRef.current = null;
-      reject(new Error('用户取消了登录'));
-    }
-  }, []);
-
-  const [showVadooBanner, setShowVadooBanner] = useState(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('vadoo_banner_dismissed') !== '1';
-    return true;
-  });
-
-  // Sidebar Collapsed & Mobile Drawer State
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('sidebar_collapsed') === 'true';
-    return false;
-  });
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [expandedCategoryId, setExpandedCategoryId] = useState(() => (
-    getNavigationCategory(getInitialTab())?.id || NAVIGATION_CATEGORIES[0].id
-  ));
-  const activeCategory = getNavigationCategory(activeTab);
-
-  const toggleSidebar = useCallback(() => {
-    setIsSidebarCollapsed(prev => {
-      const next = !prev;
-      localStorage.setItem('sidebar_collapsed', next ? 'true' : 'false');
-      return next;
-    });
-  }, []);
-
-  const handleCategoryToggle = useCallback((categoryId) => {
-    const isCollapsedNavigation = isSidebarCollapsed && !isMobileOpen;
-
-    if (!isCollapsedNavigation) {
-      setExpandedCategoryId((currentId) => (
-        currentId === categoryId ? null : categoryId
-      ));
-      return;
-    }
-
-    setExpandedCategoryId(categoryId);
-    toggleSidebar();
-  }, [isMobileOpen, isSidebarCollapsed, toggleSidebar]);
-
-  useEffect(() => {
-    if (activeCategory?.id) {
-      setExpandedCategoryId(activeCategory.id);
-    }
-  }, [activeCategory?.id]);
-
-  // Drag and Drop State
-  const [isDragging, setIsDragging] = useState(false);
-  const [droppedFiles, setDroppedFiles] = useState(null);
+  }, [requireAccountGate]);
 
   // Global generation notifications remain mounted while users switch studios.
   const [notifications, setNotifications] = useState([]);
   const [notificationsHydrated, setNotificationsHydrated] = useState(false);
   const [generationCounts, setGenerationCounts] = useState({});
+
+  // 个人中心悬浮窗状态
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [accountModalTab, setAccountModalTab] = useState('price-details');
 
   useEffect(() => {
     setNotifications(loadStoredNotifications());
@@ -571,6 +611,239 @@ export default function StandaloneShell({ locale = 'en' }) {
 
     return () => window.clearTimeout(timer);
   }, [notifications]);
+
+  // 监听 URL 中的 account=open 参数或全局 open-account-modal 自定义事件
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('account') === 'open' || params.has('action')) {
+      const tab = params.get('action') || 'price-details';
+      setAccountModalTab(tab);
+      setIsAccountModalOpen(true);
+    }
+
+    const handleOpenAccount = (e) => {
+      if (e.detail?.tab) {
+        setAccountModalTab(e.detail.tab);
+      }
+      setIsAccountModalOpen(true);
+    };
+
+    window.addEventListener('open-account-modal', handleOpenAccount);
+    return () => {
+      window.removeEventListener('open-account-modal', handleOpenAccount);
+    };
+  }, []);
+
+  const handleCloseAccountModal = useCallback(() => {
+    setIsAccountModalOpen(false);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('account') || url.searchParams.has('action')) {
+        url.searchParams.delete('account');
+        url.searchParams.delete('action');
+        window.history.replaceState(null, '', url.toString());
+      }
+    }
+  }, []);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
+    setAccountUser(null);
+    setAccountCredits(null);
+    setIsAccountModalOpen(false);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('muapi_key');
+        localStorage.removeItem('ko_user');
+      } catch {}
+      window.location.href = '/';
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const remixPrompt = searchParams.get('remixPrompt');
+    if (remixPrompt) {
+      pushNotification({
+        type: 'success',
+        tabId: activeTab,
+        label: '即梦社区同款',
+        message: `已自动载入同款提示词: "${remixPrompt.slice(0, 25)}..."`,
+      });
+      setTimeout(() => {
+        const textareas = document.querySelectorAll('textarea');
+        if (textareas.length > 0) {
+          const target = textareas[0];
+          target.value = remixPrompt;
+          target.dispatchEvent(new Event('input', { bubbles: true }));
+          target.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }, 600);
+    }
+  }, [activeTab, pushNotification]);
+
+  const handleAuthSuccess = useCallback((user, entitlements) => {
+    setAccountUser(user);
+    setAccountCredits(entitlements?.credits ?? 10);
+    setShowAuthModal(false);
+    if (pendingAuthResolverRef.current) {
+      const { resolve } = pendingAuthResolverRef.current;
+      pendingAuthResolverRef.current = null;
+      resolve(user);
+    }
+  }, []);
+
+  const handleAuthClose = useCallback(() => {
+    setShowAuthModal(false);
+    if (pendingAuthResolverRef.current) {
+      const { reject } = pendingAuthResolverRef.current;
+      pendingAuthResolverRef.current = null;
+      reject(new Error('用户取消了登录'));
+    }
+  }, []);
+
+  // 监听全局登录成功事件与三方登录 URL 回调
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleGlobalAuthSuccess = (e) => {
+      if (e.detail?.user) {
+        handleAuthSuccess(e.detail.user, e.detail.entitlements);
+      }
+    };
+    window.addEventListener('koyosim-auth-success', handleGlobalAuthSuccess);
+
+    // 检查 URL 中的三方登录状态参数
+    const searchParams = new URLSearchParams(window.location.search);
+    const authStatus = searchParams.get('auth');
+    const authMsg = searchParams.get('msg');
+    if (authStatus === 'success') {
+      pushNotification({
+        type: 'success',
+        tabId: activeTab,
+        label: isZh ? '第三方快捷登录' : 'Social Login',
+        message: isZh ? '登录成功，欢迎来到 KoyoSIM AI Studio！' : 'Login successful, welcome to KoyoSIM AI Studio!',
+      });
+      refreshAccount();
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.delete('auth');
+      nextUrl.searchParams.delete('msg');
+      window.history.replaceState(null, '', nextUrl.toString());
+    } else if (authStatus === 'error') {
+      pushNotification({
+        type: 'error',
+        tabId: activeTab,
+        label: isZh ? '第三方登录失败' : 'Social Login Failed',
+        message: authMsg || (isZh ? '授权未完成或已被取消，请重试' : 'Authorization failed or cancelled, please retry'),
+      });
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.delete('auth');
+      nextUrl.searchParams.delete('msg');
+      window.history.replaceState(null, '', nextUrl.toString());
+    }
+
+    return () => {
+      window.removeEventListener('koyosim-auth-success', handleGlobalAuthSuccess);
+    };
+  }, [handleAuthSuccess, pushNotification, activeTab, isZh, refreshAccount]);
+
+
+  // 动态动效配置与特性开关
+  const [motionConfig, setMotionConfig] = useState({
+    motionLevel: 'full',
+    ambientGlow: true,
+    cardTiltHover: true,
+    bannerPulse: true,
+  });
+  const [showExploreApps, setShowExploreApps] = useState(false);
+  // A failed model-directory fetch leaves every workbench without selectable
+  // models, so that failure must be surfaced and retryable, not a silent empty list.
+  const [modelDirectoryState, setModelDirectoryState] = useState('loading');
+  const [studioConfigAttempt, setStudioConfigAttempt] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    setModelDirectoryState('loading');
+    async function initStudioConfig() {
+      try {
+        const [contentRes, modelsRes] = await Promise.all([
+          fetch('/api/site/content-config').catch(() => null),
+          fetch('/api/models/active').catch(() => null),
+        ]);
+        if (!active) return;
+
+        if (contentRes && contentRes.ok) {
+          const contentData = await contentRes.json().catch(() => null);
+          if (contentData?.motion) setMotionConfig(contentData.motion);
+          if (contentData?.features?.explore_apps_enabled !== undefined) {
+            setShowExploreApps(Boolean(contentData.features.explore_apps_enabled));
+          }
+        }
+
+        if (modelsRes && modelsRes.ok) {
+          const modelsData = await modelsRes.json().catch(() => null);
+          if (Array.isArray(modelsData?.models) && typeof applyActiveModelDirectory === 'function') {
+            applyActiveModelDirectory(modelsData.models);
+            setModelDirectoryState('ready');
+            return;
+          }
+        }
+        setModelDirectoryState('error');
+      } catch (err) {
+        console.warn('Failed to load studio config:', err?.message || err);
+        if (active) setModelDirectoryState('error');
+      }
+    }
+    initStudioConfig();
+    return () => { active = false; };
+  }, [studioConfigAttempt]);
+
+  // Sidebar Collapsed & Mobile Drawer State
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('sidebar_collapsed') === 'true';
+    return false;
+  });
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [expandedCategoryId, setExpandedCategoryId] = useState(() => (
+    getNavigationCategory(getInitialTab())?.id || NAVIGATION_CATEGORIES[0].id
+  ));
+  const activeCategory = getNavigationCategory(activeTab);
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem('sidebar_collapsed', next ? 'true' : 'false');
+      return next;
+    });
+  }, []);
+
+  const handleCategoryToggle = useCallback((categoryId) => {
+    const isCollapsedNavigation = isSidebarCollapsed && !isMobileOpen;
+
+    if (!isCollapsedNavigation) {
+      setExpandedCategoryId((currentId) => (
+        currentId === categoryId ? null : categoryId
+      ));
+      return;
+    }
+
+    setExpandedCategoryId(categoryId);
+    toggleSidebar();
+  }, [isMobileOpen, isSidebarCollapsed, toggleSidebar]);
+
+  useEffect(() => {
+    if (activeCategory?.id) {
+      setExpandedCategoryId(activeCategory.id);
+    }
+  }, [activeCategory?.id]);
+
+  // Drag and Drop State
+  const [isDragging, setIsDragging] = useState(false);
+  const [droppedFiles, setDroppedFiles] = useState(null);
 
   const fetchBalance = useCallback(async (key) => {
     try {
@@ -795,188 +1068,160 @@ export default function StandaloneShell({ locale = 'en' }) {
   }, []);
 
   if (!hasMounted) return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-      <div className="animate-spin text-[#22d3ee] text-3xl">◌</div>
+    <div className="bg-canvas flex min-h-screen items-center justify-center">
+      <Spinner className="size-8 text-brand" />
     </div>
   );
 
   return (
     <div 
-      className="h-screen bg-[#030303] flex flex-col overflow-hidden text-white relative"
+      className="relative flex h-screen flex-col overflow-hidden bg-base text-ink"
       onDragOver={handleDragOver}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      {/* 背景氛围流光动效 (根据后台动效配置开关) */}
+      {motionConfig.ambientGlow && (
+        <div className="pointer-events-none absolute -top-40 left-1/2 z-0 h-80 w-full max-w-4xl -translate-x-1/2 bg-gradient-to-b from-brand-soft to-transparent opacity-60 blur-3xl" />
+      )}
       {/* Drag Overlay */}
       {isDragging && (
-        <div className="fixed inset-0 z-[100] bg-[#22d3ee]/10 backdrop-blur-md border-4 border-dashed border-[#22d3ee]/50 flex items-center justify-center pointer-events-none transition-all duration-300">
-          <div className="bg-[#0a0a0a] p-8 rounded-3xl border border-white/10 shadow-2xl flex flex-col items-center gap-4 scale-110 animate-pulse">
-            <div className="w-20 h-20 bg-[#22d3ee] rounded-2xl flex items-center justify-center">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5">
+        <div className="pointer-events-none fixed inset-0 z-toast flex items-center justify-center border-4 border-dashed border-brand-ring bg-brand-soft backdrop-blur-md transition-opacity duration-slow">
+          <div className="flex scale-110 animate-pulse flex-col items-center gap-4 rounded-3xl border border-line bg-overlay p-8 shadow-elevation-4">
+            <div className="flex size-20 items-center justify-center rounded-2xl bg-brand text-ink-on-accent">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
               </svg>
             </div>
             <div className="flex flex-col items-center">
-              <span className="text-xl font-bold text-white">{copy.shell.dropHere}</span>
-              <span className="text-sm text-white/40">{copy.shell.dropHereHint}</span>
+              <span className="text-page-title font-bold text-ink">{copy.shell.dropHere}</span>
+              <span className="text-body-sm text-ink-subtle">{copy.shell.dropHereHint}</span>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Vadoo promo banner */}
-      {showVadooBanner && (
-        <div className="flex-shrink-0 w-full bg-indigo-600 flex items-center justify-center px-4 py-2 gap-3 relative z-50">
-          <a
-            href="https://vadoo.tv"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[13px] font-bold text-white hover:opacity-80 transition-opacity text-center"
-          >
-            {copy.shell.vadooPromo}
-          </a>
-          <button
-            onClick={() => {
-              setShowVadooBanner(false);
-              localStorage.setItem('vadoo_banner_dismissed', '1');
-            }}
-            className="absolute right-3 text-white/60 hover:text-white transition-colors text-lg leading-none"
-            aria-label={copy.shell.dismiss}
-          >
-            ✕
-          </button>
         </div>
       )}
 
       {/* Header */}
       {isHeaderVisible && (
-        <header className="flex-shrink-0 h-14 border-b border-white/[0.05] flex items-center justify-between px-4 bg-[#0a0a0b]/80 backdrop-blur-md z-50 gap-4">
+        <header className="bg-surface-glass z-header flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line-subtle px-4 backdrop-blur-md">
           {/* Left: Mobile menu toggle + Logo + Desktop Sidebar Toggle */}
           <div className="flex items-center gap-3">
             {/* Mobile drawer toggle */}
-            <button
+            <IconButton
+              icon={Menu}
               onClick={() => setIsMobileOpen(!isMobileOpen)}
-              className="md:hidden p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors"
-              aria-label={copy.shell.toggleNavMenu}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
+              className="md:hidden"
+              label={copy.shell.toggleNavMenu}
+            />
 
             {/* Desktop Sidebar Toggle Button (Single Toggle Button) */}
-            <div className="hidden md:block relative group">
-              <button
+            <div className="group relative hidden md:block">
+              <IconButton
+                icon={PanelLeft}
                 onClick={toggleSidebar}
-                className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors border border-white/5"
-                aria-label={isSidebarCollapsed ? copy.shell.expandSidebar : copy.shell.collapseSidebar}
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className={`transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`}
-                >
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <path d="M9 3v18" />
-                  <path d="M14 9l-3 3 3 3" />
-                </svg>
-              </button>
+                label={isSidebarCollapsed ? copy.shell.expandSidebar : copy.shell.collapseSidebar}
+                className={isSidebarCollapsed ? '[&_svg]:rotate-180' : undefined}
+              />
               {/* Custom Tooltip */}
-              <div className="absolute left-0 top-full mt-2 px-2.5 py-1 bg-[#121215]/95 backdrop-blur-md text-white text-[11px] font-medium rounded-md shadow-2xl border border-white/15 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50 whitespace-nowrap">
+              <div className="text-caption bg-overlay-glass z-tooltip pointer-events-none absolute left-0 top-full mt-2 whitespace-nowrap rounded-md border border-line-strong px-2.5 py-1 font-medium text-ink opacity-0 shadow-elevation-3 backdrop-blur-md transition-opacity duration-base group-hover:opacity-100">
                 {isSidebarCollapsed ? copy.shell.expandSidebar : copy.shell.collapseSidebar}
               </div>
             </div>
 
-            {/* Logo & Title */}
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-[#22d3ee] rounded-lg flex items-center justify-center shadow-lg shadow-[#22d3ee]/20">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
-              </div>
-              <span className="text-sm font-bold tracking-tight hidden sm:block text-white">
-                {copy.shell.brand}
-              </span>
-            </div>
+            {/* Logo & Title (动态品牌与Logo) */}
+            <a
+              href={siteBrand?.logoHref || '/studio'}
+              target={siteBrand?.logoTarget || '_self'}
+              className="group flex items-center gap-2.5 cursor-pointer"
+              aria-label={siteBrand?.brandName || copy.shell.brand}
+            >
+              {siteBrand?.logoUrl && !logoImgError ? (
+                <div className="flex h-8 max-w-44 items-center justify-center transition-transform duration-base group-hover:scale-105">
+                  <img
+                    src={siteBrand.logoUrl}
+                    alt={siteBrand.brandName || 'Logo'}
+                    className="max-h-8 w-auto max-w-44 object-contain"
+                    onError={() => setLogoImgError(true)}
+                  />
+                </div>
+              ) : (
+                /* The brand tile is admin data, so an override colour is
+                   allowed to win; the fallback resolves from --accent-primary
+                   through `text-ink-on-accent` / `bg-brand` rather than a
+                   second copy of the hex. */
+                <div
+                  className="bg-brand text-ink-on-accent flex size-8 items-center justify-center rounded-lg shadow-elevation-1 transition-transform duration-base group-hover:scale-105"
+                  style={siteBrand?.logoBgColor ? { backgroundColor: siteBrand.logoBgColor } : undefined}
+                >
+                  <DynamicVectorIcon
+                    iconName={siteBrand?.logoIcon || 'layers'}
+                    color={siteBrand?.logoTextColor || undefined}
+                    className="size-5"
+                  />
+                </div>
+              )}
+
+              {siteBrand?.showBrandName && (
+                <span className="font-jost text-body hidden max-w-44 truncate font-bold tracking-tight text-ink sm:block">
+                  {siteBrand?.brandName || copy.shell.brand}
+                </span>
+              )}
+            </a>
+
+            {/* 左侧全站固定纯文字导航 (首页 + 社区) */}
+            <nav className="ml-1 flex items-center gap-1 sm:ml-4 sm:gap-2" aria-label={copy.shell.studioNavigation}>
+              {/* Hidden below `sm`: the logo tile beside it already links to
+                  /studio, and at 390px the duplicate label is what pushed the
+                  Log in control past the viewport edge. */}
+              <a
+                href={studioPath('')}
+                className={`text-body-sm hidden rounded-md px-2.5 py-1 transition-colors sm:text-body sm:block ${
+                  pathname === '/' || pathname?.includes('/studio')
+                    ? 'font-semibold text-ink'
+                    : 'text-ink-muted hover:text-ink'
+                }`}
+              >
+                {copy.shell?.home || (isZh ? '首页' : 'Studio')}
+              </a>
+              <a
+                href="/community"
+                className={`text-body-sm rounded-md px-2.5 py-1 transition-colors sm:text-body ${
+                  pathname?.startsWith('/community')
+                    ? 'font-semibold text-ink'
+                    : 'text-ink-muted hover:text-ink'
+                }`}
+              >
+                {isZh ? '社区' : 'Community'}
+              </a>
+            </nav>
           </div>
 
           {/* Active Tab Breadcrumb Badge */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.05] text-xs text-white/60">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#22d3ee]" />
-            <span className="font-medium text-white/80">
+          <div className="bg-wash text-caption hidden items-center gap-2 rounded-full border border-line-subtle px-3 py-1 text-ink-muted lg:flex">
+            <span className="size-1.5 rounded-full bg-brand" />
+            <span className="font-medium text-ink">
               {tabLabel(activeTab) || copy.shell.studioFallback}
             </span>
           </div>
 
-          {/* Right: Actions */}
+          {/* Right: Actions (右上角固定图标功能区: 额度、提醒、语言切换、用户头像) */}
           <div className="flex-shrink-0 flex items-center gap-2">
-            <a
-              href="/community"
-              className="flex items-center gap-1.5 bg-gradient-to-r from-cyan-500/15 via-blue-500/15 to-purple-500/15 hover:from-cyan-500/25 hover:to-purple-500/25 text-cyan-300 border border-cyan-400/30 px-3 py-1.5 rounded-full text-xs font-bold transition shadow-sm"
-              title="前往即梦社区发现万千灵感与一键做同款"
-            >
-              <span>🔥 即梦社区</span>
-            </a>
-
-            <a
-              href="/creations"
-              className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 px-3 py-1.5 rounded-full text-xs font-medium transition"
-              title="查看与管理我的生图/生视频/生音乐素材"
-            >
-              <span>📁 我的作品</span>
-            </a>
-
-            {accountUser ? (
-              <a
-                href="/account"
-                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full border border-white/10 transition-colors text-xs"
-                title="查看账户与模型额度"
-              >
-                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                <span className="font-semibold text-cyan-300">
-                  ⚡ {accountCredits !== null ? `${accountCredits} 额度` : '已登录'}
-                </span>
-                <span className="hidden md:inline text-white/50 text-[11px] truncate max-w-[120px]">
-                  {accountUser.displayName || accountUser.email}
-                </span>
-              </a>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowAuthModal(true)}
-                className="flex items-center gap-1.5 bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm"
-              >
-                登录 / 注册
-              </button>
-            )}
-
-            {apiKey && (
-              <div className="hidden sm:flex items-center gap-1.5 bg-white/5 px-2.5 py-1.5 rounded-md border border-white/5 text-[11px] text-white/70">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                <span>BYOK</span>
-              </div>
-            )}
-
-            <LanguageSwitcher />
-
-            <button
-              onClick={() => setShowSettings(true)}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-white/10 bg-white/5 text-[13px] font-bold text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-              aria-label={copy.shell.settings}
-              title="设置与 API Key"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-              </svg>
-            </button>
+            <UserDropdownMenu
+              user={accountUser}
+              credits={accountCredits}
+              locale={locale}
+              onOpenSettings={() => {
+                setAccountModalTab('settings');
+                setIsAccountModalOpen(true);
+              }}
+              onOpenAccount={(tab) => {
+                setAccountModalTab(tab);
+                setIsAccountModalOpen(true);
+              }}
+              onLogout={handleLogout}
+              onOpenAuth={() => setShowAuthModal(true)}
+            />
           </div>
         </header>
       )}
@@ -986,7 +1231,7 @@ export default function StandaloneShell({ locale = 'en' }) {
         {/* Mobile Backdrop Overlay */}
         {isMobileOpen && (
           <div 
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden animate-fade-in"
+            className="bg-scrim z-sticky animate-fade-in fixed inset-0 backdrop-blur-sm md:hidden"
             onClick={() => setIsMobileOpen(false)}
           />
         )}
@@ -995,12 +1240,12 @@ export default function StandaloneShell({ locale = 'en' }) {
         {isHeaderVisible && (
           <aside
             className={`
-              fixed top-14 bottom-0 left-0 md:static md:h-full z-30 bg-[#0a0a0b]/95 backdrop-blur-md border-r border-white/[0.06] flex flex-col transition-all duration-300 ease-in-out flex-shrink-0 select-none
-              ${isMobileOpen ? 'translate-x-0 w-60 z-50' : '-translate-x-full md:translate-x-0'}
-              ${isSidebarCollapsed ? 'md:w-16' : 'md:w-52'}
+              bg-surface-glass z-drawer fixed bottom-0 left-0 top-14 flex shrink-0 select-none flex-col border-r border-line-subtle backdrop-blur-md transition-[transform,width] duration-slow ease-standard md:static md:h-full
+              ${isMobileOpen ? 'w-sidebar translate-x-0' : '-translate-x-full md:translate-x-0'}
+              ${isSidebarCollapsed ? 'md:w-sidebar-collapsed' : 'md:w-sidebar'}
             `}
           >
-            <nav aria-label={copy.shell.studioNavigation} className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none py-2 px-2">
+            <nav aria-label={copy.shell.studioNavigation} className="flex-1 overflow-x-hidden overflow-y-auto px-2 py-2">
               <div className="space-y-1">
                 {NAVIGATION_CATEGORIES.map((category) => {
                   const isCategoryActive = activeCategory?.id === category.id;
@@ -1019,43 +1264,34 @@ export default function StandaloneShell({ locale = 'en' }) {
                         aria-controls={isCollapsed ? undefined : categoryPanelId}
                         title={isCollapsed ? categoryLabelText : undefined}
                         className={`
-                          group relative flex items-center rounded-xl transition-all duration-150 font-semibold
-                          ${isCollapsed ? 'h-11 w-11 justify-center mx-auto' : 'px-3 py-2.5 w-full gap-3 text-left'}
+                          group relative flex items-center rounded-xl border font-semibold transition-colors duration-fast
+                          ${isCollapsed ? 'mx-auto h-11 w-11 justify-center' : 'min-h-11 w-full gap-3 px-3 py-2.5 text-left'}
                           ${isCategoryActive
-                            ? 'bg-gradient-to-r from-[#22d3ee]/15 to-purple-500/10 text-[#22d3ee] border border-[#22d3ee]/20 shadow-[0_0_15px_rgba(34,211,238,0.08)]'
+                            ? 'border-brand-line bg-brand-soft text-brand'
                             : isCategoryOpen
-                              ? 'bg-white/[0.06] text-white border border-white/[0.08]'
-                              : 'text-white/60 hover:text-white hover:bg-white/[0.04] border border-transparent'
+                              ? 'border-line bg-wash-strong text-ink'
+                              : 'border-transparent text-ink-muted hover:bg-wash hover:text-ink'
                           }
                         `}
                       >
                         {isCategoryActive && (
-                          <span className="absolute left-0 top-2 bottom-2 w-1 bg-gradient-to-b from-[#22d3ee] to-[#a855f7] rounded-r-full shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
+                          <span className="absolute bottom-2 left-0 top-2 w-1 rounded-r-full bg-brand" />
                         )}
 
-                        <span className={`flex-shrink-0 transition-colors ${isCategoryActive ? 'text-[#22d3ee]' : 'text-white/55 group-hover:text-white'}`}>
+                        <span className={`shrink-0 transition-colors ${isCategoryActive ? 'text-brand' : 'text-ink-muted group-hover:text-ink'}`}>
                           {category.icon}
                         </span>
 
                         {!isCollapsed && (
                           <>
-                            <span className="flex-1 min-w-0 text-[12px] leading-4 tracking-tight">
+                            <span className="text-label min-w-0 flex-1">
                               {categoryLabelText}
                             </span>
-                            <svg
-                              width="15"
-                              height="15"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className={`flex-shrink-0 transition-transform duration-200 ${isCategoryOpen ? 'rotate-180' : ''}`}
+                            <ChevronDown
+                              className={`size-4 shrink-0 transition-transform duration-base ${isCategoryOpen ? 'rotate-180' : ''}`}
+                              strokeWidth={1.8}
                               aria-hidden="true"
-                            >
-                              <path d="M6 9l6 6 6-6"/>
-                            </svg>
+                            />
                           </>
                         )}
                       </button>
@@ -1065,7 +1301,7 @@ export default function StandaloneShell({ locale = 'en' }) {
                           id={categoryPanelId}
                           role="group"
                           aria-label={`${categoryLabelText} ${copy.shell.toolsSuffix}`}
-                          className="mt-1 ml-2 pl-2 border-l border-white/[0.08] space-y-1 max-h-64 overflow-y-auto scrollbar-none"
+                          className="ml-2 mt-1 max-h-64 space-y-1 overflow-y-auto border-l border-line pl-2"
                         >
                           {category.tabIds.map((tabId) => {
                             const tab = TABS.find((item) => item.id === tabId);
@@ -1079,17 +1315,17 @@ export default function StandaloneShell({ locale = 'en' }) {
                                 onClick={(event) => handleNavigationItemClick(event, tab.id)}
                                 aria-current={isActive ? 'page' : undefined}
                                 className={`
-                                  group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12px] font-medium transition-all duration-150
+                                  group relative flex items-center gap-2.5 rounded-lg border px-2.5 py-2 text-label font-medium transition-colors duration-fast
                                   ${isActive
-                                    ? 'bg-[#22d3ee]/12 text-[#22d3ee] border border-[#22d3ee]/20'
-                                    : 'text-white/55 hover:text-white hover:bg-white/[0.04] border border-transparent'
+                                    ? 'border-brand-line bg-brand-soft text-brand'
+                                    : 'border-transparent text-ink-muted hover:bg-wash hover:text-ink'
                                   }
                                 `}
                               >
                                 {isActive && (
-                                  <span className="absolute -left-[11px] top-2 bottom-2 w-0.5 rounded-full bg-[#22d3ee] shadow-[0_0_7px_rgba(34,211,238,0.7)]" />
+                                  <span className="absolute -left-2.5 bottom-2 top-2 w-0.5 rounded-full bg-brand" />
                                 )}
-                                <span className={`flex-shrink-0 ${isActive ? 'text-[#22d3ee]' : 'text-white/45 group-hover:text-white/80'}`}>
+                                <span className={`shrink-0 ${isActive ? 'text-brand' : 'text-ink-subtle group-hover:text-ink-muted'}`}>
                                   {tab.icon}
                                 </span>
                                 <span className="truncate">{tabLabel(tab.id)}</span>
@@ -1103,8 +1339,8 @@ export default function StandaloneShell({ locale = 'en' }) {
                 })}
               </div>
 
-              {EXPLORE_APPS_TAB && (
-                <div className="mt-3 pt-3 border-t border-white/[0.07]">
+              {showExploreApps && EXPLORE_APPS_TAB && (
+                <div className="mt-3 border-t border-line-subtle pt-3">
                   <a
                     href={studioPath(EXPLORE_APPS_TAB.id)}
                     onClick={(event) => handleNavigationItemClick(event, EXPLORE_APPS_TAB.id)}
@@ -1112,18 +1348,18 @@ export default function StandaloneShell({ locale = 'en' }) {
                     aria-label={tabLabel(EXPLORE_APPS_TAB.id)}
                     title={isSidebarCollapsed && !isMobileOpen ? tabLabel(EXPLORE_APPS_TAB.id) : undefined}
                     className={`
-                      group relative flex items-center rounded-xl transition-all duration-150 text-[13px] font-semibold
-                      ${isSidebarCollapsed && !isMobileOpen ? 'h-11 w-11 justify-center mx-auto' : 'px-3 py-2.5 w-full gap-3'}
+                      group relative flex items-center rounded-xl border text-body-sm font-semibold transition-colors duration-fast
+                      ${isSidebarCollapsed && !isMobileOpen ? 'mx-auto h-11 w-11 justify-center' : 'w-full gap-3 px-3 py-2.5'}
                       ${activeTab === EXPLORE_APPS_TAB.id
-                        ? 'bg-gradient-to-r from-[#22d3ee]/15 to-purple-500/10 text-[#22d3ee] border border-[#22d3ee]/20'
-                        : 'text-white/60 hover:text-white hover:bg-white/[0.04] border border-transparent'
+                        ? 'border-brand-line bg-brand-soft text-brand'
+                        : 'border-transparent text-ink-muted hover:bg-wash hover:text-ink'
                       }
                     `}
                   >
                     {activeTab === EXPLORE_APPS_TAB.id && (
-                      <span className="absolute left-0 top-2 bottom-2 w-1 bg-gradient-to-b from-[#22d3ee] to-[#a855f7] rounded-r-full" />
+                      <span className="absolute bottom-2 left-0 top-2 w-1 rounded-r-full bg-brand" />
                     )}
-                    <span className={`flex-shrink-0 ${activeTab === EXPLORE_APPS_TAB.id ? 'text-[#22d3ee]' : 'text-white/50 group-hover:text-white'}`}>
+                    <span className={`shrink-0 ${activeTab === EXPLORE_APPS_TAB.id ? 'text-brand' : 'text-ink-muted group-hover:text-ink'}`}>
                       {EXPLORE_APPS_TAB.icon}
                     </span>
                     {(!isSidebarCollapsed || isMobileOpen) && (
@@ -1137,46 +1373,88 @@ export default function StandaloneShell({ locale = 'en' }) {
         )}
 
         {/* Studio Content */}
-        <div className="flex-1 min-h-0 h-full relative overflow-hidden bg-[#030303]">
-        <div className={activeTab === 'image' ? "h-full w-full" : "hidden"}>
+        <div className="relative h-full min-h-0 flex-1 overflow-hidden bg-base" data-active-studio={activeTab}>
+          {modelDirectoryState === 'error' && (
+            <div
+              className="absolute inset-x-4 top-4 z-40 mx-auto flex max-w-lg items-center gap-3 rounded-lg border border-warning-line bg-warning-soft px-4 py-2.5 shadow-elevation-4"
+              role="alert"
+            >
+              <AlertCircle className="size-4 shrink-0 text-warning" />
+              <span className="flex-1 text-body-sm text-ink">{copy.shell.modelDirectoryUnavailable}</span>
+              <button
+                type="button"
+                onClick={() => setStudioConfigAttempt((n) => n + 1)}
+                className="h-control-md shrink-0 rounded-lg border border-warning-line px-3 text-label font-semibold text-warning transition-colors duration-base hover:bg-warning-soft active:scale-95"
+              >
+                {copy.shell.retry}
+              </button>
+            </div>
+          )}
+        {activeTab === 'image' && (
+            <StudioResourceBoundary studioId="image">
           <ImageStudio apiKey={apiKey} locale={locale} droppedFiles={droppedFiles} onFilesHandled={handleFilesHandled} onGenerationStart={makeGenerationStartCallback('image')} onGenerationEnd={makeGenerationEndCallback('image')} onGenerationComplete={makeSuccessCallback('image')} onGenerationError={makeErrorCallback('image')} />
-        </div>
-        <div className={activeTab === 'headshot' ? "h-full w-full" : "hidden"}>
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'headshot' && (
+            <StudioResourceBoundary studioId="headshot">
           <HeadshotStudio apiKey={apiKey} locale={locale} droppedFiles={droppedFiles} onFilesHandled={handleFilesHandled} onGenerationStart={makeGenerationStartCallback('headshot')} onGenerationEnd={makeGenerationEndCallback('headshot')} onGenerationComplete={makeSuccessCallback('headshot')} onGenerationError={makeErrorCallback('headshot')} />
-        </div>
-        <div className={activeTab === 'layers' ? "h-full w-full" : "hidden"}>
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'layers' && (
+            <StudioResourceBoundary studioId="layers">
           <LayersStudio apiKey={apiKey} locale={locale} droppedFiles={droppedFiles} onFilesHandled={handleFilesHandled} onGenerationStart={makeGenerationStartCallback('layers')} onGenerationEnd={makeGenerationEndCallback('layers')} onGenerationComplete={makeSuccessCallback('layers')} onGenerationError={makeErrorCallback('layers')} />
-        </div>
-        <div className={activeTab === 'video' ? "h-full w-full" : "hidden"}>
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'video' && (
+            <StudioResourceBoundary studioId="video">
           <VideoStudio apiKey={apiKey} locale={locale} droppedFiles={droppedFiles} onFilesHandled={handleFilesHandled} onGenerationStart={makeGenerationStartCallback('video')} onGenerationEnd={makeGenerationEndCallback('video')} onGenerationComplete={makeSuccessCallback('video')} onGenerationError={makeErrorCallback('video')} />
-        </div>
-        <div className={activeTab === 'clipping' ? "h-full w-full" : "hidden"}>
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'clipping' && (
+            <StudioResourceBoundary studioId="clipping">
           <ClippingStudio apiKey={apiKey} locale={locale} droppedFiles={droppedFiles} onFilesHandled={handleFilesHandled} onGenerationStart={makeGenerationStartCallback('clipping')} onGenerationEnd={makeGenerationEndCallback('clipping')} onGenerationComplete={makeSuccessCallback('clipping')} onGenerationError={makeErrorCallback('clipping')} />
-        </div>
-        <div className={activeTab === 'motion-control' ? "h-full w-full" : "hidden"}>
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'motion-control' && (
+            <StudioResourceBoundary studioId="motion-control">
           <MotionControlStudio apiKey={apiKey} locale={locale} droppedFiles={droppedFiles} onFilesHandled={handleFilesHandled} onGenerationStart={makeGenerationStartCallback('motion-control')} onGenerationEnd={makeGenerationEndCallback('motion-control')} onGenerationComplete={makeSuccessCallback('motion-control')} onGenerationError={makeErrorCallback('motion-control')} />
-        </div>
-        <div className={activeTab === 'vibe-motion' ? "h-full w-full" : "hidden"}>
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'vibe-motion' && (
+            <StudioResourceBoundary studioId="vibe-motion">
           <VibeMotionStudio apiKey={apiKey} locale={locale} onGenerationStart={makeGenerationStartCallback('vibe-motion')} onGenerationEnd={makeGenerationEndCallback('vibe-motion')} onGenerationComplete={makeSuccessCallback('vibe-motion')} onGenerationError={makeErrorCallback('vibe-motion')} />
-        </div>
-        <div className={activeTab === 'lipsync' ? "h-full w-full" : "hidden"}>
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'lipsync' && (
+            <StudioResourceBoundary studioId="lipsync">
           <LipSyncStudio apiKey={apiKey} locale={locale} droppedFiles={droppedFiles} onFilesHandled={handleFilesHandled} onGenerationStart={makeGenerationStartCallback('lipsync')} onGenerationEnd={makeGenerationEndCallback('lipsync')} onGenerationComplete={makeSuccessCallback('lipsync')} onGenerationError={makeErrorCallback('lipsync')} />
-        </div>
-        <div className={activeTab === 'body-swap' ? "h-full w-full" : "hidden"}>
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'body-swap' && (
+            <StudioResourceBoundary studioId="body-swap">
           <RecastStudio apiKey={apiKey} locale={locale} droppedFiles={droppedFiles} onFilesHandled={handleFilesHandled} onGenerationStart={makeGenerationStartCallback('body-swap')} onGenerationEnd={makeGenerationEndCallback('body-swap')} onGenerationComplete={makeSuccessCallback('body-swap')} onGenerationError={makeErrorCallback('body-swap')} />
-        </div>
-        <div className={activeTab === 'cinema' ? "h-full w-full" : "hidden"}>
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'cinema' && (
+            <StudioResourceBoundary studioId="cinema">
           <CinemaStudio apiKey={apiKey} locale={locale} onGenerationStart={makeGenerationStartCallback('cinema')} onGenerationEnd={makeGenerationEndCallback('cinema')} onGenerationComplete={makeSuccessCallback('cinema')} onGenerationError={makeErrorCallback('cinema')} />
-        </div>
-        <div className={activeTab === 'audio' ? "h-full w-full" : "hidden"}>
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'audio' && (
+            <StudioResourceBoundary studioId="audio">
           <AudioStudio apiKey={apiKey} locale={locale} droppedFiles={droppedFiles} onFilesHandled={handleFilesHandled} onGenerationStart={makeGenerationStartCallback('audio')} onGenerationEnd={makeGenerationEndCallback('audio')} onGenerationComplete={makeSuccessCallback('audio')} onGenerationError={makeErrorCallback('audio')} />
-        </div>
-        <div className={activeTab === 'marketing' ? "h-full w-full" : "hidden"}>
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'marketing' && (
+            <StudioResourceBoundary studioId="marketing">
           <MarketingStudio apiKey={apiKey} locale={locale} droppedFiles={droppedFiles} onFilesHandled={handleFilesHandled} onGenerationStart={makeGenerationStartCallback('marketing')} onGenerationEnd={makeGenerationEndCallback('marketing')} onGenerationComplete={makeSuccessCallback('marketing')} onGenerationError={makeErrorCallback('marketing')} />
-        </div>
-        <div className={activeTab === 'workflows' ? "h-full w-full" : "hidden"}>
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'workflows' && (
+            <StudioResourceBoundary studioId="workflows">
           <WorkflowStudio
             apiKey={apiKey}
+            signedIn={!!accountUser}
             isHeaderVisible={isHeaderVisible}
             onToggleHeader={setIsHeaderVisible}
             onGenerationStart={makeGenerationStartCallback('workflows')}
@@ -1184,12 +1462,16 @@ export default function StandaloneShell({ locale = 'en' }) {
             onGenerationComplete={makeSuccessCallback('workflows')}
             onGenerationError={makeErrorCallback('workflows')}
           />
-        </div>
-        <div className={activeTab === 'agents' ? "h-full w-full" : "hidden"}>
-          <AgentStudio apiKey={apiKey} locale={locale} isHeaderVisible={isHeaderVisible} onToggleHeader={setIsHeaderVisible} />
-        </div>
-        <div className={activeTab === 'design-agent' ? "h-full w-full" : "hidden"}>
-          {activeTab === 'design-agent' && (
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'agents' && (
+            <StudioResourceBoundary studioId="agents">
+          <AgentStudio apiKey={apiKey} locale={locale} signedIn={!!accountUser} onRequireAuth={() => setShowAuthModal(true)} isHeaderVisible={isHeaderVisible} onToggleHeader={setIsHeaderVisible} />
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'design-agent' && (
+            <StudioResourceBoundary studioId="design-agent">
+
             <DesignAgentStudio
               apiKey={apiKey}
               isHeaderVisible={isHeaderVisible}
@@ -1199,12 +1481,16 @@ export default function StandaloneShell({ locale = 'en' }) {
               onGenerationComplete={makeSuccessCallback('design-agent')}
               onGenerationError={makeErrorCallback('design-agent')}
             />
+          
+            </StudioResourceBoundary>
           )}
-        </div>
-        <div className={activeTab === 'apps' ? "h-full w-full" : "hidden"}>
+        {activeTab === 'apps' && (
+            <StudioResourceBoundary studioId="apps">
           <AppsStudio apiKey={apiKey} locale={locale} />
-        </div>
-        <div className={activeTab === 'ai-influencer' ? "h-full w-full" : "hidden"}>
+            </StudioResourceBoundary>
+          )}
+        {activeTab === 'ai-influencer' && (
+            <StudioResourceBoundary studioId="ai-influencer">
           <AiInfluencerStudio
             apiKey={apiKey}
             locale={locale}
@@ -1213,7 +1499,8 @@ export default function StandaloneShell({ locale = 'en' }) {
             onGenerationComplete={makeSuccessCallback('ai-influencer')}
             onGenerationError={makeErrorCallback('ai-influencer')}
           />
-        </div>
+            </StudioResourceBoundary>
+          )}
       </div>
     </div>
 
@@ -1222,7 +1509,7 @@ export default function StandaloneShell({ locale = 'en' }) {
         <div
           aria-live="polite"
           aria-label={copy.notifications.ariaLabel}
-          className="fixed top-16 right-5 z-[200] flex max-h-[calc(100vh-80px)] w-[340px] max-w-[calc(100vw-32px)] flex-col gap-2 overflow-x-hidden overflow-y-auto global-notif-stack pointer-events-none"
+          className="z-toast pointer-events-none fixed bottom-5 left-5 right-5 top-16 flex flex-col gap-2 overflow-x-hidden overflow-y-auto md:left-auto md:w-toast"
           data-testid="global-notification-stack"
         >
           {activeGenerations.map((generation) => (
@@ -1230,16 +1517,13 @@ export default function StandaloneShell({ locale = 'en' }) {
               key={generation.tabId}
               role="status"
               data-generation-tab={generation.tabId}
-              className="pointer-events-auto flex items-center gap-3 rounded-xl border border-cyan-500/40 bg-white px-3.5 py-3 text-[13px] text-zinc-900 shadow-[0_10px_30px_rgba(0,0,0,0.15)]"
+              className="bg-surface-inverse text-ink-inverse animate-fade-in pointer-events-auto flex items-center gap-3 rounded-xl border border-brand-line px-3.5 py-3 text-body-sm shadow-elevation-3"
               data-testid="generation-activity"
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-cyan-400/40 bg-cyan-50">
-                <span
-                  className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-cyan-600/30 border-t-cyan-600"
-                  aria-hidden="true"
-                />
+              <span className="border-brand-line flex size-8 shrink-0 items-center justify-center rounded-lg border bg-brand-soft">
+                <Spinner className="size-3.5 text-brand" />
               </span>
-              <p className="min-w-0 flex-1 font-semibold leading-5 text-zinc-900">
+              <p className="min-w-0 flex-1 font-semibold">
                 {generation.label} {copy.notifications.generating}
                 {generation.count > 1 ? ` (${generation.count})` : ''}
               </p>
@@ -1252,47 +1536,40 @@ export default function StandaloneShell({ locale = 'en' }) {
               role={notif.type === 'error' ? 'alert' : 'status'}
               data-notification-type={notif.type}
               data-notification-tab={notif.tabId}
-              className="pointer-events-auto flex items-start gap-3 rounded-xl border bg-white px-3.5 py-3 text-[13px] text-zinc-900 shadow-[0_10px_30px_rgba(0,0,0,0.15)]"
-              style={{
-                borderColor: notif.type === 'success' ? 'rgba(6,182,212,0.4)' : 'rgba(239,68,68,0.4)',
-                animation: 'slideInRight 280ms cubic-bezier(0.16,1,0.3,1) forwards',
-              }}
+              className={`
+                text-ink animate-fade-in pointer-events-auto flex items-start gap-3 rounded-xl border bg-overlay px-3.5 py-3 text-body-sm shadow-elevation-3
+                ${notif.type === 'success' ? 'border-brand-line' : 'border-danger-line'}
+              `}
             >
               <span
-                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border ${
+                className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border ${
                   notif.type === 'success'
-                    ? 'border-cyan-400/40 bg-cyan-50 text-cyan-600'
-                    : 'border-red-400/40 bg-red-50 text-red-600'
+                    ? 'border-brand-line bg-brand-soft text-brand'
+                    : 'border-danger-line bg-danger-soft text-danger'
                 }`}
               >
                 {notif.type === 'success' ? (
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="m5 12 4 4L19 6" />
-                  </svg>
+                  <Check className="size-4" strokeWidth={2} aria-hidden="true" />
                 ) : (
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M12 7v6" />
-                    <path d="M12 17h.01" />
-                  </svg>
+                  <AlertCircle className="size-4" strokeWidth={1.8} aria-hidden="true" />
                 )}
               </span>
 
               <div className="min-w-0 flex-1">
-                <p className="font-semibold leading-5 text-zinc-900">
+                <p className="font-semibold">
                   {notif.label}
-                  <span className="font-normal text-zinc-500">
+                  <span className="font-normal text-ink-subtle">
                     {' '}
                     {notif.type === 'success' ? copy.notifications.generationComplete : copy.notifications.generationFailed}
                   </span>
                 </p>
                 {notif.type === 'error' && notif.message && (
-                  <p className="mt-0.5 line-clamp-2 text-[12px] font-medium leading-4 text-red-600" title={typeof notif.message === 'string' ? notif.message : String(notif.message?.message || notif.message)}>
+                  <p className="text-label mt-0.5 line-clamp-2 font-medium text-danger" title={typeof notif.message === 'string' ? notif.message : String(notif.message?.message || notif.message)}>
                     {typeof notif.message === 'string' ? notif.message : String(notif.message?.message || notif.message)}
                   </p>
                 )}
                 {notif.type === 'success' && (
-                  <p className="mt-0.5 text-[12px] leading-4 text-zinc-500">
+                  <p className="text-label mt-0.5 text-ink-subtle">
                     {copy.notifications.resultReady}
                   </p>
                 )}
@@ -1300,7 +1577,7 @@ export default function StandaloneShell({ locale = 'en' }) {
                   <button
                     type="button"
                     onClick={() => handleOpenNotification(notif)}
-                    className="mt-1.5 text-[11px] font-bold text-cyan-600 transition-colors hover:text-cyan-700"
+                    className="text-caption mt-1.5 font-bold text-brand transition-colors hover:text-brand-hover"
                     aria-label={copy.notifications.openResult.replace('{label}', notif.label)}
                   >
                     {copy.notifications.open}
@@ -1308,84 +1585,61 @@ export default function StandaloneShell({ locale = 'en' }) {
                 )}
               </div>
 
-              <button
-                type="button"
+              <IconButton
+                icon={X}
+                size="icon-sm"
                 onClick={() => dismissNotification(notif.id)}
-                className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-300"
-                aria-label={copy.notifications.dismissNotification}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                  <path d="M18 6 6 18M6 6l12 12" />
-                </svg>
-              </button>
+                label={copy.notifications.dismissNotification}
+                className="mt-0.5 shrink-0"
+              />
             </div>
           ))}
         </div>
       )}
 
-      {/* Keyframe for toast slide-in & scrollbar suppression */}
-      <style>{`
-        @keyframes slideInRight {
-          from { transform: translateX(110%); opacity: 0; }
-          to   { transform: translateX(0);    opacity: 1; }
-        }
-        .global-notif-stack::-webkit-scrollbar {
-          display: none;
-        }
-        .global-notif-stack {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
-
       {/* Settings Modal */}
-      {showSettings && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in-up">
-          <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-8 w-full max-w-sm shadow-2xl">
-            <h2 className="text-white font-bold text-lg mb-2">{copy.settingsModal.title}</h2>
-            <p className="text-white/40 text-[13px] mb-8">
-              {copy.settingsModal.subtitle}
-            </p>
-
-            <div className="space-y-4 mb-8">
-              <div className="bg-white/5 border border-white/[0.03] rounded-md p-4">
-                <label className="block text-xs font-bold text-white/30 mb-2">
-                   {copy.settingsModal.activeApiKey}
-                </label>
-                <div className="text-[13px] font-mono text-white/80">
-                  {apiKey ? `${apiKey.slice(0, 8)}••••••••••••••••` : '未配置（优先使用本站账户额度）'}
-                </div>
-              </div>
-              <div className="bg-white/5 border border-white/[0.03] rounded-md p-4 flex items-center justify-between">
-                <div>
-                  <label className="block text-xs font-bold text-white/30 mb-1">
-                    {locale === 'zh' ? '界面语言' : 'Interface Language'}
-                  </label>
-                  <span className="text-[13px] text-white/80">
-                    {locale === 'zh' ? '简体中文' : 'English'}
-                  </span>
-                </div>
-                <LanguageSwitcher showLabel={false} />
-              </div>
+      <Modal open={showSettings} onOpenChange={setShowSettings}>
+        <ModalContent
+          size="sm"
+          title={copy.settingsModal.title}
+          description={copy.settingsModal.subtitle}
+        >
+          <div className="space-y-3">
+            <div className="rounded-lg border border-line bg-wash p-4">
+              <p className="text-label text-ink-subtle">
+                {copy.settingsModal.activeApiKey}
+              </p>
+              <p className="text-mono mt-1.5 text-ink">
+                {apiKey
+                  ? `${apiKey.slice(0, 8)}••••••••••••••••`
+                  : copy.shell.apiKeyUnconfigured}
+              </p>
             </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleKeyChange}
-                className="flex-1 h-10 rounded-md bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-semibold transition-all"
-              >
-                {copy.settingsModal.changeKey}
-              </button>
-              <button
-                onClick={() => setShowSettings(false)}
-                className="flex-1 h-10 rounded-md bg-white/5 text-white/80 hover:bg-white/10 text-xs font-semibold transition-all border border-white/5"
-              >
-                {copy.settingsModal.close}
-              </button>
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-line bg-wash p-4">
+              <div className="min-w-0">
+                <p className="text-label text-ink-subtle">
+                  {copy.settingsModal.interfaceLanguage}
+                </p>
+                <p className="text-body-sm mt-1 text-ink">{nativeLocaleName}</p>
+              </div>
+              <LanguageSwitcher showLabel={false} />
             </div>
           </div>
-        </div>
-      )}
+
+          <div className="mt-6 flex gap-3">
+            <Button variant="danger" fullWidth onClick={handleKeyChange}>
+              {copy.settingsModal.changeKey}
+            </Button>
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={() => setShowSettings(false)}
+            >
+              {copy.settingsModal.close}
+            </Button>
+          </div>
+        </ModalContent>
+      </Modal>
 
       {/* 登录拦截与登录弹窗 */}
       {showAuthModal && (
@@ -1395,6 +1649,13 @@ export default function StandaloneShell({ locale = 'en' }) {
           locale={locale}
         />
       )}
+
+      {/* 个人中心悬浮窗（点击背景当前页面即可关闭） */}
+      <AccountModal
+        isOpen={isAccountModalOpen}
+        onClose={handleCloseAccountModal}
+        initialTab={accountModalTab}
+      />
     </div>
   );
 }

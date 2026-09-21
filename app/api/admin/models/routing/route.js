@@ -9,7 +9,7 @@ import {
   getCanonicalModelById,
   listProviders,
   listCanonicalModels,
-} from '@/lib/repositories/aiCatalog';
+} from '@/lib/services/modelCatalog';
 import { logAudit } from '@/lib/admin/audit';
 
 export const runtime = 'nodejs';

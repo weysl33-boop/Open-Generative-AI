@@ -74,17 +74,17 @@ export default function InteractiveCanvasPreview() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto rounded-3xl overflow-hidden border border-white/[0.1] bg-[#0c0f17]/90 backdrop-blur-2xl shadow-2xl shadow-cyan-500/10">
+    <div className="max-w-6xl mx-auto rounded-3xl overflow-hidden border border-line bg-base/90 backdrop-blur-2xl shadow-elevation-4 shadow-brand-soft">
       
       {/* 顶部体验切换栏 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-white/[0.08] bg-white/[0.02] gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-line bg-wash gap-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-red-500/80" />
-            <span className="w-3 h-3 rounded-full bg-amber-500/80" />
-            <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
+            <span className="w-3 h-3 rounded-full bg-danger" />
+            <span className="w-3 h-3 rounded-full bg-warning" />
+            <span className="w-3 h-3 rounded-full bg-success" />
           </div>
-          <span className="text-xs font-mono text-neutral-400 pl-2">
+          <span className="text-xs font-mono text-ink-muted pl-2">
             KoyoSIM Studio · 灵感画布与生成预览
           </span>
         </div>
@@ -97,8 +97,8 @@ export default function InteractiveCanvasPreview() {
               onClick={() => setSelectedId(p.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
                 selectedId === p.id
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold shadow-sm'
-                  : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
+                  ? 'bg-brand-pressed text-brand-hover border border-brand-ring font-semibold shadow-elevation-1'
+                  : 'text-ink-muted hover:text-ink hover:bg-wash'
               }`}
             >
               {p.title}
@@ -111,54 +111,54 @@ export default function InteractiveCanvasPreview() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
         
         {/* 左侧：画质大图展示 */}
-        <div className="lg:col-span-7 relative bg-black flex items-center justify-center min-h-[380px] lg:min-h-[460px] overflow-hidden group">
+        <div className="lg:col-span-7 relative bg-canvas flex items-center justify-center min-h-[380px] lg:min-h-[460px] overflow-hidden group">
           <img
             src={current.imageUrl}
             alt={current.title}
-            className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full object-cover object-center transition-transform duration-page group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
 
           {/* 画面悬浮信息标签 */}
           <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between pointer-events-none">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-mono">
+              <span className="px-2.5 py-1 rounded-md bg-scrim backdrop-blur-md border border-line-strong text-ink text-xs font-mono">
                 {current.model}
               </span>
-              <span className="px-2 py-1 rounded-md bg-cyan-500/30 backdrop-blur-md border border-cyan-400/30 text-cyan-200 text-xs font-mono">
+              <span className="px-2 py-1 rounded-md bg-brand-line backdrop-blur-md border border-brand-line text-brand-hover text-xs font-mono">
                 {current.aspectRatio} · 4K UHD
               </span>
             </div>
-            <span className="text-[11px] font-mono text-neutral-400 bg-black/50 px-2 py-1 rounded backdrop-blur-md">
+            <span className="text-[11px] font-mono text-ink-muted bg-scrim px-2 py-1 rounded backdrop-blur-md">
               Seed: {current.seed}
             </span>
           </div>
         </div>
 
         {/* 右侧：提示词、参数面板与直达 Studio 创作 */}
-        <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between bg-[#0e121d] border-t lg:border-t-0 lg:border-l border-white/[0.08]">
+        <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between bg-surface border-t lg:border-t-0 lg:border-l border-line">
           
           <div className="space-y-5">
             {/* 标题与模型 */}
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-400 font-bold">
+                <span className="text-micro font-mono tracking-widest uppercase text-brand font-bold">
                   {current.tag}
                 </span>
-                <h3 className="text-xl font-bold text-white mt-0.5">{current.title}</h3>
+                <h3 className="text-xl font-bold text-ink mt-0.5">{current.title}</h3>
               </div>
-              <span className="px-2.5 py-1 rounded-full bg-white/[0.06] text-xs text-neutral-300 font-mono border border-white/[0.08]">
+              <span className="px-2.5 py-1 rounded-full bg-wash-strong text-xs text-ink font-mono border border-line">
                 {current.style}
               </span>
             </div>
 
             {/* 提示词卡片 */}
-            <div className="rounded-xl bg-[#080a10] border border-white/[0.08] p-4 text-xs font-mono text-neutral-300 relative group">
-              <div className="flex items-center justify-between text-[11px] text-neutral-500 mb-2 pb-1.5 border-b border-white/[0.06]">
-                <span className="text-cyan-300 font-semibold">生成提示词 (Prompt)</span>
+            <div className="rounded-xl bg-canvas border border-line p-4 text-xs font-mono text-ink relative group">
+              <div className="flex items-center justify-between text-[11px] text-ink-subtle mb-2 pb-1.5 border-b border-line-subtle">
+                <span className="text-brand-hover font-semibold">生成提示词 (Prompt)</span>
                 <button
                   onClick={handleCopyPrompt}
-                  className="hover:text-white flex items-center gap-1 transition-colors text-[10px]"
+                  className="hover:text-ink flex items-center gap-1 transition-colors text-micro"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -166,31 +166,31 @@ export default function InteractiveCanvasPreview() {
                   <span>{copied ? '已复制！' : '复制提示词'}</span>
                 </button>
               </div>
-              <p className="leading-relaxed select-all text-neutral-200">{current.prompt}</p>
+              <p className="leading-relaxed select-all text-ink">{current.prompt}</p>
             </div>
 
             {/* 核心生图参数 */}
             <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
-              <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-                <span className="text-[10px] text-neutral-500 block">采样步数</span>
-                <span className="text-white font-bold">{current.steps} steps</span>
+              <div className="p-2.5 rounded-xl bg-wash border border-line-subtle">
+                <span className="text-micro text-ink-subtle block">采样步数</span>
+                <span className="text-ink font-bold">{current.steps} steps</span>
               </div>
-              <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-                <span className="text-[10px] text-neutral-500 block">CFG Scale</span>
-                <span className="text-cyan-400 font-bold">{current.cfg}</span>
+              <div className="p-2.5 rounded-xl bg-wash border border-line-subtle">
+                <span className="text-micro text-ink-subtle block">CFG Scale</span>
+                <span className="text-brand font-bold">{current.cfg}</span>
               </div>
-              <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-                <span className="text-[10px] text-neutral-500 block">画幅比</span>
-                <span className="text-amber-400 font-bold">{current.aspectRatio}</span>
+              <div className="p-2.5 rounded-xl bg-wash border border-line-subtle">
+                <span className="text-micro text-ink-subtle block">画幅比</span>
+                <span className="text-warning font-bold">{current.aspectRatio}</span>
               </div>
             </div>
           </div>
 
           {/* 底部与首页功能深度融合的直达 CTA */}
-          <div className="pt-6 border-t border-white/[0.08] mt-6 space-y-2.5">
+          <div className="pt-6 border-t border-line mt-6 space-y-2.5">
             <a
               href="/studio"
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-active to-blue-600 hover:from-brand hover:to-blue-500 text-ink font-bold text-sm tracking-wide shadow-elevation-2 shadow-brand-line flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -198,9 +198,9 @@ export default function InteractiveCanvasPreview() {
               <span>在 Studio 中一键 Remix 同款创作</span>
             </a>
 
-            <div className="flex items-center justify-between text-[11px] text-neutral-500 px-1">
+            <div className="flex items-center justify-between text-[11px] text-ink-subtle px-1">
               <span>免费账户即赠 1,000 点算力</span>
-              <a href="/community" className="text-cyan-400 hover:text-cyan-300 font-medium">
+              <a href="/community" className="text-brand hover:text-brand-hover font-medium">
                 查看社区更多精选作品 &rarr;
               </a>
             </div>

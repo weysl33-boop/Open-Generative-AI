@@ -9,7 +9,7 @@ const FEATURES = [
     subtitle: '文生图 / 图生图 / 超写真渲染',
     desc: '聚合 Midjourney v6.1、FLUX.1 Pro 与 Stable Diffusion 3.5。支持超高精度手部与面部毛孔细节、智能提示词补全与多风格自由切换。',
     badge: '旗舰生图',
-    badgeColor: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
+    badgeColor: 'bg-brand-soft text-brand border-brand-line',
     link: '/studio/image',
     buttonText: '进入生图工坊',
     stats: '200+ 顶尖模型支持',
@@ -27,7 +27,7 @@ const FEATURES = [
     subtitle: '图生视频 / 运镜控制 / 4K 动态',
     desc: '让静态大作一键化身电影级分镜。搭载 Google Veo 3.1、快手可灵 1.5 HD 与字节 Seedance 2.5，精准掌控推拉摇移、首尾帧与角色一致性。',
     badge: '电影级动态',
-    badgeColor: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+    badgeColor: 'bg-info-soft text-info border-info-line',
     link: '/studio/video',
     buttonText: '进入视频工坊',
     stats: '支持 4K 极清运镜',
@@ -44,7 +44,7 @@ const FEATURES = [
     subtitle: '局部重绘 / 画幅拓展 / 消除笔',
     desc: '无损分层编辑画布。支持指定区域精准 Inpaint 局部重绘、Outpaint 无限扩展画幅边界、一键扣图去除杂物与智能高清放大（Upscale）。',
     badge: '精准精修',
-    badgeColor: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+    badgeColor: 'bg-warning-soft text-warning border-warning-line',
     link: '/studio/layers',
     buttonText: '进入图层工坊',
     stats: '毫秒级无损重绘',
@@ -84,14 +84,14 @@ export default function StudioFeatureGrid() {
       {/* 区域标题 */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
         <div>
-          <span className="text-cyan-400 font-mono text-xs font-semibold tracking-wider uppercase">
+          <span className="text-brand font-mono text-xs font-semibold tracking-wider uppercase">
             STUDIO CREATIVE SUITE
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-1.5 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-ink mt-1.5 tracking-tight">
             全模态生图工作台 · 为极致灵感而生
           </h2>
         </div>
-        <p className="text-sm text-neutral-400 max-w-md mt-3 md:mt-0">
+        <p className="text-sm text-ink-muted max-w-md mt-3 md:mt-0">
           深度整合首页核心工坊，从灵感迸发、超清成图到分层精修与动画化，一站式无缝流转。
         </p>
       </div>
@@ -101,33 +101,33 @@ export default function StudioFeatureGrid() {
         {FEATURES.map((item) => (
           <div
             key={item.id}
-            className="rounded-2xl p-6 bg-[#0e121d]/80 border border-white/[0.08] hover:border-cyan-400/40 transition-all group flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-xl hover:shadow-cyan-500/10"
+            className="rounded-2xl p-6 bg-surface/80 border border-line hover:border-brand-ring transition-all group flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-elevation-3 hover:shadow-brand-soft"
           >
             <div>
               {/* 顶部图标与 Badge */}
               <div className="flex items-center justify-between mb-5">
-                <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-cyan-400 group-hover:scale-110 group-hover:text-cyan-300 transition-all shadow-inner">
+                <div className="w-12 h-12 rounded-xl bg-wash border border-line flex items-center justify-center text-brand group-hover:scale-110 group-hover:text-brand-hover transition-all shadow-inner">
                   {item.icon}
                 </div>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-mono border ${item.badgeColor}`}>
+                <span className={`px-2 py-0.5 rounded text-micro font-mono border ${item.badgeColor}`}>
                   {item.badge}
                 </span>
               </div>
 
               {/* 标题与描述 */}
-              <h3 className="text-lg font-bold text-white mb-1 group-hover:text-cyan-300 transition-colors">
+              <h3 className="text-lg font-bold text-ink mb-1 group-hover:text-brand-hover transition-colors">
                 {item.title}
               </h3>
-              <p className="text-xs text-neutral-400 font-mono mb-3">{item.subtitle}</p>
-              <p className="text-xs text-neutral-400 leading-relaxed">{item.desc}</p>
+              <p className="text-xs text-ink-muted font-mono mb-3">{item.subtitle}</p>
+              <p className="text-xs text-ink-muted leading-relaxed">{item.desc}</p>
             </div>
 
             {/* 底部跳转与指标 */}
-            <div className="pt-6 mt-6 border-t border-white/[0.06] flex items-center justify-between">
-              <span className="text-[11px] font-mono text-neutral-500">{item.stats}</span>
+            <div className="pt-6 mt-6 border-t border-line-subtle flex items-center justify-between">
+              <span className="text-[11px] font-mono text-ink-subtle">{item.stats}</span>
               <a
                 href={item.link}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition-colors group-hover:translate-x-0.5"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand hover:text-brand-hover transition-colors group-hover:translate-x-0.5"
               >
                 <span>{item.buttonText}</span>
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

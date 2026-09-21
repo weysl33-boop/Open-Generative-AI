@@ -53,5 +53,10 @@
     "minutesAgo": "{n}m ago",
     "hoursAgo": "{n}h ago",
     "daysAgo": "{n}d ago"
+  },
+  "auth": {
+    "heading": "Sign in to browse Agents",
+    "description": "Templates, your agents and chat history are tied to your KoyoSIM account. Log in to load them.",
+    "cta": "Log in"
   }
 }

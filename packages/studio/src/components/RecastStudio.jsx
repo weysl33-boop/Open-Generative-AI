@@ -31,6 +31,10 @@ import {
 } from "./prompt/PromptComposer.jsx";
 import en from "../messages/en/recastStudio.json";
 import zh from "../messages/zh/recastStudio.json";
+import ja from "../messages/ja-JP/recastStudio.json";
+import ko from "../messages/ko-KR/recastStudio.json";
+import zhTw from "../messages/zh-TW/recastStudio.json";
+import es from "../messages/es/recastStudio.json";
 import { resolveCopy } from "../i18nUtils";
 
 // ---------------------------------------------------------------------------
@@ -147,7 +151,7 @@ function MediaPickerButton({
       className={promptMediaButtonClassName({
         active: uploadState === UPLOAD_STATE.READY,
         className: isDragging
-          ? "border-[#22d3ee] bg-[#22d3ee]/10 ring-2 ring-[#22d3ee]/50 scale-105"
+          ? "border-line-accent bg-brand/10 ring-2 ring-line-accent/50 scale-105"
           : "",
       })}
     >
@@ -168,7 +172,7 @@ function MediaPickerButton({
 
       {/* Uploading indicator */}
       {uploadState === UPLOAD_STATE.UPLOADING && (
-        <div className="flex flex-col items-center justify-center w-full h-full absolute inset-0 bg-black/80 z-20 backdrop-blur-[2px]">
+        <div className="flex flex-col items-center justify-center w-full h-full absolute inset-0 bg-scrim z-20 backdrop-blur-[2px]">
           <svg className="w-8 h-8 -rotate-90">
             <circle
               cx="16"
@@ -177,7 +181,7 @@ function MediaPickerButton({
               stroke="currentColor"
               strokeWidth="2"
               fill="transparent"
-              className="text-white/10"
+              className="text-ink-subtle"
             />
             <circle
               cx="16"
@@ -188,10 +192,10 @@ function MediaPickerButton({
               fill="transparent"
               strokeDasharray={88}
               strokeDashoffset={88 - (88 * progress) / 100}
-              className="text-primary transition-all duration-300"
+              className="text-primary transition-all duration-page"
             />
           </svg>
-          <span className="absolute text-[9px] font-black text-primary leading-none">
+          <span className="absolute text-micro font-black text-primary leading-none">
             {progress}%
           </span>
         </div>
@@ -265,7 +269,7 @@ function AssetsDropdown({
     >
       <PromptPopoverHeader className="mb-0">{copy.assetLibrary.header}</PromptPopoverHeader>
       {/* Tabs */}
-      <div className="flex border-b border-white/5 pb-1">
+      <div className="flex border-b border-line-subtle pb-1">
         {["videos", "images", "results"].map((tab) => (
           <button
             key={tab}
@@ -273,8 +277,8 @@ function AssetsDropdown({
             onClick={() => setActiveTab(tab)}
             className={`flex-1 text-center py-1 text-xs font-bold capitalize transition-colors ${
               activeTab === tab
-                ? "text-[#22d3ee] border-b border-[#22d3ee]"
-                : "text-white/40 hover:text-white/80"
+                ? "text-brand border-b border-line-accent"
+                : "text-ink-subtle hover:text-ink"
             }`}
           >
             {copy.assetLibrary.tabs[tab]}
@@ -285,7 +289,7 @@ function AssetsDropdown({
       {/* Items list */}
       <div className="overflow-y-auto custom-scrollbar flex-1 flex flex-col gap-1.5 min-h-[180px] max-h-60">
         {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center flex-1 py-10 text-xs text-white/20">
+          <div className="flex flex-col items-center justify-center flex-1 py-10 text-xs text-ink-subtle">
             {copy.assetLibrary.empty}
           </div>
         ) : (
@@ -301,10 +305,10 @@ function AssetsDropdown({
                   onSelectResultAsVideo(item.url, item.name);
                 }
               }}
-              className="flex items-center justify-between p-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/5 hover:border-white/10 transition-all gap-2 group/item cursor-pointer"
+              className="flex items-center justify-between p-2 rounded-xl bg-wash border border-line-subtle hover:bg-wash hover:border-line transition-all gap-2 group/item cursor-pointer"
             >
               {/* Media Preview Thumbnail */}
-              <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/5 flex-shrink-0 relative">
+              <div className="w-10 h-10 rounded-lg overflow-hidden bg-wash flex-shrink-0 relative">
                 {activeTab === "images" ? (
                   <img
                     src={item.url}
@@ -328,7 +332,7 @@ function AssetsDropdown({
                     e.stopPropagation();
                     setFullscreenUrl(item.url);
                   }}
-                  className="absolute inset-0 bg-black/60 opacity-0 group-hover/item:opacity-100 flex items-center justify-center transition-opacity text-white hover:text-[#22d3ee]"
+                  className="absolute inset-0 bg-scrim opacity-0 group-hover/item:opacity-100 flex items-center justify-center transition-opacity text-ink hover:text-brand"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <circle cx="11" cy="11" r="8" />
@@ -341,10 +345,10 @@ function AssetsDropdown({
 
               {/* Info */}
               <div className="flex-1 min-w-0 flex flex-col">
-                <span className="text-xs text-white/95 font-semibold truncate" title={item.name}>
+                <span className="text-xs text-ink font-semibold truncate" title={item.name}>
                   {item.name}
                 </span>
-                <span className="text-[9px] text-white/30 truncate mt-0.5">
+                <span className="text-micro text-ink-subtle truncate mt-0.5">
                   {new Date(item.timestamp || Date.now()).toLocaleDateString()}
                 </span>
               </div>
@@ -353,7 +357,7 @@ function AssetsDropdown({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  className="text-xs text-black font-black px-2.5 py-1 bg-[#22d3ee] rounded-md hover:bg-[#22d3ee]/90 transition-colors"
+                  className="text-xs text-ink-on-accent font-black px-2.5 py-1 bg-brand rounded-md hover:bg-brand/90 transition-colors"
                 >
                   {copy.buttons.use}
                 </button>
@@ -364,7 +368,7 @@ function AssetsDropdown({
                     e.stopPropagation();
                     onDeleteAsset(activeTab, item.url);
                   }}
-                  className="p-1.5 text-white/30 hover:text-red-500 rounded hover:bg-white/5 transition-colors"
+                  className="p-1.5 text-ink-subtle hover:text-danger rounded hover:bg-wash transition-colors"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <polyline points="3 6 5 6 21 6" />
@@ -441,7 +445,7 @@ function Dropdown({
 // SVG icons
 // ---------------------------------------------------------------------------
 const VideoIcon = ({
-  className = "text-white/40 group-hover:text-primary transition-colors",
+  className = "text-ink-subtle group-hover:text-primary transition-colors",
 }) => (
   <svg
     width="16"
@@ -458,7 +462,7 @@ const VideoIcon = ({
 );
 
 const ImageIcon = ({
-  className = "text-white/40 group-hover:text-primary transition-colors",
+  className = "text-ink-subtle group-hover:text-primary transition-colors",
 }) => (
   <svg
     width="16"
@@ -489,7 +493,7 @@ export default function RecastStudio({
   onFilesHandled,
   locale = "en",
 }) {
-  const copy = resolveCopy(en, zh, locale);
+  const copy = resolveCopy(en, { 'zh-CN': zh, 'ja-JP': ja, 'ko-KR': ko, 'zh-TW': zhTw, es }, locale);
   const LEGACY_PERSIST_KEY = "hg_recast_studio_persistent";
   const PERSIST_KEY = scopedPersistKey(LEGACY_PERSIST_KEY, apiKey);
   useEffect(() => {
@@ -865,12 +869,12 @@ export default function RecastStudio({
             {history.map((entry, idx) => (
               <div
                 key={entry.id || idx}
-                className="relative group rounded-2xl overflow-hidden border border-white/10 bg-[#0a0a0a] shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col cursor-pointer"
+                className="relative group rounded-2xl overflow-hidden border border-line bg-canvas shadow-elevation-3 hover:border-primary/50 transition-all duration-page flex flex-col cursor-pointer"
                 onClick={() => setFullscreenUrl(entry.url)}
               >
                 <video
                   src={entry.url}
-                  className="w-full aspect-video object-cover bg-black/40 hover:opacity-80 transition-opacity"
+                  className="w-full aspect-video object-cover bg-scrim hover:opacity-80 transition-opacity"
                   controls={false}
                   loop
                   muted
@@ -895,7 +899,7 @@ export default function RecastStudio({
                       e.stopPropagation();
                       downloadFile(entry.url, `bodyswap-${entry.id || idx}.mp4`);
                     }}
-                    className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-primary hover:text-black transition-all border border-white/10"
+                    className="p-2 bg-scrim backdrop-blur-md rounded-full text-ink hover:bg-primary hover:text-ink-inverse transition-all border border-line"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
@@ -910,7 +914,7 @@ export default function RecastStudio({
                         setInternalHistory(prev => prev.filter((_, i) => i !== idx));
                       }
                     }}
-                    className="p-2 bg-black/60 backdrop-blur-md rounded-full text-red-400 hover:bg-red-500 hover:text-white transition-all border border-white/10"
+                    className="p-2 bg-scrim backdrop-blur-md rounded-full text-danger hover:bg-danger hover:text-ink transition-all border border-line"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <polyline points="3 6 5 6 21 6" />
@@ -944,14 +948,14 @@ export default function RecastStudio({
                 />
 
                 {/* Details */}
-                <div className="p-3 bg-black/80 backdrop-blur-sm border-t border-white/5 flex-1 flex flex-col justify-between gap-2">
+                <div className="p-3 bg-scrim backdrop-blur-sm border-t border-line-subtle flex-1 flex flex-col justify-between gap-2">
                   {entry.prompt && (
-                    <p className="text-white/70 text-xs line-clamp-2 leading-relaxed" title={entry.prompt}>
+                    <p className="text-ink-muted text-xs line-clamp-2 leading-relaxed" title={entry.prompt}>
                       {entry.prompt}
                     </p>
                   )}
                   <div className="flex items-center justify-between flex-wrap gap-1 mt-1">
-                    <span className="text-[10px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded border border-primary/20 whitespace-nowrap">
+                    <span className="text-micro font-bold text-primary px-2 py-0.5 bg-primary/10 rounded border border-primary/20 whitespace-nowrap">
                       {copy.badges.bodySwap}
                     </span>
                   </div>
@@ -960,31 +964,31 @@ export default function RecastStudio({
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full animate-fade-in-up transition-all duration-700 min-h-[50vh]">
+          <div className="flex flex-col items-center justify-center h-full animate-fade-in-up transition-all duration-page min-h-[50vh]">
             {/* Overlapping floating cards */}
             <div className="flex items-center justify-center gap-1.5 md:gap-3 mb-10 select-none scale-90 sm:scale-100">
-              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-2xl -rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] flex-shrink-0">
+              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-line shadow-elevation-4 -rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/sdxl-image.avif"
                   alt="Creative asset 1"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-2xl -rotate-[4deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-line shadow-elevation-4 -rotate-[4deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash -ml-3 sm:-ml-4 flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/chroma-image.avif"
                   alt="Creative asset 2"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="w-18 h-18 sm:w-24 sm:h-24 rounded-full border border-white/10 shadow-2xl rotate-[6deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+              <div className="w-18 h-18 sm:w-24 sm:h-24 rounded-full border border-line shadow-elevation-4 rotate-[6deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash -ml-3 sm:-ml-4 flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/neta-lumina.avif"
                   alt="Creative asset 3"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-2xl rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-line shadow-elevation-4 rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash -ml-3 sm:-ml-4 flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/perfect-pony-xl.avif"
                   alt="Creative asset 4"
@@ -994,12 +998,12 @@ export default function RecastStudio({
             </div>
 
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-center px-4 flex flex-col items-center">
-              <span className="text-white font-black uppercase text-xl sm:text-3xl tracking-wide mb-1 opacity-90">{copy.empty.titleLine1}</span>
-              <span className="text-[#22d3ee] font-black uppercase text-2xl sm:text-4xl sm:mt-1 tracking-tight">
+              <span className="text-ink font-black uppercase text-xl sm:text-3xl tracking-wide mb-1 opacity-90">{copy.empty.titleLine1}</span>
+              <span className="text-brand font-black uppercase text-2xl sm:text-4xl sm:mt-1 tracking-tight">
                 {copy.empty.titleLine2}
               </span>
             </h1>
-            <p className="text-white/40 text-xs sm:text-sm font-medium tracking-wide text-center max-w-lg leading-relaxed px-4">
+            <p className="text-ink-subtle text-xs sm:text-sm font-medium tracking-wide text-center max-w-lg leading-relaxed px-4">
               {copy.empty.description}
             </p>
           </div>
@@ -1015,7 +1019,7 @@ export default function RecastStudio({
               <MediaPickerButton
                 accept="video/*"
                 label={copy.labels.video}
-                icon={<VideoIcon className="text-white/40 group-hover:text-[#22d3ee] transition-colors" />}
+                icon={<VideoIcon className="text-ink-subtle group-hover:text-brand transition-colors" />}
                 onUpload={handleVideoPick}
                 onClear={() => {
                   setVideoUrl(null);
@@ -1034,7 +1038,7 @@ export default function RecastStudio({
               <MediaPickerButton
                 accept="image/*"
                 label={copy.labels.characterImage}
-                icon={<ImageIcon className="text-white/40 group-hover:text-[#22d3ee] transition-colors" />}
+                icon={<ImageIcon className="text-ink-subtle group-hover:text-brand transition-colors" />}
                 onUpload={handleImageUpload}
                 onClear={() => {
                   setImageUrl(null);
@@ -1077,8 +1081,8 @@ export default function RecastStudio({
                     active: openDropdown === "model",
                   })}
                 >
-                  <div className="w-3.5 h-3.5 bg-[#22d3ee] rounded-sm flex items-center justify-center">
-                    <span className="text-[9px] font-black text-black">R</span>
+                  <div className="w-3.5 h-3.5 bg-brand rounded-sm flex items-center justify-center">
+                    <span className="text-micro font-black text-ink-inverse">R</span>
                   </div>
                   <span className={PROMPT_CONTROL_LABEL_CLASS}>
                     {selectedModel?.name ?? copy.dropdowns.selectModel}
@@ -1187,12 +1191,12 @@ export default function RecastStudio({
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
-                    className="text-white/50 group-hover:text-[#22d3ee] transition-colors"
+                    className="text-ink-subtle group-hover:text-brand transition-colors"
                   >
                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                   </svg>
-                  <span className="text-xs font-semibold text-white/70 group-hover:text-[#22d3ee] transition-colors">
+                  <span className="text-xs font-semibold text-ink-muted group-hover:text-brand transition-colors">
                     {copy.labels.library}
                   </span>
                   <PromptChevronIcon />
@@ -1237,7 +1241,7 @@ export default function RecastStudio({
             >
               {isGenerating ? (
                 <>
-                  <span className="animate-spin inline-block text-black">◌</span>{" "}
+                  <span className="animate-spin inline-block text-ink-inverse">◌</span>{" "}
                   {copy.buttons.swapping}
                 </>
               ) : (
@@ -1250,12 +1254,13 @@ export default function RecastStudio({
       {/* ── FULLSCREEN MEDIA MODAL ── */}
       {fullscreenUrl && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-scrim backdrop-blur-sm animate-fade-in"
           onClick={() => setFullscreenUrl(null)}
         >
           <button
+          aria-label="Close fullscreen preview"
             type="button"
-            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors border border-white/10"
+            className="absolute top-6 right-6 p-3 bg-wash-press hover:bg-wash-press rounded-full text-ink transition-colors border border-line"
             onClick={(e) => {
               e.stopPropagation();
               setFullscreenUrl(null);
@@ -1275,7 +1280,7 @@ export default function RecastStudio({
               <img
                 src={fullscreenUrl}
                 alt="Fullscreen Preview"
-                className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up"
+                className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-elevation-4 object-contain animate-scale-up"
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
@@ -1284,14 +1289,14 @@ export default function RecastStudio({
                 controls
                 autoPlay
                 loop
-                className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up"
+                className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-elevation-4 object-contain animate-scale-up"
                 onClick={(e) => e.stopPropagation()}
               />
             );
           })()}
         </div>
       )}
-      <Toaster position="top-right" containerStyle={{ zIndex: 99999 }} toastOptions={{ duration: 5000, style: { background: '#18181b', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)', fontSize: '13px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', maxWidth: '440px', wordBreak: 'break-word', whiteSpace: 'pre-wrap', padding: '12px 16px' } }} />
+      <Toaster position="top-right" containerStyle={{ zIndex: 'var(--z-toast)' }} toastOptions={{ duration: 5000, style: { background: 'var(--bg-overlay)', color: 'var(--text-primary)', border: '1px solid var(--border-strong)', fontSize: 'var(--text-body-sm)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--elevation-3)', maxWidth: '440px', wordBreak: 'break-word', whiteSpace: 'pre-wrap', padding: '12px 16px' } }} />
     </div>
   );
 }

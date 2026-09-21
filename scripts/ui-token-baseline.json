@@ -1,0 +1,1730 @@
+{
+  "app/account/AccountClient.js": {
+    "hard-coded-hex": 5,
+    "ad-hoc-shadow": 1,
+    "ad-hoc-z-index": 1,
+    "other-arbitrary-value": 5,
+    "transition-all": 1,
+    "off-system-palette": 6,
+    "pure-white-black": 15,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 4
+  },
+  "app/account/HistoryPanel.js": {
+    "off-system-palette": 6,
+    "pure-white-black": 13,
+    "off-system-type-ramp": 13
+  },
+  "app/account/UsagePanel.js": {
+    "ad-hoc-shadow": 1,
+    "arbitrary-type": 1,
+    "off-system-palette": 8,
+    "pure-white-black": 11,
+    "off-system-type-ramp": 13
+  },
+  "app/admin/admins/AdminRoleModifier.js": {
+    "hard-coded-hex": 2,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 4,
+    "pure-white-black": 1,
+    "off-system-type-ramp": 4
+  },
+  "app/admin/admins/page.js": {
+    "hard-coded-hex": 4,
+    "arbitrary-type": 3,
+    "other-arbitrary-value": 2,
+    "transition-all": 1,
+    "off-system-palette": 2,
+    "pure-white-black": 3,
+    "off-system-type-ramp": 5
+  },
+  "app/admin/audit/page.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 4,
+    "pure-white-black": 12,
+    "off-system-type-ramp": 6
+  },
+  "app/admin/content/analytics/BannerAnalyticsClient.js": {
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 15,
+    "transition-all": 4,
+    "off-system-palette": 26,
+    "pure-white-black": 35,
+    "off-system-type-ramp": 10
+  },
+  "app/admin/content/banners/BannerManagerClient.js": {
+    "hard-coded-hex": 7,
+    "ad-hoc-shadow": 4,
+    "arbitrary-type": 30,
+    "other-arbitrary-value": 9,
+    "transition-all": 2,
+    "off-system-palette": 61,
+    "pure-white-black": 91,
+    "off-system-type-ramp": 26
+  },
+  "app/admin/content/branding/BrandingManagerClient.js": {
+    "arbitrary-geometry": 4,
+    "arbitrary-type": 9,
+    "transition-all": 3,
+    "outline-stripped": 3,
+    "off-system-palette": 155,
+    "pure-white-black": 36,
+    "div-onclick-not-keyboard": 1,
+    "off-system-type-ramp": 55
+  },
+  "app/admin/content/effects/MotionManagerClient.js": {
+    "hard-coded-hex": 2,
+    "arbitrary-geometry": 3,
+    "arbitrary-type": 9,
+    "other-arbitrary-value": 3,
+    "transition-all": 3,
+    "off-system-palette": 19,
+    "pure-white-black": 41,
+    "off-system-type-ramp": 10
+  },
+  "app/admin/coupons/CouponGeneratorClient.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 13,
+    "pure-white-black": 21,
+    "off-system-type-ramp": 10
+  },
+  "app/admin/coupons/page.js": {
+    "off-system-palette": 1,
+    "pure-white-black": 1
+  },
+  "app/admin/credits/page.js": {
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 4,
+    "off-system-palette": 26,
+    "pure-white-black": 9,
+    "off-system-type-ramp": 9
+  },
+  "app/admin/error.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 1,
+    "transition-all": 2,
+    "off-system-palette": 12,
+    "pure-white-black": 9,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 4
+  },
+  "app/admin/generations/failures/page.js": {
+    "arbitrary-type": 1,
+    "off-system-palette": 5,
+    "pure-white-black": 11,
+    "off-system-type-ramp": 7
+  },
+  "app/admin/generations/page.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 15,
+    "pure-white-black": 12,
+    "off-system-type-ramp": 8
+  },
+  "app/admin/health/LiveLogViewer.jsx": {
+    "hard-coded-hex": 1,
+    "arbitrary-geometry": 1,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 1,
+    "pure-white-black": 9,
+    "off-system-type-ramp": 5
+  },
+  "app/admin/health/page.js": {
+    "arbitrary-type": 1,
+    "pure-white-black": 10,
+    "off-system-type-ramp": 4
+  },
+  "app/admin/i18n/LanguageManagementClient.js": {
+    "hard-coded-hex": 2,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 2,
+    "off-system-palette": 8,
+    "pure-white-black": 24,
+    "off-system-type-ramp": 14
+  },
+  "app/admin/layout.js": {
+    "hard-coded-hex": 2,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 3,
+    "other-arbitrary-value": 4,
+    "transition-all": 2,
+    "off-system-palette": 5,
+    "pure-white-black": 8,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 5
+  },
+  "app/admin/models/catalog/CatalogManagerClient.jsx": {
+    "hard-coded-hex": 4,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 4,
+    "outline-stripped": 8,
+    "off-system-palette": 41,
+    "pure-white-black": 44,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 23
+  },
+  "app/admin/models/cost-center/CostCenterClient.jsx": {
+    "hard-coded-hex": 3,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 5,
+    "other-arbitrary-value": 3,
+    "outline-stripped": 2,
+    "off-system-palette": 32,
+    "pure-white-black": 29,
+    "off-system-type-ramp": 16
+  },
+  "app/admin/models/health/HealthMonitorClient.jsx": {
+    "arbitrary-type": 3,
+    "off-system-palette": 13,
+    "pure-white-black": 11,
+    "off-system-type-ramp": 13
+  },
+  "app/admin/models/pricing/PricingManagerClient.jsx": {
+    "hard-coded-hex": 3,
+    "arbitrary-type": 3,
+    "other-arbitrary-value": 3,
+    "outline-stripped": 5,
+    "off-system-palette": 27,
+    "pure-white-black": 29,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 6
+  },
+  "app/admin/models/profit-center/ProfitCenterClient.jsx": {
+    "hard-coded-hex": 2,
+    "arbitrary-type": 5,
+    "other-arbitrary-value": 2,
+    "outline-stripped": 1,
+    "off-system-palette": 34,
+    "pure-white-black": 19,
+    "off-system-type-ramp": 10
+  },
+  "app/admin/models/providers/ProvidersManagerClient.jsx": {
+    "hard-coded-hex": 3,
+    "other-arbitrary-value": 3,
+    "transition-all": 1,
+    "outline-stripped": 7,
+    "off-system-palette": 31,
+    "pure-white-black": 39,
+    "off-system-type-ramp": 25
+  },
+  "app/admin/models/routing/RoutingManagerClient.jsx": {
+    "hard-coded-hex": 6,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 6,
+    "transition-all": 1,
+    "outline-stripped": 9,
+    "off-system-palette": 51,
+    "pure-white-black": 67,
+    "off-system-type-ramp": 19
+  },
+  "app/admin/moderation/page.js": {
+    "hard-coded-hex": 1,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 6,
+    "pure-white-black": 8,
+    "off-system-type-ramp": 5
+  },
+  "app/admin/orders/page.js": {
+    "hard-coded-hex": 2,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 2,
+    "off-system-palette": 6,
+    "pure-white-black": 13,
+    "off-system-type-ramp": 6
+  },
+  "app/admin/page.js": {
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 24,
+    "other-arbitrary-value": 3,
+    "transition-all": 7,
+    "off-system-palette": 39,
+    "pure-white-black": 34,
+    "off-system-type-ramp": 23
+  },
+  "app/admin/plans/PlanCardEditor.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-type": 18,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 30,
+    "pure-white-black": 80,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 26
+  },
+  "app/admin/providers/ai/page.js": {
+    "off-system-palette": 6,
+    "pure-white-black": 3,
+    "off-system-type-ramp": 3
+  },
+  "app/admin/providers/models/ModelsManagerClient.jsx": {
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 4,
+    "off-system-palette": 19,
+    "pure-white-black": 26,
+    "off-system-type-ramp": 13
+  },
+  "app/admin/providers/ProviderCard.js": {
+    "hard-coded-hex": 5,
+    "arbitrary-geometry": 4,
+    "arbitrary-type": 12,
+    "other-arbitrary-value": 9,
+    "transition-all": 3,
+    "off-system-palette": 28,
+    "pure-white-black": 19,
+    "alpha-on-var-colour": 3,
+    "off-system-type-ramp": 13
+  },
+  "app/admin/providers/social/SocialProviderCard.js": {
+    "hard-coded-hex": 5,
+    "arbitrary-geometry": 3,
+    "arbitrary-type": 16,
+    "other-arbitrary-value": 9,
+    "transition-all": 2,
+    "off-system-palette": 48,
+    "pure-white-black": 27,
+    "alpha-on-var-colour": 3,
+    "off-system-type-ramp": 16
+  },
+  "app/admin/security/sessions/page.js": {
+    "arbitrary-geometry": 1,
+    "off-system-palette": 3,
+    "pure-white-black": 5,
+    "off-system-type-ramp": 2
+  },
+  "app/admin/settings/SettingsEditor.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-type": 5,
+    "other-arbitrary-value": 2,
+    "transition-all": 2,
+    "off-system-palette": 28,
+    "pure-white-black": 41,
+    "off-system-type-ramp": 62
+  },
+  "app/admin/subscription-faq/SubscriptionFaqManagerClient.js": {
+    "hard-coded-hex": 4,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 3,
+    "outline-stripped": 9,
+    "off-system-palette": 62,
+    "pure-white-black": 60,
+    "off-system-type-ramp": 21
+  },
+  "app/admin/subscriptions/page.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-geometry": 1,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 5,
+    "pure-white-black": 7,
+    "off-system-type-ramp": 3
+  },
+  "app/admin/users/page.js": {
+    "hard-coded-hex": 4,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 3,
+    "other-arbitrary-value": 4,
+    "off-system-palette": 29,
+    "pure-white-black": 31,
+    "off-system-type-ramp": 11
+  },
+  "app/admin/users/[id]/page.js": {
+    "arbitrary-type": 3,
+    "off-system-palette": 1,
+    "pure-white-black": 13,
+    "off-system-type-ramp": 8
+  },
+  "app/admin/users/[id]/UserDetailTabs.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-type": 3,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 25,
+    "pure-white-black": 57,
+    "off-system-type-ramp": 28
+  },
+  "app/admin/webhooks/page.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-geometry": 1,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 4,
+    "pure-white-black": 4,
+    "off-system-type-ramp": 5
+  },
+  "app/agents/layout.js": {
+    "pure-white-black": 1
+  },
+  "app/agents/[agent_id]/AgentChatClient.js": {
+    "pure-white-black": 1
+  },
+  "app/call-api/page.jsx": {
+    "hard-coded-hex": 4,
+    "ad-hoc-radius": 1,
+    "arbitrary-geometry": 10,
+    "arbitrary-type": 3,
+    "other-arbitrary-value": 6,
+    "transition-all": 4,
+    "off-system-palette": 45,
+    "pure-white-black": 22,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 14
+  },
+  "app/content-policy/page.js": {
+    "hard-coded-hex": 5,
+    "other-arbitrary-value": 5,
+    "off-system-palette": 10,
+    "pure-white-black": 11,
+    "alpha-on-var-colour": 4,
+    "off-system-type-ramp": 9
+  },
+  "app/error.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-geometry": 1,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 7,
+    "pure-white-black": 8,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 4
+  },
+  "app/global-error.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 9,
+    "pure-white-black": 13,
+    "off-system-type-ramp": 4
+  },
+  "app/privacy/page.js": {
+    "hard-coded-hex": 6,
+    "other-arbitrary-value": 6,
+    "off-system-palette": 11,
+    "pure-white-black": 13,
+    "alpha-on-var-colour": 5,
+    "off-system-type-ramp": 10
+  },
+  "app/refund/page.js": {
+    "hard-coded-hex": 5,
+    "other-arbitrary-value": 5,
+    "off-system-palette": 10,
+    "pure-white-black": 11,
+    "alpha-on-var-colour": 4,
+    "off-system-type-ramp": 9
+  },
+  "app/terms/page.js": {
+    "hard-coded-hex": 6,
+    "other-arbitrary-value": 6,
+    "off-system-palette": 11,
+    "pure-white-black": 13,
+    "alpha-on-var-colour": 5,
+    "off-system-type-ramp": 10
+  },
+  "components/account/AccountLayout.js": {
+    "hard-coded-hex": 4,
+    "ad-hoc-radius": 1,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 10,
+    "arbitrary-type": 7,
+    "other-arbitrary-value": 4,
+    "transition-all": 3,
+    "outline-stripped": 1,
+    "off-system-palette": 13,
+    "pure-white-black": 17,
+    "div-onclick-not-keyboard": 1,
+    "alpha-on-var-colour": 2
+  },
+  "components/account/AccountModal.js": {
+    "ad-hoc-z-index": 1
+  },
+  "components/account/DualCurrencyCards.js": {
+    "hard-coded-hex": 2,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 2,
+    "transition-all": 3,
+    "off-system-palette": 17,
+    "pure-white-black": 9,
+    "alpha-on-var-colour": 2,
+    "off-system-type-ramp": 7
+  },
+  "components/account/RechargeModal.js": {
+    "hard-coded-hex": 21,
+    "ad-hoc-shadow": 2,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 19,
+    "transition-all": 5,
+    "outline-stripped": 1,
+    "off-system-palette": 49,
+    "pure-white-black": 33,
+    "div-onclick-not-keyboard": 1,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 21
+  },
+  "components/account/tabs/ActivityTab.js": {
+    "hard-coded-hex": 7,
+    "ad-hoc-radius": 9,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 6,
+    "arbitrary-type": 5,
+    "other-arbitrary-value": 7,
+    "transition-all": 3,
+    "off-system-palette": 52,
+    "pure-white-black": 34,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 21
+  },
+  "components/account/tabs/AgentApiKeyTab.js": {
+    "hard-coded-hex": 2,
+    "ad-hoc-radius": 1,
+    "arbitrary-geometry": 3,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 2,
+    "off-system-palette": 15,
+    "pure-white-black": 13,
+    "off-system-type-ramp": 9
+  },
+  "components/account/tabs/InvoicesTab.js": {
+    "hard-coded-hex": 1,
+    "ad-hoc-radius": 1,
+    "arbitrary-geometry": 1,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 9,
+    "pure-white-black": 13,
+    "off-system-type-ramp": 9
+  },
+  "components/account/tabs/MembershipTab.js": {
+    "hard-coded-hex": 9,
+    "arbitrary-type": 12,
+    "other-arbitrary-value": 5,
+    "transition-all": 1,
+    "off-system-palette": 37,
+    "pure-white-black": 25,
+    "alpha-on-var-colour": 5,
+    "off-system-type-ramp": 16
+  },
+  "components/account/tabs/PriceDetailsTab.js": {
+    "hard-coded-hex": 5,
+    "ad-hoc-radius": 1,
+    "arbitrary-type": 6,
+    "other-arbitrary-value": 5,
+    "off-system-palette": 9,
+    "pure-white-black": 15,
+    "alpha-on-var-colour": 2,
+    "off-system-type-ramp": 5
+  },
+  "components/account/tabs/ProfileTab.js": {
+    "hard-coded-hex": 19,
+    "ad-hoc-radius": 4,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 19,
+    "transition-all": 2,
+    "off-system-palette": 84,
+    "pure-white-black": 83,
+    "off-system-type-ramp": 40
+  },
+  "components/account/tabs/SettingsTab.js": {
+    "hard-coded-hex": 3,
+    "ad-hoc-radius": 1,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 3,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 3,
+    "outline-stripped": 2,
+    "off-system-palette": 8,
+    "pure-white-black": 14,
+    "off-system-type-ramp": 10
+  },
+  "components/account/tabs/UsageTab.js": {
+    "hard-coded-hex": 5,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 8,
+    "other-arbitrary-value": 3,
+    "off-system-palette": 34,
+    "pure-white-black": 9,
+    "alpha-on-var-colour": 2,
+    "off-system-type-ramp": 15
+  },
+  "components/account/tabs/WalletTab.js": {
+    "hard-coded-hex": 3,
+    "ad-hoc-radius": 1,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 2,
+    "transition-all": 3,
+    "off-system-palette": 10,
+    "pure-white-black": 15,
+    "off-system-type-ramp": 12
+  },
+  "components/admin/AdminActionForm.js": {
+    "arbitrary-geometry": 1,
+    "off-system-palette": 7,
+    "pure-white-black": 8,
+    "off-system-type-ramp": 2
+  },
+  "components/admin/AdminNav.js": {
+    "arbitrary-geometry": 3,
+    "arbitrary-type": 3,
+    "other-arbitrary-value": 3,
+    "transition-all": 3,
+    "off-system-palette": 12,
+    "pure-white-black": 10
+  },
+  "components/admin/AdminScrollableTabs.js": {
+    "hard-coded-hex": 6,
+    "ad-hoc-shadow": 1,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 7,
+    "transition-all": 3,
+    "off-system-palette": 15,
+    "pure-white-black": 8,
+    "alpha-on-var-colour": 4,
+    "off-system-type-ramp": 1
+  },
+  "components/admin/AdminShell.js": {
+    "hard-coded-hex": 4,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 3,
+    "other-arbitrary-value": 4,
+    "off-system-palette": 16,
+    "pure-white-black": 16,
+    "div-onclick-not-keyboard": 1,
+    "alpha-on-var-colour": 1
+  },
+  "components/admin/AdminUi.js": {
+    "hard-coded-hex": 3,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 11,
+    "other-arbitrary-value": 4,
+    "transition-all": 3,
+    "off-system-palette": 28,
+    "pure-white-black": 16,
+    "alpha-on-var-colour": 3,
+    "off-system-type-ramp": 13
+  },
+  "components/admin/AdminUiClient.js": {
+    "hard-coded-hex": 2,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 10,
+    "pure-white-black": 2,
+    "off-system-type-ramp": 5
+  },
+  "components/admin/branding/LogoCropper.js": {
+    "arbitrary-geometry": 3,
+    "arbitrary-type": 3,
+    "transition-all": 2,
+    "off-system-palette": 43,
+    "pure-white-black": 8,
+    "range-without-utility": 1,
+    "off-system-type-ramp": 9
+  },
+  "components/admin/ExportButton.js": {
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 1,
+    "pure-white-black": 5,
+    "off-system-type-ramp": 1
+  },
+  "components/admin/model-center/BulkActionBar.jsx": {
+    "arbitrary-geometry": 3
+  },
+  "components/admin/model-center/ModelCard.jsx": {
+    "arbitrary-geometry": 1
+  },
+  "components/admin/model-center/ModelDetailDrawer.jsx": {
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 1
+  },
+  "components/admin/model-center/ModelFilterGroups.jsx": {
+    "arbitrary-geometry": 3,
+    "arbitrary-type": 1
+  },
+  "components/admin/model-center/ModelGrid.jsx": {
+    "other-arbitrary-value": 2
+  },
+  "components/admin/model-center/ModelHeader.jsx": {
+    "arbitrary-type": 1
+  },
+  "components/admin/model-center/ModelList.jsx": {
+    "arbitrary-geometry": 5,
+    "arbitrary-type": 1
+  },
+  "components/admin/model-center/ModelStates.jsx": {
+    "other-arbitrary-value": 2
+  },
+  "components/admin/model-center/ModelToolbar.jsx": {
+    "arbitrary-geometry": 4
+  },
+  "components/ApiKeyModal.js": {
+    "hard-coded-hex": 1,
+    "ad-hoc-z-index": 1,
+    "other-arbitrary-value": 1,
+    "outline-stripped": 1,
+    "off-system-palette": 11,
+    "pure-white-black": 5,
+    "off-system-type-ramp": 5
+  },
+  "components/assets/AssetCard.js": {
+    "hard-coded-hex": 7,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 7,
+    "other-arbitrary-value": 3,
+    "transition-all": 1,
+    "off-system-palette": 9,
+    "pure-white-black": 37,
+    "div-onclick-not-keyboard": 1,
+    "alpha-on-var-colour": 3,
+    "off-system-type-ramp": 2
+  },
+  "components/assets/AssetDetailModal.js": {
+    "hard-coded-hex": 8,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 16,
+    "other-arbitrary-value": 4,
+    "transition-all": 1,
+    "off-system-palette": 9,
+    "pure-white-black": 53,
+    "div-onclick-not-keyboard": 1,
+    "off-system-type-ramp": 7
+  },
+  "components/assets/AssetLibraryClient.js": {
+    "hard-coded-hex": 16,
+    "ad-hoc-shadow": 2,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 12,
+    "transition-all": 4,
+    "outline-stripped": 2,
+    "off-system-palette": 2,
+    "pure-white-black": 46,
+    "alpha-on-var-colour": 3,
+    "off-system-type-ramp": 13
+  },
+  "components/assets/CreateFolderModal.js": {
+    "hard-coded-hex": 6,
+    "ad-hoc-shadow": 1,
+    "other-arbitrary-value": 5,
+    "transition-all": 2,
+    "outline-stripped": 1,
+    "off-system-palette": 3,
+    "pure-white-black": 22,
+    "div-onclick-not-keyboard": 1,
+    "off-system-type-ramp": 8
+  },
+  "components/assets/FolderTree.js": {
+    "hard-coded-hex": 20,
+    "ad-hoc-shadow": 4,
+    "arbitrary-type": 18,
+    "other-arbitrary-value": 11,
+    "transition-all": 5,
+    "off-system-palette": 11,
+    "pure-white-black": 41,
+    "div-onclick-not-keyboard": 2,
+    "alpha-on-var-colour": 3,
+    "off-system-type-ramp": 5
+  },
+  "components/assets/MoveToFolderModal.js": {
+    "hard-coded-hex": 18,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 9,
+    "other-arbitrary-value": 10,
+    "transition-all": 4,
+    "off-system-palette": 3,
+    "pure-white-black": 30,
+    "div-onclick-not-keyboard": 1,
+    "alpha-on-var-colour": 7,
+    "off-system-type-ramp": 8
+  },
+  "components/auth/LoginSuccessOverlay.js": {
+    "hard-coded-hex": 1,
+    "ad-hoc-shadow": 2,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 13,
+    "pure-white-black": 3,
+    "off-system-type-ramp": 3
+  },
+  "components/auth/LoginSummaryModal.js": {
+    "hard-coded-hex": 6,
+    "ad-hoc-shadow": 1,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 4,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 7,
+    "transition-all": 3,
+    "off-system-palette": 20,
+    "pure-white-black": 13,
+    "alpha-on-var-colour": 3,
+    "off-system-type-ramp": 8
+  },
+  "components/auth/UserOnboardingModal.js": {
+    "hard-coded-hex": 3,
+    "ad-hoc-shadow": 5,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 5,
+    "arbitrary-type": 8,
+    "other-arbitrary-value": 4,
+    "transition-all": 4,
+    "off-system-palette": 41,
+    "pure-white-black": 25,
+    "off-system-type-ramp": 15
+  },
+  "components/billing/CreditBadge.js": {
+    "pure-white-black": 3,
+    "off-system-type-ramp": 1
+  },
+  "components/billing/PlanCard.js": {
+    "arbitrary-type": 1,
+    "off-system-palette": 1,
+    "pure-white-black": 10,
+    "off-system-type-ramp": 6
+  },
+  "components/call-api/CreativeGallery.jsx": {
+    "hard-coded-hex": 4,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 3,
+    "transition-all": 2,
+    "off-system-palette": 14,
+    "pure-white-black": 11,
+    "off-system-type-ramp": 7
+  },
+  "components/call-api/DeveloperEcosystem.jsx": {
+    "hard-coded-hex": 5,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 5,
+    "transition-all": 4,
+    "off-system-palette": 47,
+    "pure-white-black": 35,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 25
+  },
+  "components/call-api/InteractiveCanvasPreview.jsx": {
+    "hard-coded-hex": 3,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 8,
+    "other-arbitrary-value": 3,
+    "transition-all": 2,
+    "off-system-palette": 32,
+    "pure-white-black": 28,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 9
+  },
+  "components/call-api/InteractiveCodeTerminal.jsx": {
+    "hard-coded-hex": 2,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 2,
+    "off-system-palette": 8,
+    "pure-white-black": 10,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 4
+  },
+  "components/call-api/PremiumFooter.jsx": {
+    "hard-coded-hex": 2,
+    "ad-hoc-radius": 1,
+    "arbitrary-geometry": 4,
+    "arbitrary-type": 3,
+    "other-arbitrary-value": 3,
+    "transition-all": 2,
+    "outline-stripped": 1,
+    "off-system-palette": 62,
+    "pure-white-black": 25,
+    "off-system-type-ramp": 18
+  },
+  "components/call-api/StudioFeatureGrid.jsx": {
+    "hard-coded-hex": 1,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 1,
+    "transition-all": 2,
+    "off-system-palette": 24,
+    "pure-white-black": 6,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 8
+  },
+  "components/call-api/SupplierMarquee.jsx": {
+    "hard-coded-hex": 5,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 10,
+    "other-arbitrary-value": 5,
+    "transition-all": 2,
+    "off-system-palette": 63,
+    "pure-white-black": 13,
+    "alpha-on-var-colour": 3,
+    "off-system-type-ramp": 11
+  },
+  "components/ChinaIpGate.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 9,
+    "pure-white-black": 15,
+    "off-system-type-ramp": 5
+  },
+  "components/community/CommunityClient.js": {
+    "hard-coded-hex": 6,
+    "ad-hoc-radius": 2,
+    "ad-hoc-shadow": 2,
+    "arbitrary-geometry": 4,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 8,
+    "transition-all": 4,
+    "outline-stripped": 1,
+    "off-system-palette": 7,
+    "pure-white-black": 35,
+    "alpha-on-var-colour": 16,
+    "off-system-type-ramp": 20
+  },
+  "components/community/CommunityDetailModal.js": {
+    "hard-coded-hex": 1,
+    "ad-hoc-shadow": 2,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 5,
+    "other-arbitrary-value": 1,
+    "transition-all": 2,
+    "off-system-palette": 21,
+    "pure-white-black": 1,
+    "div-onclick-not-keyboard": 1,
+    "alpha-on-var-colour": 11,
+    "off-system-type-ramp": 18
+  },
+  "components/community/ShareToCommunityModal.js": {
+    "arbitrary-geometry": 1,
+    "div-onclick-not-keyboard": 1,
+    "alpha-on-var-colour": 8,
+    "off-system-type-ramp": 8
+  },
+  "components/creations/CreationsClient.js": {
+    "hard-coded-hex": 17,
+    "ad-hoc-radius": 7,
+    "arbitrary-geometry": 7,
+    "arbitrary-type": 6,
+    "other-arbitrary-value": 17,
+    "transition-all": 4,
+    "off-system-palette": 20,
+    "pure-white-black": 96,
+    "div-onclick-not-keyboard": 1,
+    "alpha-on-var-colour": 6,
+    "off-system-type-ramp": 29
+  },
+  "components/credits/CreditsClient.js": {
+    "hard-coded-hex": 26,
+    "arbitrary-type": 48,
+    "other-arbitrary-value": 26,
+    "transition-all": 12,
+    "outline-stripped": 1,
+    "off-system-palette": 241,
+    "pure-white-black": 114,
+    "alpha-on-var-colour": 16,
+    "off-system-type-ramp": 91
+  },
+  "components/GlobalSiteBanner.js": {
+    "hard-coded-hex": 1,
+    "ad-hoc-shadow": 4,
+    "ad-hoc-z-index": 1,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 2,
+    "transition-all": 4,
+    "off-system-palette": 5,
+    "pure-white-black": 14,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 1
+  },
+  "components/HeadshotStudio.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-type": 3,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 4,
+    "pure-white-black": 10,
+    "off-system-type-ramp": 3
+  },
+  "components/LanguageSwitcher.js": {
+    "ad-hoc-radius": 1,
+    "transition-all": 1,
+    "off-system-palette": 10,
+    "pure-white-black": 3,
+    "off-system-type-ramp": 2
+  },
+  "components/MaintenanceGate.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 10,
+    "pure-white-black": 11,
+    "off-system-type-ramp": 5
+  },
+  "components/pricing/PricingClient.js": {
+    "hard-coded-hex": 3,
+    "arbitrary-type": 16,
+    "other-arbitrary-value": 3,
+    "off-system-palette": 35,
+    "pure-white-black": 61,
+    "div-onclick-not-keyboard": 1,
+    "off-system-type-ramp": 32
+  },
+  "components/profile/UserProfileClient.js": {
+    "hard-coded-hex": 6,
+    "ad-hoc-radius": 4,
+    "ad-hoc-z-index": 1,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 7,
+    "transition-all": 1,
+    "off-system-palette": 29,
+    "pure-white-black": 29,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 17
+  },
+  "components/site/StudioHeader.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 1,
+    "off-system-palette": 7,
+    "pure-white-black": 11,
+    "off-system-type-ramp": 8
+  },
+  "components/StudioResourceBoundary.jsx": {
+    "hard-coded-hex": 5,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 5,
+    "off-system-palette": 1,
+    "pure-white-black": 6,
+    "off-system-type-ramp": 5
+  },
+  "components/subscription/SubscriptionModal.jsx": {
+    "hard-coded-hex": 12,
+    "ad-hoc-shadow": 4,
+    "ad-hoc-z-index": 1,
+    "arbitrary-type": 17,
+    "other-arbitrary-value": 12,
+    "transition-all": 5,
+    "off-system-palette": 47,
+    "pure-white-black": 39
+  },
+  "packages/Open-AI-Design-Agent/client/app/page.js": {
+    "ad-hoc-shadow": 4,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 10,
+    "other-arbitrary-value": 3,
+    "transition-all": 10,
+    "off-system-palette": 3,
+    "pure-white-black": 9,
+    "div-onclick-not-keyboard": 2
+  },
+  "packages/Open-AI-Design-Agent/client/components/Navbar.js": {
+    "arbitrary-geometry": 4,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 1,
+    "transition-all": 1
+  },
+  "packages/Open-AI-Design-Agent/packages/design-agent/src/components/PlanVisualizer.jsx": {
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 10,
+    "transition-all": 2,
+    "alpha-on-var-colour": 1
+  },
+  "packages/Open-AI-Design-Agent/packages/design-agent/src/CreativeCanvas.jsx": {
+    "ad-hoc-shadow": 3,
+    "ad-hoc-z-index": 3,
+    "arbitrary-geometry": 7,
+    "arbitrary-type": 52,
+    "other-arbitrary-value": 10,
+    "transition-all": 20,
+    "outline-stripped": 2,
+    "off-system-palette": 7,
+    "pure-white-black": 19,
+    "div-onclick-not-keyboard": 2,
+    "alpha-on-var-colour": 25,
+    "off-system-type-ramp": 13
+  },
+  "packages/Open-Poe-AI/client/app/agents/create/page.js": {
+    "pure-white-black": 1
+  },
+  "packages/Open-Poe-AI/client/app/agents/edit/[id]/page.js": {
+    "pure-white-black": 1
+  },
+  "packages/Open-Poe-AI/client/app/agents/loading.js": {
+    "arbitrary-geometry": 1,
+    "off-system-palette": 2
+  },
+  "packages/Open-Poe-AI/client/app/agents/page.js": {
+    "hard-coded-hex": 2,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 9,
+    "other-arbitrary-value": 3,
+    "transition-all": 5,
+    "off-system-palette": 54,
+    "pure-white-black": 8
+  },
+  "packages/Open-Poe-AI/client/app/agents/[agent_id]/profile/page.js": {
+    "pure-white-black": 1
+  },
+  "packages/Open-Poe-AI/client/app/page.js": {
+    "arbitrary-geometry": 8,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 6,
+    "transition-all": 5,
+    "off-system-palette": 38,
+    "pure-white-black": 6
+  },
+  "packages/Open-Poe-AI/packages/agents/src/AgentProfile.jsx": {
+    "transition-all": 1,
+    "off-system-palette": 1
+  },
+  "packages/Open-Poe-AI/packages/agents/src/AiAgent.jsx": {
+    "ad-hoc-z-index": 4,
+    "arbitrary-geometry": 11,
+    "arbitrary-type": 51,
+    "other-arbitrary-value": 62,
+    "transition-all": 27,
+    "outline-stripped": 1,
+    "off-system-palette": 15,
+    "pure-white-black": 29,
+    "div-onclick-not-keyboard": 3,
+    "off-system-type-ramp": 23
+  },
+  "packages/Open-Poe-AI/packages/agents/src/components/CreateAgent.jsx": {
+    "arbitrary-geometry": 4,
+    "other-arbitrary-value": 1,
+    "transition-all": 2,
+    "outline-stripped": 1,
+    "off-system-palette": 17,
+    "pure-white-black": 7,
+    "off-system-type-ramp": 7
+  },
+  "packages/Open-Poe-AI/packages/agents/src/components/EditAgent.jsx": {
+    "ad-hoc-radius": 3,
+    "ad-hoc-z-index": 3,
+    "arbitrary-geometry": 16,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 7,
+    "transition-all": 24,
+    "off-system-palette": 166,
+    "pure-white-black": 75,
+    "div-onclick-not-keyboard": 2,
+    "off-system-type-ramp": 58
+  },
+  "packages/Open-Poe-AI/packages/agents/src/components/ProfileAgent.jsx": {
+    "arbitrary-type": 7,
+    "other-arbitrary-value": 1,
+    "transition-all": 5,
+    "off-system-palette": 76,
+    "pure-white-black": 21,
+    "off-system-type-ramp": 18
+  },
+  "packages/Open-Poe-AI/packages/agents/src/CreatePage.jsx": {
+    "transition-all": 1,
+    "off-system-palette": 1
+  },
+  "packages/Open-Poe-AI/packages/agents/src/EditPage.jsx": {
+    "transition-all": 1,
+    "off-system-palette": 1
+  },
+  "packages/studio/src/components/AgentStudio.jsx": {
+    "hard-coded-hex": 27,
+    "arbitrary-geometry": 5,
+    "arbitrary-type": 25,
+    "other-arbitrary-value": 23,
+    "transition-all": 7,
+    "outline-stripped": 5,
+    "off-system-palette": 4,
+    "pure-white-black": 86,
+    "div-onclick-not-keyboard": 2,
+    "alpha-on-var-colour": 9,
+    "off-system-type-ramp": 19
+  },
+  "packages/studio/src/components/AiInfluencerStudio.jsx": {
+    "hard-coded-hex": 7,
+    "arbitrary-geometry": 6,
+    "arbitrary-type": 16,
+    "other-arbitrary-value": 8,
+    "transition-all": 7,
+    "off-system-palette": 30,
+    "pure-white-black": 44,
+    "off-system-type-ramp": 3
+  },
+  "packages/studio/src/components/AppsStudio.jsx": {
+    "hard-coded-hex": 22,
+    "ad-hoc-radius": 1,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 14,
+    "other-arbitrary-value": 15,
+    "transition-all": 5,
+    "off-system-palette": 1,
+    "pure-white-black": 36,
+    "div-onclick-not-keyboard": 1,
+    "alpha-on-var-colour": 8,
+    "off-system-type-ramp": 15
+  },
+  "packages/studio/src/components/CinemaStudio.jsx": {
+    "hard-coded-hex": 32,
+    "ad-hoc-shadow": 6,
+    "ad-hoc-z-index": 2,
+    "arbitrary-geometry": 13,
+    "arbitrary-type": 15,
+    "other-arbitrary-value": 28,
+    "transition-all": 16,
+    "off-system-palette": 3,
+    "pure-white-black": 69,
+    "div-onclick-not-keyboard": 3,
+    "alpha-on-var-colour": 9,
+    "off-system-type-ramp": 23
+  },
+  "packages/studio/src/components/ClippingStudio.jsx": {
+    "hard-coded-hex": 7,
+    "ad-hoc-shadow": 2,
+    "arbitrary-geometry": 6,
+    "arbitrary-type": 20,
+    "other-arbitrary-value": 8,
+    "transition-all": 12,
+    "outline-stripped": 1,
+    "off-system-palette": 40,
+    "pure-white-black": 64,
+    "range-without-utility": 1,
+    "div-onclick-not-keyboard": 2,
+    "alpha-on-var-colour": 11,
+    "off-system-type-ramp": 22
+  },
+  "packages/studio/src/components/DesignAgentStudio.jsx": {
+    "pure-white-black": 1
+  },
+  "packages/studio/src/components/DrawModal.jsx": {
+    "hard-coded-hex": 47,
+    "ad-hoc-shadow": 2,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 18,
+    "arbitrary-type": 12,
+    "other-arbitrary-value": 46,
+    "transition-all": 13,
+    "pure-white-black": 78,
+    "range-without-utility": 1,
+    "alpha-on-var-colour": 18,
+    "off-system-type-ramp": 15
+  },
+  "packages/studio/src/components/ImageStudio.jsx": {
+    "hard-coded-hex": 6,
+    "ad-hoc-radius": 9,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 16,
+    "arbitrary-type": 40,
+    "other-arbitrary-value": 10,
+    "transition-all": 25,
+    "outline-stripped": 5,
+    "off-system-palette": 62,
+    "pure-white-black": 168,
+    "div-onclick-not-keyboard": 4,
+    "alpha-on-var-colour": 10,
+    "off-system-type-ramp": 44
+  },
+  "packages/studio/src/components/LayersStudio.jsx": {
+    "hard-coded-hex": 175,
+    "ad-hoc-shadow": 13,
+    "arbitrary-geometry": 34,
+    "arbitrary-type": 74,
+    "other-arbitrary-value": 163,
+    "transition-all": 22,
+    "outline-stripped": 3,
+    "off-system-palette": 7,
+    "pure-white-black": 300,
+    "range-without-utility": 22,
+    "div-onclick-not-keyboard": 2,
+    "alpha-on-var-colour": 26,
+    "off-system-type-ramp": 100
+  },
+  "packages/studio/src/components/LipSyncStudio.jsx": {
+    "hard-coded-hex": 6,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 4,
+    "arbitrary-type": 9,
+    "other-arbitrary-value": 7,
+    "transition-all": 10,
+    "off-system-palette": 2,
+    "pure-white-black": 35,
+    "div-onclick-not-keyboard": 3,
+    "alpha-on-var-colour": 5,
+    "off-system-type-ramp": 10
+  },
+  "packages/studio/src/components/MarketingStudio.jsx": {
+    "hard-coded-hex": 10,
+    "ad-hoc-shadow": 1,
+    "ad-hoc-z-index": 2,
+    "arbitrary-geometry": 11,
+    "arbitrary-type": 8,
+    "other-arbitrary-value": 13,
+    "transition-all": 16,
+    "off-system-palette": 3,
+    "pure-white-black": 64,
+    "div-onclick-not-keyboard": 8,
+    "alpha-on-var-colour": 7,
+    "off-system-type-ramp": 13
+  },
+  "packages/studio/src/components/McpCliStudio.jsx": {
+    "hard-coded-hex": 2,
+    "arbitrary-type": 8,
+    "other-arbitrary-value": 1,
+    "pure-white-black": 29,
+    "off-system-type-ramp": 8
+  },
+  "packages/studio/src/components/MobileGenerationActions.jsx": {
+    "hard-coded-hex": 5,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 3,
+    "transition-all": 2,
+    "off-system-palette": 3,
+    "pure-white-black": 15,
+    "div-onclick-not-keyboard": 1,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 1
+  },
+  "packages/studio/src/components/ModelParameterControls.jsx": {
+    "hard-coded-hex": 3,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 5,
+    "other-arbitrary-value": 2,
+    "off-system-palette": 2,
+    "pure-white-black": 12
+  },
+  "packages/studio/src/components/MotionControlStudio.jsx": {
+    "hard-coded-hex": 42,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 6,
+    "arbitrary-type": 25,
+    "other-arbitrary-value": 35,
+    "transition-all": 15,
+    "outline-stripped": 1,
+    "off-system-palette": 6,
+    "pure-white-black": 97,
+    "range-without-utility": 1,
+    "div-onclick-not-keyboard": 3,
+    "alpha-on-var-colour": 14,
+    "off-system-type-ramp": 22
+  },
+  "packages/studio/src/components/RecastStudio.jsx": {
+    "hard-coded-hex": 13,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 7,
+    "arbitrary-type": 10,
+    "other-arbitrary-value": 12,
+    "transition-all": 11,
+    "off-system-palette": 3,
+    "pure-white-black": 49,
+    "div-onclick-not-keyboard": 3,
+    "alpha-on-var-colour": 8,
+    "off-system-type-ramp": 16
+  },
+  "packages/studio/src/components/VibeMotionStudio.jsx": {
+    "hard-coded-hex": 15,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 4,
+    "arbitrary-type": 14,
+    "other-arbitrary-value": 13,
+    "transition-all": 10,
+    "off-system-palette": 11,
+    "pure-white-black": 46,
+    "div-onclick-not-keyboard": 3,
+    "alpha-on-var-colour": 12,
+    "off-system-type-ramp": 16
+  },
+  "packages/studio/src/components/VideoModelControls.jsx": {
+    "hard-coded-hex": 7,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 6,
+    "other-arbitrary-value": 4,
+    "pure-white-black": 8,
+    "alpha-on-var-colour": 3,
+    "off-system-type-ramp": 5
+  },
+  "packages/studio/src/components/VideoStudio.jsx": {
+    "hard-coded-hex": 10,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 13,
+    "arbitrary-type": 27,
+    "other-arbitrary-value": 7,
+    "transition-all": 13,
+    "outline-stripped": 1,
+    "off-system-palette": 14,
+    "pure-white-black": 101,
+    "div-onclick-not-keyboard": 2,
+    "alpha-on-var-colour": 13,
+    "off-system-type-ramp": 20
+  },
+  "packages/studio/src/components/WorkflowStudio.jsx": {
+    "hard-coded-hex": 35,
+    "ad-hoc-shadow": 3,
+    "ad-hoc-z-index": 2,
+    "arbitrary-geometry": 8,
+    "arbitrary-type": 33,
+    "other-arbitrary-value": 27,
+    "transition-all": 8,
+    "outline-stripped": 4,
+    "off-system-palette": 13,
+    "pure-white-black": 95,
+    "div-onclick-not-keyboard": 3,
+    "alpha-on-var-colour": 6,
+    "off-system-type-ramp": 23
+  },
+  "packages/studio/src/components/WorkflowUI.jsx": {
+    "pure-white-black": 1
+  },
+  "packages/studio/src/providerLogos.js": {
+    "off-system-palette": 66,
+    "alpha-on-var-colour": 2
+  },
+  "packages/Vibe-Workflow/client/app/page.js": {
+    "hard-coded-hex": 1,
+    "ad-hoc-shadow": 3,
+    "arbitrary-geometry": 8,
+    "other-arbitrary-value": 3,
+    "transition-all": 3,
+    "off-system-palette": 20,
+    "pure-white-black": 24
+  },
+  "packages/Vibe-Workflow/client/app/workflow/page.js": {
+    "hard-coded-hex": 1,
+    "arbitrary-geometry": 8,
+    "other-arbitrary-value": 3,
+    "off-system-palette": 3,
+    "pure-white-black": 1
+  },
+  "packages/Vibe-Workflow/client/app/workflow/WorkflowListingClient.js": {
+    "hard-coded-hex": 5,
+    "ad-hoc-shadow": 3,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 6,
+    "transition-all": 7,
+    "outline-stripped": 1,
+    "off-system-palette": 20,
+    "pure-white-black": 28,
+    "div-onclick-not-keyboard": 2
+  },
+  "packages/Vibe-Workflow/client/app/workflow/[id]/page.js": {
+    "pure-white-black": 1
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/ApiNode.jsx": {
+    "hard-coded-hex": 5,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 7,
+    "other-arbitrary-value": 7,
+    "transition-all": 2,
+    "off-system-palette": 23,
+    "pure-white-black": 19,
+    "alpha-on-var-colour": 2,
+    "off-system-type-ramp": 3
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/AudioNode.jsx": {
+    "hard-coded-hex": 4,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 5,
+    "other-arbitrary-value": 7,
+    "transition-all": 3,
+    "off-system-palette": 22,
+    "pure-white-black": 22,
+    "alpha-on-var-colour": 2,
+    "off-system-type-ramp": 3
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/AudioPlayer.jsx": {
+    "hard-coded-hex": 3,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 3,
+    "transition-all": 5,
+    "off-system-palette": 5,
+    "pure-white-black": 6,
+    "range-without-utility": 2
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/ChatWidget.jsx": {
+    "hard-coded-hex": 5,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 8,
+    "arbitrary-type": 9,
+    "other-arbitrary-value": 6,
+    "transition-all": 5,
+    "off-system-palette": 57,
+    "pure-white-black": 46,
+    "alpha-on-var-colour": 2,
+    "off-system-type-ramp": 14
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/ImageNode.jsx": {
+    "hard-coded-hex": 4,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 6,
+    "other-arbitrary-value": 7,
+    "transition-all": 2,
+    "off-system-palette": 22,
+    "pure-white-black": 24,
+    "alpha-on-var-colour": 2,
+    "off-system-type-ramp": 5
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/NodeFlow.jsx": {
+    "hard-coded-hex": 25,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 8,
+    "arbitrary-type": 5,
+    "other-arbitrary-value": 27,
+    "transition-all": 13,
+    "outline-stripped": 3,
+    "off-system-palette": 85,
+    "pure-white-black": 86,
+    "div-onclick-not-keyboard": 6,
+    "alpha-on-var-colour": 2,
+    "off-system-type-ramp": 36
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/NodeOptionsMenu.jsx": {
+    "hard-coded-hex": 1,
+    "ad-hoc-z-index": 1,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 1,
+    "transition-all": 1,
+    "off-system-palette": 7,
+    "pure-white-black": 12,
+    "alpha-on-var-colour": 1
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/NodeSendButton.jsx": {
+    "hard-coded-hex": 1,
+    "other-arbitrary-value": 1,
+    "transition-all": 1,
+    "off-system-palette": 3,
+    "pure-white-black": 4,
+    "div-onclick-not-keyboard": 1,
+    "off-system-type-ramp": 1
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/NodesNavbar.jsx": {
+    "hard-coded-hex": 8,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 3,
+    "other-arbitrary-value": 8,
+    "outline-stripped": 1,
+    "off-system-palette": 15,
+    "pure-white-black": 8,
+    "div-onclick-not-keyboard": 2,
+    "off-system-type-ramp": 7
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/PromptConcate.jsx": {
+    "hard-coded-hex": 3,
+    "ad-hoc-shadow": 1,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 4,
+    "transition-all": 1,
+    "off-system-palette": 13,
+    "pure-white-black": 1,
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 2
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/RenderApiField.jsx": {
+    "arbitrary-geometry": 5,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 3,
+    "transition-all": 7,
+    "outline-stripped": 1,
+    "off-system-palette": 37,
+    "pure-white-black": 29,
+    "range-without-utility": 1,
+    "off-system-type-ramp": 13
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/RenderField.jsx": {
+    "hard-coded-hex": 1,
+    "arbitrary-geometry": 4,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 5,
+    "transition-all": 8,
+    "outline-stripped": 1,
+    "off-system-palette": 38,
+    "pure-white-black": 32,
+    "range-without-utility": 1,
+    "off-system-type-ramp": 13
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/TextNode.jsx": {
+    "hard-coded-hex": 4,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 7,
+    "arbitrary-type": 5,
+    "other-arbitrary-value": 6,
+    "transition-all": 4,
+    "off-system-palette": 28,
+    "pure-white-black": 21,
+    "alpha-on-var-colour": 2,
+    "off-system-type-ramp": 4
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/UploadNode.jsx": {
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 2,
+    "transition-all": 2,
+    "off-system-palette": 8,
+    "pure-white-black": 12,
+    "off-system-type-ramp": 6
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/VideoCombiner.jsx": {
+    "hard-coded-hex": 4,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 6,
+    "transition-all": 2,
+    "off-system-palette": 22,
+    "pure-white-black": 11,
+    "alpha-on-var-colour": 2,
+    "off-system-type-ramp": 3
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/VideoNode.jsx": {
+    "hard-coded-hex": 4,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 2,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 7,
+    "transition-all": 2,
+    "off-system-palette": 22,
+    "pure-white-black": 18,
+    "alpha-on-var-colour": 2,
+    "off-system-type-ramp": 3
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/VideoPlayer.jsx": {
+    "arbitrary-type": 1,
+    "transition-all": 2,
+    "pure-white-black": 14,
+    "range-without-utility": 2,
+    "div-onclick-not-keyboard": 1
+  },
+  "src/components/AgentStudio.js": {
+    "pure-white-black": 1,
+    "off-system-type-ramp": 2
+  },
+  "src/components/AuthModal.js": {
+    "ad-hoc-z-index": 1,
+    "pure-white-black": 2
+  },
+  "src/components/CameraControls.js": {
+    "hard-coded-hex": 5,
+    "ad-hoc-radius": 3,
+    "arbitrary-geometry": 6,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 9,
+    "transition-all": 2,
+    "pure-white-black": 8,
+    "alpha-on-var-colour": 2,
+    "off-system-type-ramp": 1
+  },
+  "src/components/CinemaStudio.js": {
+    "hard-coded-hex": 8,
+    "ad-hoc-radius": 1,
+    "arbitrary-geometry": 13,
+    "arbitrary-type": 9,
+    "other-arbitrary-value": 9,
+    "transition-all": 5,
+    "outline-stripped": 1,
+    "pure-white-black": 54,
+    "off-system-type-ramp": 10
+  },
+  "src/components/Header.js": {
+    "arbitrary-type": 3,
+    "pure-white-black": 14
+  },
+  "src/components/ImageStudio.js": {
+    "hard-coded-hex": 2,
+    "ad-hoc-radius": 3,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 7,
+    "arbitrary-type": 5,
+    "other-arbitrary-value": 3,
+    "transition-all": 19,
+    "outline-stripped": 1,
+    "pure-white-black": 47,
+    "range-without-utility": 4,
+    "alpha-on-var-colour": 4,
+    "off-system-type-ramp": 15
+  },
+  "src/components/LipSyncStudio.js": {
+    "hard-coded-hex": 3,
+    "ad-hoc-radius": 2,
+    "ad-hoc-z-index": 2,
+    "arbitrary-geometry": 5,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 4,
+    "transition-all": 19,
+    "pure-white-black": 45,
+    "alpha-on-var-colour": 12,
+    "off-system-type-ramp": 20
+  },
+  "src/components/LocalModelManager.js": {
+    "arbitrary-type": 9,
+    "transition-all": 6,
+    "off-system-palette": 8,
+    "pure-white-black": 20,
+    "alpha-on-var-colour": 5,
+    "off-system-type-ramp": 9
+  },
+  "src/components/McpCliStudio.js": {
+    "arbitrary-type": 4,
+    "pure-white-black": 13,
+    "off-system-type-ramp": 7
+  },
+  "src/components/Sidebar.js": {
+    "arbitrary-type": 1,
+    "transition-all": 1,
+    "pure-white-black": 3
+  },
+  "src/components/UploadPicker.js": {
+    "arbitrary-geometry": 5,
+    "arbitrary-type": 3,
+    "transition-all": 6,
+    "off-system-palette": 2,
+    "pure-white-black": 14,
+    "alpha-on-var-colour": 5,
+    "off-system-type-ramp": 4
+  },
+  "src/components/VideoStudio.js": {
+    "hard-coded-hex": 2,
+    "ad-hoc-radius": 3,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 8,
+    "arbitrary-type": 11,
+    "other-arbitrary-value": 3,
+    "transition-all": 18,
+    "outline-stripped": 1,
+    "off-system-palette": 10,
+    "pure-white-black": 49,
+    "alpha-on-var-colour": 6,
+    "off-system-type-ramp": 13
+  },
+  "src/components/WorkflowStudio.js": {
+    "pure-white-black": 1,
+    "off-system-type-ramp": 2
+  },
+  "components/StandaloneShell.js": {
+    "div-onclick-not-keyboard": 1
+  },
+  "packages/Open-AI-Design-Agent/packages/design-agent/src/CanvasArea.jsx": {
+    "div-onclick-not-keyboard": 1,
+    "off-system-type-ramp": 1
+  },
+  "packages/studio/src/components/AudioStudio.jsx": {
+    "div-onclick-not-keyboard": 1
+  },
+  "app/admin/providers/sms/SmsProvidersClient.js": {
+    "alpha-on-var-colour": 1,
+    "off-system-type-ramp": 1
+  },
+  "components/admin/AdminBreadcrumbs.js": {
+    "off-system-type-ramp": 2
+  }
+}

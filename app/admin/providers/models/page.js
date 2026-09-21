@@ -1,21 +1,12 @@
-import { getAllModelsOverview } from '@/lib/services/models';
-import { PageHeader } from '@/components/admin/AdminUi';
-import ModelsManagerClient from './ModelsManagerClient';
+import { redirect } from 'next/navigation';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ModelsConfigPage() {
-  const models = await getAllModelsOverview();
-
-  return (
-    <>
-      <PageHeader
-        eyebrow="模型与计费中枢"
-        title="模型开关与成本定价"
-        description="管理 Studio 各模型（Hailuo 2.3、Kling 3.0 Pro、Veo 2、Flux 等）的启用状态、官方上游成本价（USD）以及向用户收取的 Credits 扣点数。"
-      />
-
-      <ModelsManagerClient initialModels={models} />
-    </>
-  );
+// 旧「模型开关与成本定价」页：功能已由 ModelControlCenter（/admin/models）完整覆盖，
+// 保留此地址仅兼容历史收藏链接。
+export default async function LegacyModelsConfigPage() {
+  await requireAdminPagePermission(PERMISSIONS.modelsRead);
+  redirect('/admin/models');
 }

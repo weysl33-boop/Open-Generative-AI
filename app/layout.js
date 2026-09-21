@@ -1,22 +1,26 @@
 import './globals.css';
-import { Inter } from "next/font/google";
+import { Inter, Jost } from "next/font/google";
 import { cookies, headers } from 'next/headers';
 import { getLocaleConfig } from '@/lib/locales';
 import ChunkSelfHealing from '@/components/ChunkSelfHealing';
 import GlobalSiteBanner from '@/components/GlobalSiteBanner';
 import MaintenanceGate from '@/components/MaintenanceGate';
-import { getSettingByKey } from '@/lib/repositories/settings';
-import { getUserBySession } from '@/lib/billing';
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages, getLocale } from 'next-intl/server';
+import { getSettingByKey } from '@/lib/services/settings';
+import { getUserBySession } from '@/lib/services/auth';
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 });
 
+const jost = Jost({
+  variable: "--font-jost",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata = {
-  title: 'Open Generative AI — Free AI Image & Video Studio',
+  title: 'koyosim — Free AI Image & Video Studio',
   description: 'Generate AI images and videos using 200+ models — Flux, Midjourney, Kling, Veo, Seedance and more.',
 };
 
@@ -29,32 +33,28 @@ export default async function RootLayout({ children }) {
 
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get('ko_session')?.value;
-  const user = getUserBySession(sessionToken);
+  const user = await getUserBySession(sessionToken);
 
   let banner = null;
   let maintenance = null;
   try {
-    banner = getSettingByKey('site_banner')?.value || null;
-    maintenance = getSettingByKey('maintenance_mode')?.value || null;
+    banner = (await getSettingByKey('site_banner'))?.value || null;
+    maintenance = (await getSettingByKey('maintenance_mode'))?.value || null;
   } catch {}
 
-  let messages = {};
-  let currentLocale = 'en';
-  try {
-    messages = await getMessages();
-    currentLocale = await getLocale();
-  } catch {}
+  const currentLocale = getLocaleConfig(headerList.get('x-locale')).code;
 
   return (
-    <html lang={htmlLang || currentLocale}>
-      <body className={inter.variable}>
-        <NextIntlClientProvider locale={currentLocale} messages={messages}>
-          <ChunkSelfHealing />
-          <GlobalSiteBanner banner={banner} />
-          <MaintenanceGate maintenance={maintenance} user={user}>
-            {children}
-          </MaintenanceGate>
-        </NextIntlClientProvider>
+    <html
+      lang={htmlLang || currentLocale}
+      className={`${inter.variable} ${jost.variable}`}
+    >
+      <body>
+        <ChunkSelfHealing />
+        <GlobalSiteBanner banner={banner} />
+        <MaintenanceGate maintenance={maintenance} user={user}>
+          {children}
+        </MaintenanceGate>
       </body>
     </html>
   );

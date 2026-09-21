@@ -1,8 +1,7 @@
 import { PageHeader } from '@/components/admin/AdminUi';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { listCanonicalModels } from '@/lib/repositories/aiCatalog';
-import { queryMany } from '@/lib/db/index';
+import { listCanonicalModels, listCanonicalPricingRows } from '@/lib/services/modelCatalog';
 import PricingManagerClient from './PricingManagerClient';
 
 export const dynamic = 'force-dynamic';
@@ -12,12 +11,7 @@ export default async function ModelPricingAdminPage() {
 
   const [models, pricingList] = await Promise.all([
     listCanonicalModels(),
-    queryMany(`
-      SELECT mp.*, m.name, m.display_name, m.category, m.status AS model_status
-      FROM ai_studio.model_pricing mp
-      JOIN ai_studio.ai_models m ON m.id = mp.model_id
-      ORDER BY m.sort ASC, m.id ASC
-    `),
+    listCanonicalPricingRows(),
   ]);
 
   const pricingMap = new Map(pricingList.map((p) => [p.model_id, p]));

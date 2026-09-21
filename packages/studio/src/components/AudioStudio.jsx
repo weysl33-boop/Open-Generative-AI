@@ -1,13 +1,42 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import { useState, useEffect, useRef, useCallback, useId } from "react";
+import { toast } from "react-hot-toast";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Download,
+  Music,
+  Pause,
+  Play,
+  Trash2,
+  Upload,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import { cn } from "../ui/cn";
+import { Button, IconButton } from "../ui/Button";
+import { FieldMessage, Input, Label, Switch, Textarea } from "../ui/Field";
+import { Alert, EmptyState, Progress, ToastHost } from "../ui/Feedback";
+import { Badge } from "../ui/Surface";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/Overlay";
+import { CARD_BASE, CARD_INTERACTIVE, CARD_SURFACE } from "../ui/tokens";
 import { generateAudio, uploadFile } from "../muapi.js";
 import { formatErrorMessage } from "../utils/formatError.js";
 import { scopedPersistKey, migrateLegacyPersistKey } from "../persistKey.js";
 import { audioModels, getAudioModelById } from "../models.js";
 import en from "../messages/en/audioStudio.json";
 import zh from "../messages/zh/audioStudio.json";
+import ja from "../messages/ja-JP/audioStudio.json";
+import ko from "../messages/ko-KR/audioStudio.json";
+import zhTw from "../messages/zh-TW/audioStudio.json";
+import es from "../messages/es/audioStudio.json";
 import { resolveCopy } from "../i18nUtils";
 
 // ---------------------------------------------------------------------------
@@ -19,53 +48,9 @@ const UPLOAD_STATE = {
   READY: "ready",
 };
 
-// ---------------------------------------------------------------------------
-// SVG Icons
-// ---------------------------------------------------------------------------
-const PlayIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M8 5v14l11-7z" />
-  </svg>
-);
-
-const PauseIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-  </svg>
-);
-
-const VolumeIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-  </svg>
-);
-
-const VolumeMuteIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-    <line x1="23" y1="9" x2="17" y2="15" />
-    <line x1="17" y1="9" x2="23" y2="15" />
-  </svg>
-);
-
-const MusicIcon = ({ className = "text-[#22d3ee]" }) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M9 18V5l12-2v13" />
-    <circle cx="6" cy="18" r="3" />
-    <circle cx="18" cy="16" r="3" />
-  </svg>
-);
-
-const TrashIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-    <line x1="10" y1="11" x2="10" y2="17" />
-    <line x1="14" y1="11" x2="14" y2="17" />
-  </svg>
-);
+// Icons come from lucide-react (single icon system). Size and strokeWidth are
+// set at each call site because the control contract fixes the glyph footprint
+// relative to the hit area, not per icon.
 
 // ---------------------------------------------------------------------------
 // Single File Uploader Component
@@ -77,6 +62,7 @@ function AudioFileUploader({ label, value, onChange, apiKey, copy = en }) {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
   const dragCounterRef = useRef(0);
+  const inputId = useId();
 
   useEffect(() => {
     if (!value) {
@@ -94,7 +80,7 @@ function AudioFileUploader({ label, value, onChange, apiKey, copy = en }) {
     if (!file) return;
 
     if (file.size > 20 * 1024 * 1024) {
-      alert(copy.uploader.sizeLimitError);
+      toast.error(copy.uploader.sizeLimitError);
       return;
     }
 
@@ -110,7 +96,7 @@ function AudioFileUploader({ label, value, onChange, apiKey, copy = en }) {
       onChange(url);
     } catch (err) {
       setUploadState(UPLOAD_STATE.IDLE);
-      alert(copy.uploader.uploadFailedError.replace('{message}', err.message));
+      toast.error(copy.uploader.uploadFailedError.replace('{message}', err.message));
     } finally {
       setProgress(0);
     }
@@ -165,18 +151,15 @@ function AudioFileUploader({ label, value, onChange, apiKey, copy = en }) {
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <label className="text-xs font-bold text-zinc-200 uppercase tracking-wider">
+      <div className="flex items-center justify-between gap-3">
+        <Label htmlFor={inputId} className="uppercase tracking-wide">
           {label}
-        </label>
+        </Label>
         {uploadState === UPLOAD_STATE.READY && (
-          <button
-            type="button"
-            onClick={clearFile}
-            className="text-xs font-bold text-red-400 hover:text-red-300 transition-colors uppercase tracking-wider flex items-center gap-1.5"
-          >
-            <TrashIcon /> {copy.uploader.clear}
-          </button>
+          <Button variant="danger" size="xs" onClick={clearFile}>
+            <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
+            {copy.uploader.clear}
+          </Button>
         )}
       </div>
 
@@ -186,58 +169,66 @@ function AudioFileUploader({ label, value, onChange, apiKey, copy = en }) {
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        className={`relative border rounded p-4 transition-all duration-300 flex items-center gap-3.5 cursor-pointer ${
-          isDragging
-            ? "border-primary bg-primary/15 shadow-[0_0_15px_rgba(34,211,238,0.15)]"
-            : uploadState === UPLOAD_STATE.READY
-            ? "border-primary/60 bg-primary/10 shadow-[0_0_15px_rgba(34,211,238,0.05)]"
-            : "border-zinc-700 bg-zinc-900 hover:bg-zinc-850 hover:border-primary/50"
-        }`}
+        className={cn(
+          "relative flex cursor-pointer items-center gap-3 rounded-md border p-4",
+          "transition-[background-color,border-color] duration-base ease-standard",
+          // The file input is visually hidden but focusable, so the ring that
+          // belongs to it has to be drawn by the tile (PART 33: keyboard).
+          "has-[:focus-visible]:border-brand has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-ring",
+          isDragging && "border-brand bg-brand-soft",
+          !isDragging &&
+            uploadState === UPLOAD_STATE.READY &&
+            "border-brand-line bg-brand-soft",
+          !isDragging &&
+            uploadState === UPLOAD_STATE.IDLE &&
+            "border-line bg-well hover:border-line-strong hover:bg-wash",
+        )}
       >
         <input
+          id={inputId}
           ref={fileInputRef}
           type="file"
           accept="audio/*"
-          className="hidden"
+          className="sr-only"
           onChange={handleInputChange}
         />
 
         {uploadState === UPLOAD_STATE.IDLE && (
           <>
-            <div className="w-10 h-10 rounded bg-zinc-800 flex items-center justify-center text-zinc-200 border border-zinc-700/50">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-              </svg>
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-line bg-raised text-ink-muted">
+              <Upload size={18} strokeWidth={1.8} aria-hidden="true" />
             </div>
-            <div className="text-left">
-              <div className="text-xs font-bold text-white">{copy.uploader.uploadPrompt}</div>
-              <div className="text-[11px] text-zinc-300 font-medium mt-0.5">{copy.uploader.uploadHint}</div>
+            <div className="min-w-0 text-left">
+              <div className="text-label font-medium truncate text-ink">
+                {copy.uploader.uploadPrompt}
+              </div>
+              <div className="text-caption mt-0.5 text-ink-subtle">
+                {copy.uploader.uploadHint}
+              </div>
             </div>
           </>
         )}
 
         {uploadState === UPLOAD_STATE.UPLOADING && (
-          <div className="w-full flex items-center gap-4">
-            <div className="flex-1">
-              <div className="flex justify-between text-xs text-white/95 mb-1.5 font-bold">
-                <span>{copy.uploader.uploading}</span>
-                <span>{progress}%</span>
-              </div>
-              <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
-              </div>
-            </div>
-          </div>
+          <Progress
+            className="min-w-0 flex-1"
+            label={copy.uploader.uploading}
+            showValue
+            size="sm"
+            value={progress}
+          />
         )}
 
         {uploadState === UPLOAD_STATE.READY && (
           <>
-            <div className="w-10 h-10 rounded bg-primary/20 flex items-center justify-center text-primary border border-primary/30">
-              <MusicIcon className="text-primary" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-brand-line bg-brand-soft text-brand">
+              <Music size={18} strokeWidth={1.8} aria-hidden="true" />
             </div>
-            <div className="text-left flex-1 min-w-0">
-              <div className="text-xs font-bold text-white truncate">{fileName}</div>
-              <div className="text-[11px] text-primary font-bold mt-0.5">{copy.uploader.ready}</div>
+            <div className="min-w-0 flex-1 text-left">
+              <div className="text-label font-medium truncate text-ink">{fileName}</div>
+              <div className="text-caption mt-0.5 text-brand">
+                {copy.uploader.ready}
+              </div>
             </div>
           </>
         )}
@@ -262,9 +253,10 @@ function AudioListUploader({ label, value = [], onChange, apiKey, maxItems = 2, 
 
   return (
     <div className="space-y-4">
-      <label className="block text-xs font-bold text-zinc-200 uppercase tracking-wider">
+      {/* A group heading, not a form label: each track below carries its own. */}
+      <span className="text-label block uppercase tracking-wide text-ink-muted">
         {label} {copy.uploader.maxSuffix.replace('{max}', maxItems)}
-      </label>
+      </span>
       <div className="space-y-3">
         {Array.from({ length: maxItems }).map((_, i) => (
           <AudioFileUploader
@@ -291,7 +283,6 @@ function PremiumAudioPlayer({ url, title, copy = en }) {
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef(null);
-  const progressBarRef = useRef(null);
   const visualizerIntervalRef = useRef(null);
   const [visualizerHeights, setVisualizerHeights] = useState(Array(18).fill(15));
 
@@ -382,12 +373,12 @@ function PremiumAudioPlayer({ url, title, copy = en }) {
     }
   };
 
-  // Scrubbing
-  const handleScrub = (e) => {
+  // Scrubbing. A native range gives pointer dragging, keyboard arrows and a
+  // focus ring for one element instead of a click hit-test that only the
+  // mouse could reach.
+  const handleSeek = (e) => {
     if (!audioRef.current || duration === 0) return;
-    const rect = progressBarRef.current.getBoundingClientRect();
-    const pos = (e.clientX - rect.left) / rect.width;
-    const seekTime = Math.min(Math.max(pos * duration, 0), duration);
+    const seekTime = Number(e.target.value);
     audioRef.current.currentTime = seekTime;
     setCurrentTime(seekTime);
   };
@@ -418,7 +409,7 @@ function PremiumAudioPlayer({ url, title, copy = en }) {
   };
 
   return (
-    <div className="w-full bg-zinc-900 border border-zinc-700/80 rounded p-6 shadow-3xl space-y-6 backdrop-blur-md">
+    <div className="w-full space-y-5 rounded-xl border border-line bg-surface p-5 shadow-elevation-2 sm:p-6">
       <audio
         ref={audioRef}
         src={url}
@@ -428,99 +419,92 @@ function PremiumAudioPlayer({ url, title, copy = en }) {
         preload="auto"
       />
 
-      {/* Visualizer and Track Details */}
-      <div className="flex flex-col items-center justify-center py-6 relative rounded bg-black/60 overflow-hidden border border-zinc-800">
-        <div className="flex items-center gap-1.5 h-12 mb-4 justify-center">
+      {/* Visualizer and track details */}
+      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-line bg-canvas px-4 py-6">
+        <div className="flex h-12 items-center justify-center gap-1.5" aria-hidden="true">
           {visualizerHeights.map((h, i) => (
             <div
               key={i}
-              className="w-1.5 rounded-full bg-gradient-to-t from-primary to-[#a855f7] transition-all duration-100"
+              className="w-1.5 rounded-full bg-brand transition-[height] duration-fast ease-standard"
               style={{ height: `${h}px` }}
             />
           ))}
         </div>
-        <div className="text-center px-4 max-w-full relative z-10">
-          <span className="text-xs font-black text-primary uppercase tracking-[0.2em] block mb-1">
+        <div className="max-w-full px-4 text-center">
+          <span className="text-label mb-1 block font-medium uppercase tracking-widest text-brand">
             {copy.player.nowPlaying}
           </span>
-          <p className="text-white font-bold text-base truncate max-w-xs">{title || copy.player.defaultTitle}</p>
+          <p className="text-body max-w-xs truncate font-medium text-ink">
+            {title || copy.player.defaultTitle}
+          </p>
         </div>
       </div>
 
-      {/* Controls & Progress bar */}
-      <div className="space-y-4">
-        {/* Progress bar */}
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold text-zinc-200 w-10 text-right">
-            {formatTime(currentTime)}
-          </span>
-          
-          <div
-            ref={progressBarRef}
-            onClick={handleScrub}
-            className="flex-1 h-2 bg-zinc-700 hover:bg-zinc-650 rounded-full cursor-pointer relative group transition-colors"
-          >
-            <div 
-              className="absolute left-0 top-0 bottom-0 bg-primary rounded-full group-hover:bg-primary/95 transition-all"
-              style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
-            />
-            <div 
-              className="absolute w-3.5 h-3.5 bg-white rounded-full -top-[3px] shadow-glow opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-              style={{ left: `calc(${(currentTime / (duration || 1)) * 100}% - 7px)` }}
-            />
-          </div>
+      {/* Seek */}
+      <div className="flex items-center gap-3">
+        <span className="text-mono w-12 shrink-0 text-right text-ink-muted">
+          {formatTime(currentTime)}
+        </span>
+        <input
+          type="range"
+          className="range min-w-0 flex-1"
+          min="0"
+          max={duration || 0}
+          step="0.01"
+          value={Math.min(currentTime, duration || 0)}
+          onChange={handleSeek}
+          disabled={duration === 0}
+          aria-label={copy.player.seek}
+        />
+        <span className="text-mono w-12 shrink-0 text-left text-ink-muted">
+          {formatTime(duration)}
+        </span>
+      </div>
 
-          <span className="text-xs font-bold text-zinc-200 w-10 text-left">
-            {formatTime(duration)}
-          </span>
+      {/* Transport */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <IconButton
+            icon={isMuted ? VolumeX : Volume2}
+            size="sm"
+            label={copy.player.muteUnmute}
+            onClick={toggleMute}
+          />
+          <input
+            type="range"
+            className="range w-16 shrink-0"
+            min="0"
+            max="1"
+            step="0.05"
+            value={isMuted ? 0 : volume}
+            onChange={handleVolumeChange}
+            aria-label={copy.player.volume}
+          />
         </div>
 
-        {/* Buttons */}
-        <div className="flex items-center justify-between pt-2">
-          {/* Volume Control */}
-          <div className="flex items-center gap-2 group/volume w-24">
-            <button
-              onClick={toggleMute}
-              className="p-2 bg-zinc-800/80 border border-zinc-700 hover:bg-zinc-700 rounded text-zinc-200 hover:text-white transition-all"
-              title={copy.player.muteUnmute}
-              type="button"
-            >
-              {isMuted ? <VolumeMuteIcon /> : <VolumeIcon />}
-            </button>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={isMuted ? 0 : volume}
-              onChange={handleVolumeChange}
-              className="w-16 h-1 bg-zinc-700 rounded appearance-none cursor-pointer accent-primary hover:bg-zinc-600 transition-all opacity-0 group-hover/volume:opacity-100"
-            />
-          </div>
+        <Button
+          variant="primary"
+          size="icon-lg"
+          className="shrink-0 rounded-full"
+          onClick={togglePlay}
+          aria-label={isPlaying ? copy.player.pause : copy.player.play}
+        >
+          {isPlaying ? (
+            <Pause size={18} strokeWidth={2} aria-hidden="true" />
+          ) : (
+            <Play size={18} strokeWidth={2} fill="currentColor" aria-hidden="true" />
+          )}
+        </Button>
 
-          {/* Main Play/Pause Button */}
-          <button
-            onClick={togglePlay}
-            className="w-12 h-12 bg-primary hover:bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-glow"
-            title={isPlaying ? copy.player.pause : copy.player.play}
-            type="button"
-          >
-            {isPlaying ? <PauseIcon /> : <PlayIcon />}
-          </button>
-
-          {/* Download Button */}
-          <button
-            onClick={downloadAudio}
-            className="px-4 py-2 bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700 rounded text-xs font-bold text-white flex items-center gap-2 hover:border-primary/45 transition-all"
-            title={copy.player.download}
-            type="button"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
-            </svg>
-            <span>{copy.player.save}</span>
-          </button>
-        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={downloadAudio}
+          aria-label={copy.player.download}
+        >
+          <Download size={14} strokeWidth={1.8} aria-hidden="true" />
+          {copy.player.save}
+        </Button>
       </div>
     </div>
   );
@@ -540,7 +524,7 @@ export default function AudioStudio({
   onFilesHandled,
   locale = "en",
 }) {
-  const copy = resolveCopy(en, zh, locale);
+  const copy = resolveCopy(en, { 'zh-CN': zh, 'ja-JP': ja, 'ko-KR': ko, 'zh-TW': zhTw, es }, locale);
   const LEGACY_PERSIST_KEY = "hg_audio_studio_persistent";
   const PERSIST_KEY = scopedPersistKey(LEGACY_PERSIST_KEY, apiKey);
   useEffect(() => {
@@ -550,22 +534,7 @@ export default function AudioStudio({
   // ── Mode & model state ──────────────────────────────────────────────────
   const [selectedModelId, setSelectedModelId] = useState(audioModels[0]?.id ?? "");
   const [params, setParams] = useState({});
-  const [openDropdown, setOpenDropdown] = useState(false);
-  const [openParamDropdown, setOpenParamDropdown] = useState(null);
-  const modelBtnRef = useRef(null);
-  const sidebarRef = useRef(null);
-
-  // Close dropdowns on outside click
-  useEffect(() => {
-    const handler = (e) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
-        setOpenDropdown(false);
-        setOpenParamDropdown(null);
-      }
-    };
-    window.addEventListener("click", handler);
-    return () => window.removeEventListener("click", handler);
-  }, []);
+  const modelSelectId = useId();
 
   // ── Generation state ──────────────────────────────────────────────────
   const [isGenerating, setIsGenerating] = useState(false);
@@ -654,7 +623,7 @@ export default function AudioStudio({
             .then(url => {
               setParams(prev => ({ ...prev, [key]: url }));
             })
-            .catch(err => alert(copy.generate.droppedFileUploadError.replace('{message}', err.message)));
+            .catch(err => toast.error(copy.generate.droppedFileUploadError.replace('{message}', err.message)));
         } else if (firstAudioListField) {
           const [key] = firstAudioListField;
           uploadFile(apiKey, audioFiles[0], () => {})
@@ -665,7 +634,7 @@ export default function AudioStudio({
                 return { ...prev, [key]: currentList };
               });
             })
-            .catch(err => alert(copy.generate.droppedFileUploadError.replace('{message}', err.message)));
+            .catch(err => toast.error(copy.generate.droppedFileUploadError.replace('{message}', err.message)));
         }
       }
       onFilesHandled?.();
@@ -691,7 +660,7 @@ export default function AudioStudio({
     if (selectedModel.required) {
       for (const field of selectedModel.required) {
         if (!params[field] || (Array.isArray(params[field]) && params[field].length === 0)) {
-          alert(copy.sidebar.requiredFieldError.replace('{field}', selectedModel.inputs?.[field]?.title || field));
+          toast.error(copy.sidebar.requiredFieldError.replace('{field}', selectedModel.inputs?.[field]?.title || field));
           return;
         }
       }
@@ -758,60 +727,43 @@ export default function AudioStudio({
   };
 
   return (
-    <div className="w-full h-full flex bg-app-bg text-white overflow-hidden relative">
-      
-      {/* ─── LEFT CONFIGURATION SIDEBAR ─── */}
-      <div ref={sidebarRef} className="w-full lg:w-[400px] border-r border-zinc-900 flex flex-col bg-zinc-950/40 backdrop-blur-lg flex-shrink-0 z-30">
-        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6 pb-24">
-          
-          {/* Model Selector */}
-          <div className="space-y-2 relative">
-            <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider block">
-              {copy.sidebar.modelLabel}
-            </label>
-            <button
-              ref={modelBtnRef}
-              type="button"
-              onClick={() => setOpenDropdown(!openDropdown)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded px-4 py-3.5 text-sm text-left font-bold text-white flex items-center justify-between hover:bg-zinc-850 hover:border-primary/50 transition-all"
-            >
-              <span>{selectedModel?.name ?? copy.sidebar.selectModel}</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`transition-transform duration-200 ${openDropdown ? 'rotate-180' : ''}`}>
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
+    <div className="relative flex h-full w-full flex-col overflow-y-auto bg-canvas text-ink lg:flex-row lg:overflow-hidden">
 
-            {openDropdown && (
-              <div className="absolute left-0 right-0 mt-2 z-50 bg-[#161618] border border-zinc-700 rounded shadow-3xl max-h-60 overflow-y-auto custom-scrollbar p-1.5">
+      {/* ─── LEFT CONFIGURATION SIDEBAR ─── */}
+      {/* Stacked under `lg`: a row flex with a `w-full` sidebar leaves the
+          result pane zero-width on a phone, so the shell only becomes two
+          independently scrolling columns at the desktop breakpoint. */}
+      <div className="relative flex w-full shrink-0 flex-col border-b border-line bg-surface lg:w-panel lg:border-b-0 lg:border-r">
+        <div className="space-y-6 p-6 pb-24 lg:flex-1 lg:overflow-y-auto">
+
+          {/* Model Selector */}
+          <div className="space-y-2">
+            <Label htmlFor={modelSelectId} className="uppercase tracking-wide">
+              {copy.sidebar.modelLabel}
+            </Label>
+            <Select value={selectedModelId} onValueChange={setSelectedModelId}>
+              <SelectTrigger id={modelSelectId}>
+                <SelectValue placeholder={copy.sidebar.selectModel} />
+              </SelectTrigger>
+              <SelectContent>
                 {audioModels.map((model) => (
-                  <button
-                    key={model.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedModelId(model.id);
-                      setOpenDropdown(false);
-                    }}
-                    className={`w-full text-left px-4 py-2.5 rounded text-xs font-bold transition-all flex flex-col gap-1.5 border ${
-                      model.id === selectedModelId ? "text-primary bg-primary/10 border-primary/20" : "text-zinc-200 border-transparent hover:bg-zinc-900 hover:text-white"
-                    }`}
-                  >
-                    <span>{model.name}</span>
-                    {model.description && (
-                      <span className="text-[10px] text-zinc-300 truncate max-w-[320px] font-normal">
-                        {model.description}
-                      </span>
-                    )}
-                  </button>
+                  <SelectItem key={model.id} value={model.id} description={model.description}>
+                    {model.name}
+                  </SelectItem>
                 ))}
-              </div>
-            )}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Model Description */}
           {selectedModel?.description && (
-            <div className="">
-              <span className="text-[10px] font-bold text-primary uppercase tracking-wider block mb-1.5">{copy.sidebar.descriptionLabel}</span>
-              <p className="text-zinc-400 text-xs leading-relaxed font-semibold">{selectedModel.description}</p>
+            <div>
+              <span className="text-label mb-1.5 block font-medium uppercase tracking-wide text-ink-subtle">
+                {copy.sidebar.descriptionLabel}
+              </span>
+              <p className="text-body-sm font-medium leading-relaxed text-ink-muted">
+                {selectedModel.description}
+              </p>
             </div>
           )}
 
@@ -849,83 +801,61 @@ export default function AudioStudio({
               }
               // Boolean Toggles
               if (schema.type === "boolean") {
+                const switchId = `audio-bool-${key}`;
                 return (
-                  <div key={key} className="flex items-center justify-between bg-zinc-900 border border-zinc-700/80 rounded p-4 transition-all hover:border-zinc-600">
-                    <div className="flex-1 pr-4">
-                      <span className="block text-xs font-bold text-white tracking-tight">
+                  <div key={key} className="flex items-center justify-between gap-4 rounded-md border border-line bg-well p-4">
+                    <div className="min-w-0 flex-1">
+                      <Label htmlFor={switchId} className="truncate">
                         {schema.title || key}
-                      </span>
+                      </Label>
                       {schema.description && (
-                        <span className="block text-[11px] text-zinc-300 leading-normal mt-1">
+                        <span className="text-caption mt-1 block leading-normal text-ink-subtle">
                           {schema.description}
                         </span>
                       )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setParams(prev => ({ ...prev, [key]: !prev[key] }))}
-                      className={`w-11 h-6 rounded-full p-1 transition-all duration-300 relative shrink-0 ${
-                        params[key] ? "bg-primary" : "bg-zinc-800"
-                      }`}
-                    >
-                      <div className={`w-4 h-4 rounded-full bg-black shadow-md transform transition-all duration-300 ${
-                        params[key] ? "translate-x-5 bg-white" : "translate-x-0"
-                      }`} />
-                    </button>
+                    <Switch
+                      id={switchId}
+                      checked={!!params[key]}
+                      onCheckedChange={(next) => setParams(prev => ({ ...prev, [key]: next }))}
+                    />
                   </div>
                 );
               }
               // Enum Dropdowns
               if (schema.enum) {
-                const isOpen = openParamDropdown === key;
+                // Radix Select matches on strings, so a numeric enum is mapped
+                // back to its original type on selection.
+                const options = schema.enum.map((opt) =>
+                  typeof opt === "object" ? opt : { value: opt, label: opt },
+                );
+                const selectId = `audio-enum-${key}`;
+                const current = params[key];
                 return (
-                  <div key={key} className="space-y-2 relative">
-                    <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                  <div key={key} className="space-y-2">
+                    <Label htmlFor={selectId} className="uppercase tracking-wide">
                       {schema.title || key}
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOpenDropdown(false);
-                        setOpenParamDropdown(isOpen ? null : key);
+                    </Label>
+                    <Select
+                      value={current === undefined || current === null ? "" : String(current)}
+                      onValueChange={(next) => {
+                        const picked = options.find((o) => String(o.value) === next);
+                        setParams(prev => ({ ...prev, [key]: picked ? picked.value : next }));
                       }}
-                      className="w-full bg-zinc-900 border border-zinc-700 hover:border-zinc-600 rounded px-4 py-3.5 text-xs text-left font-bold text-white flex items-center justify-between transition-all cursor-pointer"
                     >
-                      <span>{params[key] || copy.sidebar.selectOption}</span>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`transition-transform duration-200 ${isOpen ? 'rotate-185' : ''}`}>
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </button>
-
-                    {isOpen && (
-                      <div className="absolute left-0 right-0 mt-1 z-50 bg-[#161618] border border-zinc-700 rounded shadow-3xl max-h-60 overflow-y-auto custom-scrollbar p-1">
-                        {schema.enum.map((opt) => {
-                          const optionValue = typeof opt === "object" ? opt.value : opt;
-                          const optionLabel = typeof opt === "object" ? (opt.label || opt.value) : opt;
-                          return (
-                            <button
-                              key={optionValue}
-                              type="button"
-                              onClick={() => {
-                                setParams(prev => ({ ...prev, [key]: optionValue }));
-                                setOpenParamDropdown(null);
-                              }}
-                              className={`w-full text-left px-4 py-2.5 rounded text-xs font-bold transition-all border ${
-                                params[key] === optionValue
-                                  ? "text-primary bg-primary/10 border-primary/20"
-                                  : "text-zinc-200 border-transparent hover:bg-zinc-900 hover:text-white"
-                              }`}
-                            >
-                              {optionLabel}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
+                      <SelectTrigger id={selectId}>
+                        <SelectValue placeholder={copy.sidebar.selectOption} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {options.map((o) => (
+                          <SelectItem key={String(o.value)} value={String(o.value)}>
+                            {String(o.label)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {schema.description && (
-                      <span className="block text-[11px] text-zinc-300 leading-normal">
-                        {schema.description}
-                      </span>
+                      <FieldMessage>{schema.description}</FieldMessage>
                     )}
                   </div>
                 );
@@ -936,29 +866,37 @@ export default function AudioStudio({
               const hasMinMax = schema.minValue !== undefined && schema.maxValue !== undefined;
               if (isNumber && hasMinMax) {
                 const step = schema.step || (schema.type === "float" ? 0.05 : 1);
+                const sliderId = `audio-range-${key}`;
                 return (
-                  <div key={key} className="space-y-3 bg-zinc-900 border border-zinc-700/80 rounded p-4 transition-all hover:border-zinc-600">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-white tracking-tight">{schema.title || key}</span>
-                      <span className="text-primary font-mono bg-primary/10 px-2 py-0.5 rounded border border-primary/20">{params[key] !== undefined ? params[key] : schema.default}</span>
+                  <div key={key} className="space-y-3 rounded-md border border-line bg-well p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <Label htmlFor={sliderId} className="truncate">
+                        {schema.title || key}
+                      </Label>
+                      <span className="text-mono shrink-0 rounded-sm border border-brand-line bg-brand-soft px-2 py-0.5 text-brand">
+                        {params[key] !== undefined ? params[key] : schema.default}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-zinc-300 font-medium w-6 text-right">{schema.minValue}</span>
+                      <span className="text-mono w-6 shrink-0 text-right text-ink-subtle">
+                        {schema.minValue}
+                      </span>
                       <input
+                        id={sliderId}
                         type="range"
                         min={schema.minValue}
                         max={schema.maxValue}
                         step={step}
                         value={params[key] !== undefined ? params[key] : (schema.default || 0)}
                         onChange={(e) => setParams(prev => ({ ...prev, [key]: parseFloat(e.target.value) }))}
-                        className="flex-1 h-1.5 bg-zinc-800 rounded-full appearance-none cursor-pointer accent-primary hover:bg-zinc-700 transition-all"
+                        className="range min-w-0 flex-1"
                       />
-                      <span className="text-[10px] text-zinc-300 font-medium w-6 text-left">{schema.maxValue}</span>
+                      <span className="text-mono w-6 shrink-0 text-left text-ink-subtle">
+                        {schema.maxValue}
+                      </span>
                     </div>
                     {schema.description && (
-                      <span className="block text-[11px] text-zinc-300 leading-normal">
-                        {schema.description}
-                      </span>
+                      <FieldMessage>{schema.description}</FieldMessage>
                     )}
                   </div>
                 );
@@ -966,28 +904,31 @@ export default function AudioStudio({
 
               // Prompt / Textarea Input
               if (key === "prompt") {
+                const promptId = "audio-prompt";
                 return (
                   <div key={key} className="space-y-2">
-                    <label className="block text-xs font-bold text-zinc-200 uppercase tracking-wider">
+                    <Label htmlFor={promptId} className="uppercase tracking-wide">
                       {schema.title || copy.sidebar.lyricsPromptLabel}
-                    </label>
-                    <textarea
+                    </Label>
+                    <Textarea
+                      id={promptId}
+                      rows={5}
                       value={params[key] || ""}
                       onChange={(e) => setParams(prev => ({ ...prev, [key]: e.target.value }))}
-                      className="w-full bg-zinc-900 border border-zinc-700 focus:border-primary/85 rounded p-3 text-xs text-white placeholder:text-zinc-400 focus:outline-none transition-all min-h-[100px] resize-none leading-relaxed shadow-inner"
                       placeholder={schema.description || copy.sidebar.promptPlaceholder}
                     />
                     {schema.examples && Array.isArray(schema.examples) && (
-                      <div className="flex flex-wrap gap-1.5 mt-2">
+                      <div className="mt-2 flex flex-wrap gap-1.5">
                         {schema.examples.map((ex, idx) => (
-                          <button
+                          <Button
                             key={idx}
-                            type="button"
+                            variant="outline"
+                            size="xs"
+                            className="rounded-full"
                             onClick={() => setParams(prev => ({ ...prev, [key]: ex }))}
-                            className="text-[11px] px-3 py-1 bg-zinc-800/80 border border-zinc-700 hover:bg-primary/20 hover:border-primary/45 hover:text-white rounded-full transition-all font-semibold text-zinc-100"
                           >
                             "{ex.slice(0, 35)}..."
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     )}
@@ -996,12 +937,14 @@ export default function AudioStudio({
               }
 
               // Standard Text / Input fields
+              const fieldId = `audio-field-${key}`;
               return (
                 <div key={key} className="space-y-2">
-                  <label className="block text-xs font-bold text-zinc-200 uppercase tracking-wider">
+                  <Label htmlFor={fieldId} className="uppercase tracking-wide">
                     {schema.title || key}
-                  </label>
-                  <input
+                  </Label>
+                  <Input
+                    id={fieldId}
                     type={isNumber ? "number" : "text"}
                     value={params[key] !== undefined ? params[key] : ""}
                     placeholder={schema.placeholder || schema.description || copy.sidebar.fieldPlaceholder.replace('{field}', key)}
@@ -1009,12 +952,9 @@ export default function AudioStudio({
                       const val = isNumber ? (e.target.value === "" ? "" : parseFloat(e.target.value)) : e.target.value;
                       setParams(prev => ({ ...prev, [key]: val }));
                     }}
-                    className="w-full bg-zinc-900 border border-zinc-700 hover:border-zinc-600 focus:border-primary/80 rounded px-4 py-3.5 text-xs text-white placeholder:text-zinc-400 focus:outline-none transition-all shadow-inner"
                   />
                   {schema.description && (
-                    <span className="block text-[11px] text-zinc-300 leading-normal">
-                      {schema.description}
-                    </span>
+                    <FieldMessage>{schema.description}</FieldMessage>
                   )}
                 </div>
               );
@@ -1023,73 +963,71 @@ export default function AudioStudio({
 
         </div>
 
-        {/* Dynamic Cost & Generate Section */}
-        <div className="p-4 border-t border-zinc-900 bg-zinc-950/80 backdrop-blur-xl absolute bottom-0 left-0 w-full lg:w-[400px] z-40">
-          <button
-            type="button"
+        {/* Generate bar. Solid rather than translucent: it floats over a
+           scrolling column of controls and must stay legible. */}
+        <div className="absolute bottom-0 left-0 z-sticky w-full border-t border-line bg-base p-4 lg:w-panel">
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
             onClick={handleGenerate}
-            disabled={isGenerating || !selectedModel}
-            className="w-full py-4 bg-primary text-black text-base font-bold rounded hover:bg-white transition-all transform hover:scale-[1.01] active:scale-95 disabled:opacity-50 disabled:grayscale shadow-glow flex items-center justify-center gap-3"
+            disabled={!selectedModel}
+            loading={isGenerating}
           >
             {isGenerating ? (
-              <>
-                <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                <span>{copy.generate.generating}</span>
-              </>
+              <span>{copy.generate.generating}</span>
             ) : (
               <>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <path d="M5 3l14 9-14 9V3z" />
-                </svg>
+                <Play size={16} strokeWidth={2} fill="currentColor" aria-hidden="true" />
                 <span>{copy.generate.cta}</span>
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
       {/* ─── RIGHT CONTENT AREA ─── */}
-      <div className="flex-1 flex flex-col min-w-0 h-full relative z-20">
+      <div className="relative flex min-w-0 flex-1 flex-col lg:h-full">
         
         {/* Main Display panel */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-10 flex flex-col justify-between">
+        <div className="flex flex-1 flex-col justify-between p-6 lg:overflow-y-auto lg:p-10">
           
-          <div className="flex-1 flex items-center justify-center min-h-[400px] mb-8">
+          <div className="mb-8 flex min-h-96 flex-1 items-center justify-center">
             
             {/* 1. Error Display */}
             {generateError && (
-              <div className="w-full max-w-md p-6 bg-red-500/10 border border-red-500/20 rounded flex flex-col items-center gap-4 animate-shake">
-                <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center text-red-500 border border-red-500/30 shadow-lg">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                </div>
-                <div className="text-center">
-                  <span className="text-xs font-black text-red-500 uppercase tracking-widest block mb-1">
-                    {copy.result.errorHeading}
-                  </span>
-                  <p className="text-white font-medium text-sm leading-relaxed">
-                    {generateError}
-                  </p>
-                </div>
-              </div>
+              <Alert
+                className="w-full max-w-md"
+                tone="danger"
+                icon={<AlertCircle size={18} strokeWidth={1.8} aria-hidden="true" />}
+                title={copy.result.errorHeading}
+              >
+                {generateError}
+              </Alert>
             )}
 
             {/* 2. Generating / Loading View */}
             {isGenerating && !generateError && (
-              <div className="flex flex-col items-center gap-6 animate-fade-in">
-                <div className="relative">
-                  <div className="w-24 h-24 border-[3px] border-zinc-800 border-t-primary rounded-full animate-spin shadow-glow" />
-                  <div className="absolute inset-0 flex items-center justify-center text-primary">
-                    <MusicIcon className="animate-pulse text-primary" />
-                  </div>
+              <div
+                className="animate-fade-in flex flex-col items-center gap-5 text-center"
+                role="status"
+                aria-live="polite"
+              >
+                <div className="relative size-16">
+                  <div
+                    aria-hidden="true"
+                    className="size-16 animate-spin rounded-full border-2 border-line border-t-brand"
+                  />
+                  <Music
+                    className="absolute inset-0 m-auto size-6 text-brand"
+                    strokeWidth={1.8}
+                    aria-hidden="true"
+                  />
                 </div>
-                <div className="text-center space-y-2">
-                  <div className="text-xs font-black text-primary uppercase tracking-[0.3em] animate-pulse">
+                <div className="space-y-1">
+                  <div className="text-label font-medium uppercase tracking-widest text-brand">
                     {copy.result.loadingHeading}
                   </div>
-                  <div className="text-sm text-zinc-200 font-bold">
+                  <div className="text-body-sm text-ink-muted">
                     {copy.result.loadingSubtext}
                   </div>
                 </div>
@@ -1098,39 +1036,27 @@ export default function AudioStudio({
 
             {/* 3. Empty State (no audio, not loading, no error) */}
             {view === "input" && !isGenerating && !generateError && (
-              <div className="flex flex-col items-center gap-6 max-w-md text-center p-8 bg-zinc-900/40 border border-zinc-800 rounded backdrop-blur-sm relative group animate-fade-in-up">
-                {/* Glow behind the icon */}
-                <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full opacity-25 group-hover:opacity-40 transition-opacity duration-1000 pointer-events-none" />
-                <div className="w-20 h-20 bg-zinc-900 border border-zinc-705 rounded flex items-center justify-center shadow-inner relative z-10 transition-transform duration-500 group-hover:scale-105">
-                  <MusicIcon className="text-primary w-8 h-8 filter drop-shadow-[0_0_8px_rgba(34,211,238,0.3)]" />
-                </div>
-                <div className="relative z-10">
-                  <h3 className="text-white font-black text-xl mb-3 tracking-tight">{copy.result.emptyHeading}</h3>
-                  <p className="text-sm text-zinc-200 font-medium leading-relaxed px-4">
-                    {copy.result.emptyBody}
-                  </p>
-                </div>
-              </div>
+              <EmptyState
+                className="animate-fade-in max-w-md rounded-xl border border-line bg-surface shadow-elevation-1"
+                description={copy.result.emptyBody}
+                icon={<Music size={22} strokeWidth={1.8} aria-hidden="true" />}
+                size="lg"
+                title={copy.result.emptyHeading}
+              />
             )}
 
             {/* 4. Active Result Player Display */}
             {view === "result" && activeResultUrl && !isGenerating && !generateError && (
-              <div className="w-full max-w-2xl animate-fade-in-up space-y-4">
-                <div className="flex items-center justify-between px-1">
-                  <button
-                    onClick={handleNew}
-                    className="text-xs font-bold text-zinc-200 hover:text-primary flex items-center gap-2 transition-all bg-zinc-905 border border-zinc-700 hover:border-primary/30 px-4 py-2 rounded-full"
-                    type="button"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <line x1="19" y1="12" x2="5" y2="12" />
-                      <polyline points="12 19 5 12 12 5" />
-                    </svg>
-                    <span>{copy.result.newGeneration}</span>
-                  </button>
-                  <span className="text-[11px] font-bold text-green-400 px-3.5 py-1.5 bg-green-500/10 border border-green-500/20 rounded-full flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" /> {copy.result.success}
-                  </span>
+              <div className="animate-fade-in w-full max-w-2xl space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+                  <Button className="rounded-full" onClick={handleNew} size="sm" variant="secondary">
+                    <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                    {copy.result.newGeneration}
+                  </Button>
+                  <Badge size="md" tone="success">
+                    <span className="size-1.5 rounded-full bg-success" aria-hidden="true" />
+                    {copy.result.success}
+                  </Badge>
                 </div>
                 <PremiumAudioPlayer url={activeResultUrl} title={activeResultTitle} copy={copy} />
               </div>
@@ -1140,38 +1066,53 @@ export default function AudioStudio({
 
           {/* ─── BOTTOM HISTORY FOOTER ─── */}
           {history.length > 0 && (
-            <div className="border-t border-zinc-900 pt-6 w-full animate-fade-in-up">
-              <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider mb-4 px-1">
+            <div className="animate-fade-in w-full border-t border-line pt-6">
+              <h4 className="text-label mb-4 uppercase tracking-wide text-ink-muted">
                 {copy.history.heading.replace('{count}', history.length)}
               </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {history.map((entry, idx) => (
-                  <div
-                    key={entry.id || idx}
-                    onClick={() => handleSelectHistory(entry, idx)}
-                    className={`p-3.5 bg-zinc-900 border rounded cursor-pointer transition-all flex flex-col justify-between h-28 border-zinc-700/80 hover:bg-zinc-850 hover:border-zinc-500 ${
-                      activeResultUrl === entry.url && view === "result"
-                        ? "border-primary bg-primary/5 shadow-glow"
-                        : ""
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className={`w-8 h-8 rounded flex items-center justify-center flex-shrink-0 ${
-                        activeResultUrl === entry.url && view === "result" ? "bg-primary/20 text-primary" : "bg-zinc-800 text-zinc-200"
-                      }`}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                        </svg>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                {history.map((entry, idx) => {
+                  const isSelected = view === "result" && activeResultUrl === entry.url;
+                  // A real button, not a clickable div: history entries have to
+                  // be reachable with Tab and activatable with Enter.
+                  return (
+                    <button
+                      key={entry.id || idx}
+                      aria-current={isSelected ? "true" : undefined}
+                      onClick={() => handleSelectHistory(entry, idx)}
+                      type="button"
+                      className={cn(
+                        CARD_BASE,
+                        isSelected
+                          ? CARD_SURFACE.selected
+                          : cn(CARD_SURFACE.default, CARD_INTERACTIVE),
+                        "flex h-28 flex-col items-stretch justify-between gap-2 p-3.5 text-left",
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "flex size-8 shrink-0 items-center justify-center rounded-sm",
+                            isSelected ? "bg-brand-line text-brand" : "bg-wash text-ink-muted",
+                          )}
+                        >
+                          <Volume2 className="size-3.5" strokeWidth={1.8} aria-hidden="true" />
+                        </span>
+                        <span
+                          className={cn(
+                            "text-label min-w-0 truncate font-medium uppercase tracking-wide",
+                            isSelected ? "text-brand" : "text-ink-muted",
+                          )}
+                        >
+                          {entry.model ? entry.model.split('-').slice(0, 2).join(' ') : copy.history.fallbackModel}
+                        </span>
                       </div>
-                      <span className="text-[10px] font-bold text-primary uppercase tracking-wider truncate">
-                        {entry.model ? entry.model.split('-').slice(0, 2).join(' ') : copy.history.fallbackModel}
-                      </span>
-                    </div>
-                    <p className="text-[11px] font-semibold text-white line-clamp-2 leading-tight">
-                      {entry.title || entry.prompt || copy.history.untitled}
-                    </p>
-                  </div>
-                ))}
+                      <p className="text-caption line-clamp-2 font-medium text-ink">
+                        {entry.title || entry.prompt || copy.history.untitled}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -1179,7 +1120,7 @@ export default function AudioStudio({
         </div>
 
       </div>
-      <Toaster position="top-right" containerStyle={{ zIndex: 99999 }} toastOptions={{ duration: 5000, style: { background: '#18181b', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)', fontSize: '13px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', maxWidth: '440px', wordBreak: 'break-word', whiteSpace: 'pre-wrap', padding: '12px 16px' } }} />
+      <ToastHost />
     </div>
   );
 }

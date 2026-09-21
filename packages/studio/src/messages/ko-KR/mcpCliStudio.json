@@ -1,0 +1,35 @@
+{
+  "hero": {
+    "badge": "개발자 및 AI 에이전트를 위한",
+    "title": "MCP 및 CLI 도구",
+    "description": "터미널, IDE 또는 모든 MCP 호환 어시스턴트에서 koyosim을 직접 제어하세요. 작업 흐름을 벗어나지 않고 100개 이상의 모델에서 영화 수준의 이미지, 비디오 및 오디오를 제작할 수 있습니다."
+  },
+  "quickStart": {
+    "sectionLabel": "빠른 시작",
+    "steps": {
+      "installCli": "CLI 설치하기",
+      "signIn": "로그인하기",
+      "addSkills": "스킬 추가하기"
+    }
+  },
+  "features": {
+    "cli": {
+      "description": "터미널에서 14개 이상의 AI 모델을 구동하여 이미지, 동영상, 오디오를 생성합니다. 사용자용 컬러 텍스트 및 에이전트용 JSON 구조화 출력(--output-json, --jq 필터링)의 듀얼 인터페이스. 비동기 워크플로우, 파일 업로드, 크레딧 추적 기능 지원."
+    },
+    "mcp": {
+      "description": "Claude, Cursor, Windsurf 및 모든 MCP 지원 어시스턴트를 100개 이상의 생성형 모델에 즉시 연결합니다. 클라우드 호스팅 엔드포인트로 별도 설치 불필요. 입출력 스키마, 비동기 폴링, 계정 관리를 포함한 19개의 구조화된 도구 세트 제공."
+    },
+    "skills": {
+      "description": "Claude Code, Cursor, Gemini CLI를 위한 멀티모달 툴킷. Cinema Director, Nano-Banana, UI Designer, Logo Creator, Seedance 2, AI Clipping, YouTube Shorts 프리셋 내장. JSON 출력 및 시맨틱 종료 코드를 갖춘 에이전트 네이티브 설계."
+    }
+  },
+  "viewOnGithub": "GitHub에서 소스코드 보기",
+  "examples": {
+    "sectionLabel": "사용 예제",
+    "imageGeneration": "이미지 생성",
+    "textToVideo": "텍스트 기반 동영상 생성",
+    "audioCreation": "오디오 및 사운드 제작",
+    "runSkill": "스킬 실행하기"
+  },
+  "footer": "오픈소스 · MIT 라이선스 · Claude, Cursor, Windsurf, Gemini CLI 완벽 호환"
+}

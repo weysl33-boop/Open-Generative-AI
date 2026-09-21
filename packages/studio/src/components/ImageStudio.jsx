@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { generateImage, generateI2I, uploadFile } from "../muapi.js";
+import { ArrowUp, Image as ImageIcon, Pencil } from "lucide-react";
+import { Spinner } from "../ui/Feedback";
+import { generateImage, generateI2I, uploadFile, resolveModelQualityOrResolution } from "../muapi.js";
+export { resolveModelQualityOrResolution };
 import { formatErrorMessage } from "../utils/formatError.js";
 import { scopedPersistKey, migrateLegacyPersistKey } from "../persistKey.js";
 import DrawModal from "./DrawModal.jsx";
@@ -59,9 +62,190 @@ import {
 } from "./prompt/PromptComposer.jsx";
 import en from "../messages/en/imageStudio.json";
 import zh from "../messages/zh/imageStudio.json";
+import ja from "../messages/ja-JP/imageStudio.json";
+import ko from "../messages/ko-KR/imageStudio.json";
+import zhTw from "../messages/zh-TW/imageStudio.json";
+import es from "../messages/es/imageStudio.json";
 import { resolveCopy } from "../i18nUtils";
+import {
+  PROVIDER_LOGOS,
+  invertLogos,
+  getProviderLogo,
+  getProviderStyle,
+} from "../providerLogos.js";
+import { getModelDescription, getModelBadge } from "../modelDescriptions.js";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
+
+export function calculatePixelDimensions(ar, quality = "2K") {
+  const is4K = typeof quality === "string" && (quality.includes("4K") || quality.includes("4k") || quality.includes("ultra"));
+  const is15K = typeof quality === "string" && (quality.includes("1.5K") || quality.includes("1K") || quality.includes("720") || quality.includes("standard"));
+  
+  if (!ar || ar === "adaptive" || ar === "auto" || ar === "智能") {
+    return { width: is4K ? 3840 : is15K ? 1024 : 2048, height: is4K ? 3840 : is15K ? 1024 : 2048, isAdaptive: true };
+  }
+
+  const strAr = String(ar);
+  const ratioMap = {
+    "1:1": is4K ? [4096, 4096] : is15K ? [1024, 1024] : [2048, 2048],
+    "3:4": is4K ? [2880, 3840] : is15K ? [768, 1024] : [1728, 2304],
+    "4:3": is4K ? [3840, 2880] : is15K ? [1024, 768] : [2304, 1728],
+    "16:9": is4K ? [3840, 2160] : is15K ? [1280, 720] : [2560, 1440],
+    "9:16": is4K ? [2160, 3840] : is15K ? [720, 1280] : [1440, 2560],
+    "2:3": is4K ? [2730, 4096] : is15K ? [682, 1024] : [1664, 2496],
+    "3:2": is4K ? [4096, 2730] : is15K ? [1024, 682] : [2496, 1664],
+    "21:9": is4K ? [5040, 2160] : is15K ? [1680, 720] : [2880, 1234],
+    "9:21": is4K ? [2160, 5040] : is15K ? [720, 1680] : [1234, 2880],
+  };
+
+  const found = ratioMap[strAr];
+  if (found) {
+    return { width: found[0], height: found[1], isAdaptive: false };
+  }
+
+  // Fallback ratio calculation
+  const parts = strAr.split(":").map(Number);
+  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1]) && parts[1] !== 0) {
+    const base = is4K ? 4096 : is15K ? 1024 : 2048;
+    const r = parts[0] / parts[1];
+    if (r >= 1) {
+      return { width: base, height: Math.round(base / r), isAdaptive: false };
+    } else {
+      return { width: Math.round(base * r), height: base, isAdaptive: false };
+    }
+  }
+
+  return { width: 2048, height: 2048, isAdaptive: false };
+}
+
+export function findClosestAspectRatio(width, height) {
+  if (!width || !height || width <= 0 || height <= 0) return "1:1";
+  const ratio = width / height;
+  const standardRatios = [
+    { label: "1:1", val: 1 },
+    { label: "16:9", val: 16 / 9 },
+    { label: "9:16", val: 9 / 16 },
+    { label: "4:3", val: 4 / 3 },
+    { label: "3:4", val: 3 / 4 },
+    { label: "3:2", val: 3 / 2 },
+    { label: "2:3", val: 2 / 3 },
+    { label: "21:9", val: 21 / 9 },
+    { label: "9:21", val: 9 / 21 },
+  ];
+  let closest = standardRatios[0];
+  let minDiff = Math.abs(ratio - standardRatios[0].val);
+  for (const item of standardRatios) {
+    const diff = Math.abs(ratio - item.val);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closest = item;
+    }
+  }
+  return closest.label;
+}
+
+export function findClosestSupportedAspectRatio(width, height, supportedRatios = []) {
+  if (!width || !height || width <= 0 || height <= 0) {
+    return supportedRatios[0] || "1:1";
+  }
+  const ratio = width / height;
+  const ratiosToSearch = (supportedRatios && supportedRatios.length > 0)
+    ? supportedRatios
+    : ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "21:9", "9:21"];
+
+  const parseVal = (r) => {
+    const parts = String(r).split(":").map(Number);
+    if (parts.length === 2 && parts[1] !== 0 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+      return parts[0] / parts[1];
+    }
+    return 1;
+  };
+
+  let closest = ratiosToSearch[0];
+  let minDiff = Math.abs(ratio - parseVal(ratiosToSearch[0]));
+
+  for (const item of ratiosToSearch) {
+    const val = parseVal(item);
+    const diff = Math.abs(ratio - val);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closest = item;
+    }
+  }
+  return closest;
+}
+
+export function extractOutputUrl(res) {
+  if (!res) return null;
+  if (typeof res === "string") return res;
+  if (res.url && typeof res.url === "string") return res.url;
+  if (res.result_url && typeof res.result_url === "string") return res.result_url;
+  if (res.image_url && typeof res.image_url === "string") return res.image_url;
+  if (Array.isArray(res.outputs) && res.outputs.length > 0) {
+    const first = res.outputs[0];
+    return typeof first === "string" ? first : first?.url || null;
+  }
+  if (Array.isArray(res.output) && res.output.length > 0) {
+    const first = res.output[0];
+    return typeof first === "string" ? first : first?.url || null;
+  }
+  if (res.output && typeof res.output === "string") return res.output;
+  if (res.output?.url && typeof res.output.url === "string") return res.output.url;
+  if (Array.isArray(res.images) && res.images.length > 0) {
+    const first = res.images[0];
+    return typeof first === "string" ? first : first?.url || null;
+  }
+  return null;
+}
+
+export function AspectLineIcon({ ratio, active = false, className = "" }) {
+  if (ratio === "adaptive" || ratio === "auto" || ratio === "智能") {
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <path d="M4 9V5a1 1 0 0 1 1-1h4" />
+        <path d="M20 9V5a1 1 0 0 0-1-1h-4" />
+        <path d="M4 15v4a1 1 0 0 0 1 1h4" />
+        <path d="M20 15v4a1 1 0 0 1-1 1h-4" />
+        <circle cx="12" cy="12" r="2.5" />
+      </svg>
+    );
+  }
+
+  if (ratio === "custom") {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <path d="M4 7V4h3" />
+        <path d="M20 7V4h-3" />
+        <path d="M4 17v3h3" />
+        <path d="M20 17v3h-3" />
+        <rect x="7" y="7" width="10" height="10" rx="1.5" strokeDasharray="2 2" />
+      </svg>
+    );
+  }
+
+  const borderClass = active ? "border-brand bg-brand-pressed" : "border-line-strong group-hover:border-brand-line";
+
+  switch (ratio) {
+    case "1:1":
+      return <div className={`w-4 h-4 rounded-xs border-2 ${borderClass} transition-colors ${className}`} />;
+    case "3:4":
+      return <div className={`w-3.5 h-4.5 rounded-xs border-2 ${borderClass} transition-colors ${className}`} />;
+    case "4:3":
+      return <div className={`w-4.5 h-3.5 rounded-xs border-2 ${borderClass} transition-colors ${className}`} />;
+    case "16:9":
+      return <div className={`w-5 h-3 rounded-xs border-2 ${borderClass} transition-colors ${className}`} />;
+    case "9:16":
+      return <div className={`w-3 h-5 rounded-xs border-2 ${borderClass} transition-colors ${className}`} />;
+    case "2:3":
+      return <div className={`w-3 h-4.5 rounded-xs border-2 ${borderClass} transition-colors ${className}`} />;
+    case "3:2":
+      return <div className={`w-4.5 h-3 rounded-xs border-2 ${borderClass} transition-colors ${className}`} />;
+    case "21:9":
+      return <div className={`w-5.5 h-2.5 rounded-xs border-2 ${borderClass} transition-colors ${className}`} />;
+    default:
+      return <div className={`w-4 h-4 rounded-xs border-2 ${borderClass} transition-colors ${className}`} />;
+  }
+}
 
 async function downloadImage(url, filename) {
   try {
@@ -194,7 +378,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
     const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
     const tooLarge = files.filter((f) => f.size > MAX_IMAGE_SIZE);
     if (tooLarge.length > 0) {
-      alert(
+      toast.error(
         t.tooLargeAlert.replace("{names}", tooLarge.map((f) => f.name).join(", ")),
       );
       return;
@@ -251,7 +435,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
         }),
       );
     } catch (err) {
-      alert(t.uploadFailedAlert.replace("{message}", err.message));
+      toast.error(t.uploadFailedAlert.replace("{message}", err.message));
     } finally {
       setUploading(false);
       setLastUploadProgress(0);
@@ -354,7 +538,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
 
   // Trigger icon content
   const triggerContent = uploading ? (
-    <div className="flex flex-col items-center justify-center w-full h-full absolute inset-0 bg-black/80 z-20 backdrop-blur-[2px]">
+    <div className="flex flex-col items-center justify-center w-full h-full absolute inset-0 bg-scrim z-20 backdrop-blur-[2px]">
       <svg className="w-8 h-8 -rotate-90">
         <circle
           cx="16"
@@ -363,7 +547,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
           stroke="currentColor"
           strokeWidth="2"
           fill="transparent"
-          className="text-white/10"
+          className="text-ink-subtle"
         />
         <circle
           cx="16"
@@ -374,10 +558,10 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
           fill="transparent"
           strokeDasharray={88}
           strokeDashoffset={88 - (88 * lastUploadProgress) / 100}
-          className="text-[#22d3ee] transition-all duration-300"
+          className="text-brand transition-all duration-page"
         />
       </svg>
-      <span className="absolute text-[9px] font-black text-[#22d3ee] leading-none">
+      <span className="absolute text-micro font-black text-brand leading-none">
         {lastUploadProgress}%
       </span>
     </div>
@@ -385,7 +569,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
     hasSelection ? (
       <img src={selectedEntries[0].url} alt="" className="w-full h-full object-cover" />
     ) : (
-      <span className="text-[10px] font-bold text-white/50">{t.faceLabel}</span>
+      <span className="text-micro font-bold text-ink-subtle">{t.faceLabel}</span>
     )
   ) : (
     <svg
@@ -395,7 +579,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
       fill="none"
       stroke="currentColor"
       strokeWidth="2.5"
-      className="text-white/40 group-hover:text-[#22d3ee] transition-colors"
+      className="text-ink-subtle group-hover:text-brand transition-colors"
     >
       <line x1="12" y1="5" x2="12" y2="19" />
       <line x1="5" y1="12" x2="19" y2="12" />
@@ -451,13 +635,13 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
           className="w-96 max-w-[calc(100vw-2rem)]"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-1 pb-3 mb-2 border-b border-white/5">
+          <div className="flex items-center justify-between px-1 pb-3 mb-2 border-b border-line-subtle">
             <div className="flex flex-col gap-0.5">
               <span className="text-xs font-bold text-secondary">
                 {t.headerTitle}
               </span>
               {isMulti && (
-                <span className="text-[9px] text-muted">
+                <span className="text-micro text-muted">
                   {t.selectUpTo.replace("{max}", maxImages)}
                 </span>
               )}
@@ -467,7 +651,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
                 <button
                   type="button"
                   onClick={handleDone}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-primary text-black rounded-xl text-xs font-black transition-all hover:scale-105"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-primary text-ink-inverse rounded-xl text-xs font-black transition-all hover:scale-105"
                 >
                   {t.doneButton.replace("{count}", count)}
                 </button>
@@ -544,9 +728,9 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-white/5 flex flex-col items-center justify-center">
+                      <div className="w-full h-full bg-wash flex flex-col items-center justify-center">
                         <div className="w-8 h-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin mb-1" />
-                        <span className="text-[10px] font-black text-primary">
+                        <span className="text-micro font-black text-primary">
                           {entry.progress}%
                         </span>
                       </div>
@@ -554,12 +738,12 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
 
                     {/* Hover overlay with delete */}
                     {entry.url && (
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/cell:opacity-100 transition-opacity flex items-end justify-end p-1">
+                      <div className="absolute inset-0 bg-scrim opacity-0 group-hover/cell:opacity-100 transition-opacity flex items-end justify-end p-1">
                         <button
                           type="button"
                           title={t.removeFromHistory}
                           onClick={(e) => handleRemoveFromHistory(e, entry)}
-                          className="w-5 h-5 bg-red-500/80 hover:bg-red-500 rounded-md flex items-center justify-center transition-colors"
+                          className="w-5 h-5 bg-danger hover:bg-danger rounded-md flex items-center justify-center transition-colors"
                         >
                           <svg
                             width="8"
@@ -580,7 +764,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
                     {isSelected && (
                       <div className="absolute top-1 left-1 min-w-[20px] h-5 bg-primary rounded-full flex items-center justify-center px-1">
                         {isMulti ? (
-                          <span className="text-[10px] font-black text-black">
+                          <span className="text-micro font-black text-ink-inverse">
                             {selIdx + 1}
                           </span>
                         ) : (
@@ -605,14 +789,14 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
 
           {/* Bottom bar for multi-select */}
           {isMulti && hasSelection && (
-            <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
+            <div className="mt-3 pt-3 border-t border-line-subtle flex items-center justify-between">
               <span className="text-xs text-secondary">
                 {t.selectedCount.replace("{count}", count).replace("{max}", maxImages)}
               </span>
               <button
                 type="button"
                 onClick={handleDone}
-                className="px-4 py-1.5 bg-primary text-black rounded-xl text-xs font-black transition-all hover:scale-105"
+                className="px-4 py-1.5 bg-primary text-ink-inverse rounded-xl text-xs font-black transition-all hover:scale-105"
               >
                 {t.useSelected}
               </button>
@@ -625,36 +809,6 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
 }
 
 // ─── ModelDropdown ────────────────────────────────────────────────────────────
-
-const PROVIDER_LOGOS = {
-  openai: "https://cdn.muapi.ai/models/openai.png",
-  google: "https://cdn.muapi.ai/models/gemini.png",
-  kling: "https://cdn.muapi.ai/models/kling.png",
-  alibaba: "https://cdn.muapi.ai/models/alibaba.png",
-  bytedance: "https://cdn.muapi.ai/models/bytedance.png",
-  blackforest: "https://cdn.muapi.ai/models/bfl.png",
-  minimax: "https://cdn.muapi.ai/models/minimax.png",
-  suno: "https://cdn.muapi.ai/models/suno.png",
-  anthropic: "https://cdn.muapi.ai/models/claude.png",
-  meshy: "https://cdn.muapi.ai/models/meshy-3.png",
-  tripo3d: "https://cdn.muapi.ai/models/tripo3d.png",
-  grok: "https://cdn.muapi.ai/models/xai.png",
-  muapi: "https://cdn.muapi.ai/models/muapi.png",
-  midjourney: "https://cdn.muapi.ai/models/midjourney.png",
-  vidu: "https://cdn.muapi.ai/models/vidu.png",
-  runway: "https://cdn.muapi.ai/models/runway.png",
-  luma: "https://cdn.muapi.ai/models/luma.png",
-  ideogram: "https://cdn.muapi.ai/models/ideogram.png",
-  leonardoai: "https://cdn.muapi.ai/models/leonardoai.png",
-  hunyuan: "https://cdn.muapi.ai/models/hunyuan.png",
-  hidream: "https://cdn.muapi.ai/models/hidream.png",
-  lightricks: "https://cdn.muapi.ai/models/lightricks.png",
-  pixverse: "https://cdn.muapi.ai/models/pixverse.png",
-  reve: "https://cdn.muapi.ai/models/reve.png",
-  stability: "https://cdn.muapi.ai/models/stability.png"
-};
-
-const invertLogos = ['openai', 'blackforest', 'runway', 'ideogram', 'lightricks', 'grok'];
 
 function ModelDropdown({ selectedModel, onSelect, onClose, copy }) {
   const t = copy.modelDropdown;
@@ -691,41 +845,6 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy }) {
     }
   }, []);
 
-  const getProviderStyle = (provider) => {
-    switch (provider) {
-      case "grok":
-        return { text: "xI", bg: "bg-orange-500/10 text-orange-400 border-orange-500/25" };
-      case "openai":
-        return { text: "O", bg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/25" };
-      case "google":
-        return { text: "G", bg: "bg-blue-500/10 text-blue-400 border-blue-500/25" };
-      case "blackforest":
-        return { text: "BF", bg: "bg-amber-500/10 text-amber-400 border-amber-500/25" };
-      case "bytedance":
-        return { text: "BD", bg: "bg-purple-500/10 text-purple-400 border-purple-500/25" };
-      case "midjourney":
-        return { text: "MJ", bg: "bg-indigo-500/10 text-indigo-400 border-indigo-500/25" };
-      case "kling":
-        return { text: "KL", bg: "bg-rose-500/10 text-rose-400 border-rose-500/25" };
-      case "vidu":
-        return { text: "VD", bg: "bg-cyan-500/10 text-cyan-400 border-cyan-500/25" };
-      case "minimax":
-        return { text: "MX", bg: "bg-pink-500/10 text-pink-400 border-pink-500/25" };
-      case "ideogram":
-        return { text: "ID", bg: "bg-yellow-500/10 text-yellow-400 border-yellow-500/25" };
-      case "luma":
-        return { text: "LM", bg: "bg-teal-500/10 text-teal-400 border-teal-500/25" };
-      case "alibaba":
-        return { text: "AL", bg: "bg-sky-500/10 text-sky-400 border-sky-500/25" };
-      case "leonardoai":
-        return { text: "LE", bg: "bg-violet-500/10 text-violet-400 border-violet-500/25" };
-      case "stability":
-        return { text: "SD", bg: "bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/25" };
-      default:
-        const name = provider ? provider.toUpperCase() : "AI";
-        return { text: name.substring(0, 2), bg: "bg-primary/10 text-primary border-primary/25" };
-    }
-  };
 
   // Dynamically compute list of providers from the input models list
   const availableProviders = [];
@@ -755,14 +874,14 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy }) {
   return (
     <div className="flex gap-4 h-full max-h-[60vh] min-h-[350px] overflow-x-hidden">
       {/* Left Sidebar: Provider tabs */}
-      <div className="flex flex-col gap-2.5 items-center pr-2 border-r border-white/5 shrink-0 select-none overflow-y-auto custom-scrollbar w-14 pt-0.5">
+      <div className="flex flex-col gap-2.5 items-center pr-2 border-r border-line-subtle shrink-0 select-none overflow-y-auto custom-scrollbar w-14 pt-0.5">
         <button
           type="button"
           onClick={() => setSelectedProvider("all")}
           className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all flex-shrink-0 cursor-pointer ${
             selectedProvider === "all"
-              ? "bg-white/10 text-yellow-400 border-yellow-500/30 shadow-md scale-105"
-              : "bg-white/[0.02] text-white/50 border-white/[0.03] hover:bg-white/5 hover:text-white"
+              ? "bg-wash-press text-yellow-400 border-yellow-500/30 shadow-elevation-2 scale-105"
+              : "bg-wash text-ink-subtle border-line-subtle hover:bg-wash hover:text-ink"
           }`}
           title={t.allProviders}
         >
@@ -780,22 +899,28 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy }) {
               type="button"
               onClick={() => setSelectedProvider(p.id)}
               aria-pressed={isSelected}
-              className={`w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center overflow-hidden font-black text-[10px] border transition-all cursor-pointer ${
+              className={`w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center overflow-hidden font-black text-micro border transition-all cursor-pointer ${
                 isSelected
-                  ? `${style.bg} scale-105 shadow-md shadow-black/10`
-                  : "bg-white/[0.02] text-white/40 border-white/[0.02] hover:bg-white/5 hover:text-white/80"
+                  ? `${style.bg} scale-105 shadow-elevation-2 shadow-black/10`
+                  : "bg-wash text-ink-subtle border-line-subtle hover:bg-wash hover:text-ink"
               }`}
               title={p.name}
             >
-              {PROVIDER_LOGOS[p.id] ? (
-                <img
-                  src={PROVIDER_LOGOS[p.id]}
-                  alt={p.name}
-                  className={`w-full h-full rounded-full object-contain ${invertLogos.includes(p.id) ? "invert" : ""}`}
-                />
-              ) : (
-                style.text
-              )}
+              {(() => {
+                const logo = getProviderLogo(p.id);
+                return logo ? (
+                  <img
+                    src={logo}
+                    alt={p.name}
+                    className={`w-full h-full rounded-full object-contain ${invertLogos.includes(p.id) ? "invert" : ""}`}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  style.text
+                );
+              })()}
             </button>
           );
         })}
@@ -803,7 +928,7 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy }) {
 
       {/* Right Pane: Search input + Models list */}
       <div className="flex-1 flex flex-col gap-2 min-w-0">
-        <div className="border-b border-white/5 shrink-0 pb-2 space-y-2">
+        <div className="border-b border-line-subtle shrink-0 pb-2 space-y-2">
           <div className="flex gap-1.5 overflow-x-auto custom-scrollbar pb-0.5">
             {modelCategories.map((category) => (
               <button
@@ -813,17 +938,17 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy }) {
                   setSelectedCategory(category.id);
                   setSelectedProvider("all");
                 }}
-                className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition-colors border ${
+                className={`shrink-0 rounded-lg px-2.5 py-1.5 text-micro font-bold transition-colors border ${
                   selectedCategory === category.id
                     ? "bg-primary/15 text-primary border-primary/30"
-                    : "bg-white/[0.02] text-white/50 border-white/[0.04] hover:bg-white/5 hover:text-white"
+                    : "bg-wash text-ink-subtle border-line-subtle hover:bg-wash hover:text-ink"
                 }`}
               >
                 {category.label}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-2 border border-white/5 focus-within:border-primary/50 transition-colors">
+          <div className="flex items-center gap-3 bg-wash rounded-xl px-4 py-2 border border-line-subtle focus-within:border-primary/50 transition-colors">
             <svg
               width="14"
               height="14"
@@ -846,7 +971,7 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy }) {
                 setSearch(value);
                 if (value.trim()) setSelectedProvider("all");
               }}
-              className="bg-transparent border-none text-xs text-white focus:ring-0 w-full p-0 focus:outline-none"
+              className="bg-transparent border-none text-xs text-ink focus:ring-0 w-full p-0 focus:outline-none"
             />
           </div>
         </div>
@@ -854,7 +979,7 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy }) {
         <div className="text-xs font-semibold text-secondary py-1 shrink-0 flex items-center justify-between">
           <span>{activeCategory.label} {t.modelsSuffix}</span>
           {selectedProvider !== "all" && (
-            <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-white/60">
+            <span className="text-micro bg-wash px-2 py-0.5 rounded text-ink-muted">
               {availableProviders.find(p => p.id === selectedProvider)?.name || selectedProvider}
             </span>
           )}
@@ -862,13 +987,15 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy }) {
         
         <div className="flex flex-col gap-1.5 overflow-y-auto custom-scrollbar pr-1 pb-2 flex-1">
           {filtered.length === 0 ? (
-            <div className="text-xs text-white/30 text-center py-6">
+            <div className="text-xs text-ink-subtle text-center py-6">
               {t.noModelsFound}
             </div>
           ) : (
             filtered.map((entry) => {
               const { family } = entry;
               const isSelected = selectedEntry === entry;
+              const desc = getModelDescription(entry.id || family.id);
+              const badge = getModelBadge(entry.id || family.id);
               return (
               <div
                 key={entry.id}
@@ -878,56 +1005,69 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy }) {
                   onSelect(entry, activeCategory.id);
                   onClose();
                 }}
-                className={`flex items-center justify-between p-3 hover:bg-white/5 rounded-lg cursor-pointer transition-all border border-transparent hover:border-white/5 ${
-                  isSelected ? "bg-white/5 border-white/5" : ""
+                className={`flex items-center justify-between p-2.5 sm:p-3 hover:bg-wash-strong rounded-xl cursor-pointer transition-all border ${
+                  isSelected ? "bg-wash-strong border-brand-line shadow-elevation-2 shadow-black/20" : "border-transparent hover:border-line"
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  {PROVIDER_LOGOS[family.provider] ? (
-                    <div className="w-8 h-8 rounded-full border border-white/5 overflow-hidden shrink-0 flex items-center justify-center bg-white/[0.02]">
-                      <img
-                        src={PROVIDER_LOGOS[family.provider]}
-                        alt={family.provider_name}
-                        className={`w-full h-full object-contain p-1 ${invertLogos.includes(family.provider) ? "invert" : ""}`}
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className={`w-8 h-8 ${
-                        family.id.includes("kontext")
-                          ? "bg-blue-500/10 text-blue-400 border-blue-500/10"
-                          : family.id.includes("effects")
-                            ? "bg-purple-500/10 text-purple-400 border-purple-500/10"
-                            : "bg-primary/10 text-primary border-primary/10"
-                      } border rounded-full flex items-center justify-center font-bold text-xs shadow-inner uppercase`}
-                    >
-                      {entry.name.charAt(0)}
-                    </div>
-                  )}
-                  <div className="flex flex-col gap-0.5 min-w-0">
-                    <span className="text-xs font-bold text-white tracking-tight truncate">
-                      {entry.name}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                    {selectedProvider === "all" && family.provider_name && (
-                      <span className="text-[9px] text-white/40">
-                        {family.provider_name}
+                <div className="flex items-center gap-3 min-w-0">
+                  {(() => {
+                    const logo = getProviderLogo(family.provider);
+                    return logo ? (
+                      <div className="w-9 h-9 rounded-xl border border-line overflow-hidden shrink-0 flex items-center justify-center bg-wash p-1.5 shadow-inner">
+                        <img
+                          src={logo}
+                          alt={family.provider_name}
+                          className={`w-full h-full object-contain ${invertLogos.includes(family.provider) ? "invert" : ""}`}
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className={`w-9 h-9 rounded-xl ${
+                          family.id.includes("kontext")
+                            ? "bg-info-soft text-info border-info-soft"
+                            : family.id.includes("effects")
+                              ? "bg-purple-500/10 text-purple-400 border-purple-500/10"
+                              : "bg-brand-soft text-brand border-brand-soft"
+                        } border flex items-center justify-center font-bold text-xs shadow-inner uppercase shrink-0`}
+                      >
+                        {entry.name.charAt(0)}
+                      </div>
+                    );
+                  })()}
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs sm:text-sm font-bold text-ink tracking-tight truncate">
+                        {entry.name}
                       </span>
-                    )}
+                      {badge && (
+                        <span className="text-micro px-1.5 py-0.2 rounded-full bg-brand-soft text-brand border border-brand-line font-medium">
+                          {badge}
+                        </span>
+                      )}
                     </div>
+                    <span className="text-[11px] text-ink-subtle truncate mt-0.5 max-w-[260px] sm:max-w-[320px]">
+                      {desc}
+                    </span>
                   </div>
                 </div>
                 {isSelected && (
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#22d3ee"
-                    strokeWidth="4"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <div className="w-5 h-5 rounded-full bg-brand-pressed border border-brand-ring flex items-center justify-center shrink-0 ml-2">
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#22d3ee"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
                 )}
               </div>
               );
@@ -964,6 +1104,478 @@ function SimpleDropdown({ title, options, selected, onSelect, onClose }) {
   );
 }
 
+// ─── ParamsPopoverPanel (Figure 2) ──────────────────────────────────────────
+
+// ─── ParamsPopoverPanel (清晰的比例、分辨率与自定义 PX 面板) ─────────────────
+
+function ParamsPopoverPanel({
+  selectedAr,
+  onSelectAr,
+  aspectRatios = [],
+  selectedQuality,
+  onSelectQuality,
+  onSelectPresetDimension,
+  resolutions = [],
+  batchSize,
+  onChangeBatchSize,
+  customWidth,
+  customHeight,
+  onChangeDimensions,
+  onSwapDimensions,
+  dimensionMode,
+  onChangeDimensionMode,
+  supplementalInputs,
+  modelParameterValues,
+  onChangeModelParameter,
+  copy,
+  onClose,
+}) {
+  const t = copy.paramsPanel || {};
+  const [activeTab, setActiveTab] = useState(
+    dimensionMode === "custom" || selectedAr === "custom" ? "custom" : "preset"
+  );
+  const [inputW, setInputW] = useState(String(customWidth || 1024));
+  const [inputH, setInputH] = useState(String(customHeight || 1024));
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  useEffect(() => {
+    setActiveTab(
+      dimensionMode === "custom" || selectedAr === "custom" ? "custom" : "preset"
+    );
+  }, [dimensionMode, selectedAr]);
+
+  useEffect(() => {
+    setInputW(String(customWidth || 1024));
+  }, [customWidth]);
+
+  useEffect(() => {
+    setInputH(String(customHeight || 1024));
+  }, [customHeight]);
+
+  const commitDimensions = (wStr, hStr) => {
+    const rawW = parseInt(wStr, 10);
+    const rawH = parseInt(hStr, 10);
+    const validW = Math.round(Math.max(256, Math.min(4096, isNaN(rawW) ? 1024 : rawW)) / 64) * 64;
+    const validH = Math.round(Math.max(256, Math.min(4096, isNaN(rawH) ? 1024 : rawH)) / 64) * 64;
+    setInputW(String(validW));
+    setInputH(String(validH));
+    onChangeDimensions(validW, validH);
+  };
+
+  const standardRatios = [
+    { id: "1:1", label: "1:1", name: "方形", desc: "头像 / 社交图" },
+    { id: "16:9", label: "16:9", name: "横屏", desc: "电脑壁纸 / 宽屏" },
+    { id: "9:16", label: "9:16", name: "竖屏", desc: "手机壁纸 / 故事" },
+    { id: "4:3", label: "4:3", name: "标清横", desc: "标准横屏" },
+    { id: "3:4", label: "3:4", name: "社交竖", desc: "标准竖屏" },
+    { id: "3:2", label: "3:2", name: "经典横", desc: "相机画幅" },
+    { id: "2:3", label: "2:3", name: "经典竖", desc: "人像画幅" },
+    { id: "21:9", label: "21:9", name: "电影宽屏", desc: "超宽银幕" },
+    { id: "adaptive", label: "自适应", name: "智能比例", desc: "自适应参考图" },
+  ];
+
+  const clarityOptions = [
+    { id: "1K", label: "标清 1K", desc: "约1024px · 基础质量" },
+    { id: "2K", label: "高清 2K ✦", desc: "约2048px · 推荐平衡" },
+    { id: "4K", label: "超清 4K ✦", desc: "约4096px · 极致细节" },
+  ];
+
+  const currentTier = (() => {
+    const s = String(selectedQuality || "2K").toLowerCase();
+    if (s.includes("1k") || s.includes("1.5k") || s.includes("720") || s === "basic" || s === "low" || s.includes("标清") || s.includes("standard")) return "1K";
+    if (s.includes("4k") || s.includes("8k") || s.includes("ultra") || s.includes("超清")) return "4K";
+    return "2K";
+  })();
+
+  const quickPresets = [
+    {
+      group: "横屏",
+      items: [
+        { label: "1920×1080", name: "全高清 1080P", w: 1920, h: 1080, ar: "16:9" },
+        { label: "2560×1440", name: "2K QHD", w: 2560, h: 1440, ar: "16:9" },
+        { label: "3840×2160", name: "4K UHD", w: 3840, h: 2160, ar: "16:9" },
+        { label: "1280×720", name: "720P 标清", w: 1280, h: 720, ar: "16:9" },
+      ],
+    },
+    {
+      group: "竖屏",
+      items: [
+        { label: "1080×1920", name: "手机全高清", w: 1080, h: 1920, ar: "9:16" },
+        { label: "1440×2560", name: "2K 竖屏", w: 1440, h: 2560, ar: "9:16" },
+        { label: "720×1280", name: "720P 标清", w: 720, h: 1280, ar: "9:16" },
+      ],
+    },
+    {
+      group: "方形",
+      items: [
+        { label: "1024×1024", name: "1K 方形", w: 1024, h: 1024, ar: "1:1" },
+        { label: "2048×2048", name: "2K 方形", w: 2048, h: 2048, ar: "1:1" },
+        { label: "4096×4096", name: "4K 方形", w: 4096, h: 4096, ar: "1:1" },
+      ],
+    },
+  ];
+
+  return (
+    <div className="flex flex-col gap-3.5 p-3.5 w-[360px] sm:w-[440px] max-w-[calc(100vw-2rem)] text-ink select-none">
+      {/* 顶部标题与当前生效尺寸展示 */}
+      <div className="flex items-center justify-between pb-2 border-b border-line">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold tracking-wide text-ink">
+            {t.titleDimensions || "尺寸与分辨率"}
+          </span>
+          <span className="px-1.5 py-0.5 rounded text-micro font-semibold bg-brand-soft text-brand border border-brand-line">
+            {activeTab === "custom" ? "自定义PX模式" : "预设规格模式"}
+          </span>
+        </div>
+        <span className="text-xs font-mono text-brand font-bold">
+          {customWidth} × {customHeight} PX · {currentTier}
+        </span>
+      </div>
+
+      {/* 模式切换选项卡 */}
+      <div className="grid grid-cols-2 gap-1 bg-wash p-1 rounded-xl border border-line">
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab("preset");
+            onChangeDimensionMode?.("preset");
+          }}
+          className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center ${
+            activeTab === "preset"
+              ? "bg-brand-active text-ink-on-accent font-bold shadow-elevation-1"
+              : "text-ink-muted hover:text-ink hover:bg-wash"
+          }`}
+        >
+          常用比例与清晰度
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab("custom");
+            onChangeDimensionMode?.("custom");
+          }}
+          className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center ${
+            activeTab === "custom"
+              ? "bg-brand-active text-ink-on-accent font-bold shadow-elevation-1"
+              : "text-ink-muted hover:text-ink hover:bg-wash"
+          }`}
+        >
+          自定义像素 (PX)
+        </button>
+      </div>
+
+      {/* 模式一：常用比例与清晰度 */}
+      {activeTab === "preset" && (
+        <div className="flex flex-col gap-3">
+          <p className="text-[11px] text-ink-subtle leading-relaxed -mt-1">
+            选择画面比例与清晰度档位，系统将自动换算标准画布像素。
+          </p>
+
+          {/* 1. 画面比例 */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-ink">
+                1. {t.titleRatio || "选择画面比例"}
+              </span>
+              <span className="text-[11px] text-brand font-mono">
+                {selectedAr || "1:1"}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+              {standardRatios.map((item) => {
+                const isSelected = selectedAr === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onSelectAr(item.id)}
+                    className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-brand-pressed border-brand text-ink shadow-elevation-2 shadow-brand-soft scale-[1.02]"
+                        : "bg-wash border-line-subtle hover:bg-wash-strong hover:border-line-strong text-ink-muted hover:text-ink"
+                    }`}
+                  >
+                    <div className="h-5 flex items-center justify-center">
+                      <AspectLineIcon ratio={item.id} active={isSelected} />
+                    </div>
+                    <span className={`text-[11px] tracking-tight ${isSelected ? "font-bold text-brand" : "font-medium"}`}>
+                      {item.label}
+                    </span>
+                    <span className="text-micro text-ink-subtle truncate max-w-full">
+                      {item.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 2. 清晰度规格 */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-ink">
+                2. {t.titleResolution || "清晰度规格"}
+              </span>
+              <span className="text-[11px] text-ink-subtle">
+                自动换算像素尺寸
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {clarityOptions.map((item) => {
+                const isSelected = currentTier === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onSelectQuality(item.id, false)}
+                    className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-brand-pressed text-brand border-brand shadow-elevation-1 font-bold scale-[1.02]"
+                        : "bg-wash border-line-subtle text-ink-muted hover:text-ink hover:bg-wash-strong"
+                    }`}
+                  >
+                    <span className="text-xs font-bold">{item.label}</span>
+                    <span className="text-micro text-ink-subtle mt-0.5">{item.desc}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 模式二：自定义像素 (PX) */}
+      {activeTab === "custom" && (
+        <div className="flex flex-col gap-3">
+          <p className="text-[11px] text-ink-subtle leading-relaxed -mt-1">
+            精准指定画布像素宽高（或套用预设），下方清晰度规格作为模型渲染质量参数协同生效。
+          </p>
+
+          {/* 精准输入区 */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-ink">
+                1. 输入像素尺寸 (PX)
+              </span>
+              <span className="text-micro text-ink-subtle font-mono">
+                范围 256 ~ 4096 (64倍数对齐)
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              {/* 宽输入框 */}
+              <div className="flex-1 flex items-center justify-between px-3 py-2 rounded-xl bg-wash border border-line text-ink focus-within:border-brand-ring transition-colors">
+                <span className="text-ink-subtle text-[11px] font-bold font-mono mr-2">W</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={inputW}
+                  onChange={(e) => setInputW(e.target.value.replace(/\D/g, ""))}
+                  onBlur={() => commitDimensions(inputW, inputH)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") commitDimensions(inputW, inputH);
+                  }}
+                  className="w-full bg-transparent text-right font-mono font-bold text-sm text-brand-hover"
+                  placeholder="宽"
+                />
+                <span className="text-ink-subtle text-micro font-mono ml-1">PX</span>
+              </div>
+
+              {/* ⇄ 宽高互换按钮 */}
+              <button
+                type="button"
+                onClick={() => {
+                  commitDimensions(inputH, inputW);
+                  onSwapDimensions();
+                }}
+                className="w-8 h-8 rounded-xl bg-wash border border-line hover:bg-wash-press hover:border-brand-ring text-ink-muted hover:text-brand flex items-center justify-center transition-all cursor-pointer shrink-0"
+                title="交换宽与高 (横竖切换)"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 16V4m0 0L3 8m4-4l4 4m10 4v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+              </button>
+
+              {/* 高输入框 */}
+              <div className="flex-1 flex items-center justify-between px-3 py-2 rounded-xl bg-wash border border-line text-ink focus-within:border-brand-ring transition-colors">
+                <span className="text-ink-subtle text-[11px] font-bold font-mono mr-2">H</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={inputH}
+                  onChange={(e) => setInputH(e.target.value.replace(/\D/g, ""))}
+                  onBlur={() => commitDimensions(inputW, inputH)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") commitDimensions(inputW, inputH);
+                  }}
+                  className="w-full bg-transparent text-right font-mono font-bold text-sm text-brand-hover"
+                  placeholder="高"
+                />
+                <span className="text-ink-subtle text-micro font-mono ml-1">PX</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 常用像素预设 */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-ink">
+                2. 常用像素预设 (PX)
+              </span>
+              <span className="text-micro text-ink-subtle">
+                点击一键套用标准画幅尺寸
+              </span>
+            </div>
+            <div className="flex flex-col gap-2">
+              {quickPresets.map((group) => (
+                <div key={group.group} className="flex flex-col gap-1">
+                  <span className="text-micro text-ink-subtle pl-0.5">{group.group}规格</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                    {group.items.map((item) => {
+                      const isSelected = customWidth === item.w && customHeight === item.h;
+                      return (
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={() => {
+                            setInputW(String(item.w));
+                            setInputH(String(item.h));
+                            const tier = item.w >= 3840 || item.h >= 3840 ? "4K" : (item.w <= 1280 && item.h <= 720 ? "1K" : "2K");
+                            if (onSelectPresetDimension) {
+                              onSelectPresetDimension(item.w, item.h, item.ar, tier);
+                            } else {
+                              onChangeDimensions(item.w, item.h, item.ar);
+                              onSelectQuality(tier, true);
+                            }
+                          }}
+                          className={`px-2 py-1.5 rounded-lg text-left transition-all cursor-pointer border flex flex-col ${
+                            isSelected
+                              ? "bg-brand-pressed text-brand-hover border-brand-ring font-bold shadow-elevation-1"
+                              : "bg-wash text-ink-muted border-line-subtle hover:bg-wash-strong hover:text-ink"
+                          }`}
+                        >
+                          <span className="text-[11px] font-mono font-bold">{item.label}</span>
+                          <span className="text-micro text-ink-subtle truncate">{item.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 清晰度规格协同选择 */}
+          <div className="flex flex-col gap-1.5 pt-1 border-t border-line-subtle">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-ink">
+                3. 模型渲染清晰度规格
+              </span>
+              <span className="text-micro text-brand">
+                当前档位：{currentTier}
+              </span>
+            </div>
+            <p className="text-micro text-ink-subtle -mt-0.5">
+              控制模型输出质量与算力档位，不覆盖上方自定义像素尺寸。
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {clarityOptions.map((item) => {
+                const isSelected = currentTier === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onSelectQuality(item.id, true)}
+                    className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-brand-pressed text-brand border-brand shadow-elevation-1 font-bold scale-[1.02]"
+                        : "bg-wash border-line-subtle text-ink-muted hover:text-ink hover:bg-wash-strong"
+                    }`}
+                  >
+                    <span className="text-xs font-bold">{item.label}</span>
+                    <span className="text-micro text-ink-subtle mt-0.5">{item.desc}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. 生成张数 */}
+      <div className="flex flex-col gap-1.5 pt-1 border-t border-line-subtle">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-ink">
+            {t.titleQuantity || "生成数量"}
+          </span>
+          <span className="text-[11px] text-brand font-mono">
+            {batchSize} 张
+          </span>
+        </div>
+        <div className="grid grid-cols-4 gap-2 bg-wash p-1 rounded-xl border border-line-subtle">
+          {[1, 2, 3, 4].map((num) => {
+            const isSelected = batchSize === num;
+            return (
+              <button
+                key={num}
+                type="button"
+                onClick={() => onChangeBatchSize(num)}
+                className={`py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center ${
+                  isSelected
+                    ? "bg-brand-active text-ink-on-accent font-bold shadow-elevation-1"
+                    : "text-ink-subtle hover:text-ink hover:bg-wash"
+                }`}
+              >
+                {num} 张
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4. 高级参数折叠 */}
+      {supplementalInputs && Object.keys(supplementalInputs).length > 0 && (
+        <div className="pt-1.5 border-t border-line-subtle flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="flex items-center justify-between text-xs text-ink-subtle hover:text-ink transition-colors py-1"
+          >
+            <span>高级参数调节</span>
+            <PromptChevronIcon className={showAdvanced ? "rotate-180" : ""} />
+          </button>
+          {showAdvanced && (
+            <div className="max-h-44 overflow-y-auto custom-scrollbar flex flex-col gap-2.5 pr-1">
+              {Object.entries(supplementalInputs).map(([key, input]) => (
+                <div key={key} className="flex flex-col gap-1 text-xs">
+                  <span className="text-[11px] text-ink-muted">{input.title || key}</span>
+                  {input.type === "string" && !input.enum ? (
+                    <input
+                      type="text"
+                      value={modelParameterValues[key] ?? input.default ?? ""}
+                      onChange={(e) => onChangeModelParameter(key, e.target.value)}
+                      className="bg-wash border border-line rounded-lg px-2.5 py-1 text-xs text-ink focus:border-brand-ring"
+                    />
+                  ) : input.enum ? (
+                    <select
+                      value={modelParameterValues[key] ?? input.default ?? input.enum[0]}
+                      onChange={(e) => onChangeModelParameter(key, e.target.value)}
+                      className="bg-raised border border-line rounded-lg px-2 py-1 text-xs text-ink focus:border-brand-ring"
+                    >
+                      {input.enum.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function ImageStudio({
@@ -978,7 +1590,7 @@ export default function ImageStudio({
   onFilesHandled,
   locale = "en",
 }) {
-  const copy = resolveCopy(en, zh, locale);
+  const copy = resolveCopy(en, { 'zh-CN': zh, 'ja-JP': ja, 'ko-KR': ko, 'zh-TW': zhTw, es }, locale);
   const LEGACY_PERSIST_KEY = "hg_image_studio_persistent";
   const PERSIST_KEY = scopedPersistKey(LEGACY_PERSIST_KEY, apiKey);
   useEffect(() => {
@@ -988,6 +1600,7 @@ export default function ImageStudio({
   // ── Model state ─────────────────────────────────────────────────────────
   const initialFamily = imageModelCatalog.familyByVariantId.get(t2iModels[0].id);
   const [imageMode, setImageMode] = useState(false); // false=t2i, true=i2i
+  const [dimensionMode, setDimensionMode] = useState("preset"); // "preset" | "custom"
   const [selectedModelId, setSelectedModelId] = useState(t2iModels[0].id);
   const [selectedFamilyId, setSelectedFamilyId] = useState(initialFamily.id);
   const [selectedAr, setSelectedAr] = useState(
@@ -997,10 +1610,74 @@ export default function ImageStudio({
     const resolutions = getResolutionsForModel(t2iModels[0].id);
     return resolutions[0] || null;
   });
+  const [customWidth, setCustomWidth] = useState(() => {
+    const initAr = t2iModels[0].inputs?.aspect_ratio?.default || "1:1";
+    const initQual = getResolutionsForModel(t2iModels[0].id)[0] || "2K";
+    return calculatePixelDimensions(initAr, initQual).width;
+  });
+  const [customHeight, setCustomHeight] = useState(() => {
+    const initAr = t2iModels[0].inputs?.aspect_ratio?.default || "1:1";
+    const initQual = getResolutionsForModel(t2iModels[0].id)[0] || "2K";
+    return calculatePixelDimensions(initAr, initQual).height;
+  });
   const [selectedEffect, setSelectedEffect] = useState("");
   const [modelParameterValues, setModelParameterValues] = useState(() =>
     createModelParameterValues(t2iModels[0]),
   );
+
+  // ── Dimensions and aspect ratio callbacks ──────────────────────────────
+  const handleSelectAr = useCallback((ratio) => {
+    setDimensionMode("preset");
+    setSelectedAr(ratio);
+    const dims = calculatePixelDimensions(ratio, selectedQuality || "2K");
+    setCustomWidth(dims.width);
+    setCustomHeight(dims.height);
+  }, [selectedQuality]);
+
+  const handleSelectQuality = useCallback((quality, keepCustomMode = false) => {
+    setSelectedQuality(quality);
+    if (!keepCustomMode && dimensionMode !== "custom") {
+      setDimensionMode("preset");
+      const dims = calculatePixelDimensions(selectedAr, quality);
+      setCustomWidth(dims.width);
+      setCustomHeight(dims.height);
+    }
+  }, [selectedAr, dimensionMode]);
+
+  const handleSelectPresetDimension = useCallback((w, h, ar, tier) => {
+    setDimensionMode("custom");
+    const validW = Math.round(Math.max(256, Math.min(4096, parseInt(w, 10) || 1024)) / 64) * 64;
+    const validH = Math.round(Math.max(256, Math.min(4096, parseInt(h, 10) || 1024)) / 64) * 64;
+    setCustomWidth(validW);
+    setCustomHeight(validH);
+    if (ar) {
+      setSelectedAr(ar);
+    } else {
+      const closest = findClosestAspectRatio(validW, validH);
+      setSelectedAr(closest);
+    }
+    if (tier) {
+      setSelectedQuality(tier);
+    }
+  }, []);
+
+  const handleChangeDimensions = useCallback((w, h, ar) => {
+    setDimensionMode("custom");
+    const validW = Math.round(Math.max(256, Math.min(4096, parseInt(w, 10) || 1024)) / 64) * 64;
+    const validH = Math.round(Math.max(256, Math.min(4096, parseInt(h, 10) || 1024)) / 64) * 64;
+    setCustomWidth(validW);
+    setCustomHeight(validH);
+    if (ar) {
+      setSelectedAr(ar);
+    } else {
+      const closest = findClosestAspectRatio(validW, validH);
+      setSelectedAr(closest);
+    }
+  }, []);
+
+  const handleSwapDimensions = useCallback(() => {
+    handleChangeDimensions(customHeight, customWidth);
+  }, [customHeight, customWidth, handleChangeDimensions]);
 
   // ── Prompt / upload state ───────────────────────────────────────────────
   const [prompt, setPrompt] = useState("");
@@ -1014,6 +1691,11 @@ export default function ImageStudio({
   const [generateError, setGenerateError] = useState(null);
   const [fullscreenUrl, setFullscreenUrl] = useState(null);
   const [isDrawModalOpen, setIsDrawModalOpen] = useState(false);
+  const globalFileInputRef = useRef(null);
+  const paramsPanelRef = useRef(null);
+  const modeSelectRef = useRef(null);
+  const [isParamsPanelOpen, setIsParamsPanelOpen] = useState(false);
+  const [isModeSelectOpen, setIsModeSelectOpen] = useState(false);
 
   // ── Canvas / history state ──────────────────────────────────────────────
   const [currentImageUrl, setCurrentImageUrl] = useState(null);
@@ -1046,62 +1728,66 @@ export default function ImageStudio({
 
   // ── Close dropdown on outside click ─────────────────────────────────────
   useEffect(() => {
-    if (!dropdownOpen) return;
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(null);
       }
+      if (paramsPanelRef.current && !paramsPanelRef.current.contains(e.target)) {
+        setIsParamsPanelOpen(false);
+      }
+      if (modeSelectRef.current && !modeSelectRef.current.contains(e.target)) {
+        setIsModeSelectOpen(false);
+      }
     };
     window.addEventListener("click", handler);
     return () => window.removeEventListener("click", handler);
-  }, [dropdownOpen]);
-
-  // ── Persistence: Load ────────────────────────────────────────────────────
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(PERSIST_KEY);
-      if (stored) {
-        const data = JSON.parse(stored);
-        if (data.imageMode !== undefined) setImageMode(data.imageMode);
-        if (data.selectedModelId) {
-          const restoredFamily = imageModelCatalog.familyByVariantId.get(data.selectedModelId);
-          const restoredVariant = imageModelCatalog.variantById.get(data.selectedModelId);
-          if (restoredFamily) {
-            setSelectedModelId(data.selectedModelId);
-            setSelectedFamilyId(restoredFamily.id);
-            setModelParameterValues(
-              createModelParameterValues(
-                restoredVariant?.model,
-                data.modelParameterValues || {},
-              ),
-            );
-          }
-        }
-        if (data.selectedAr) setSelectedAr(data.selectedAr);
-        if (data.selectedQuality) setSelectedQuality(data.selectedQuality);
-        if (data.selectedEffect) setSelectedEffect(data.selectedEffect);
-        if (data.prompt) setPrompt(data.prompt);
-        if (data.uploadedImageUrls) setUploadedImageUrls(data.uploadedImageUrls);
-        if (data.uploadHistory) setUploadHistory(data.uploadHistory);
-        if (data.batchSize) setBatchSize(data.batchSize);
-        if (data.localHistory) setLocalHistory(data.localHistory);
-      }
-    } catch (err) {
-      console.warn("Failed to load ImageStudio persistence:", err);
-    }
   }, []);
 
-  // ── Adjust height on load ────────────────────────────────────────────────
-  // ── Persistence: Save ────────────────────────────────────────────────────
+
+  // ── Persistence: restore on mount ───────────────────────────────────────
+  const hasRestoredRef = useRef(false);
+  useEffect(() => {
+    if (hasRestoredRef.current) return;
+    hasRestoredRef.current = true;
+    try {
+      const raw = localStorage.getItem(PERSIST_KEY);
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      if (state.imageMode !== undefined) setImageMode(state.imageMode);
+      if (state.dimensionMode) setDimensionMode(state.dimensionMode);
+      if (state.selectedModelId) setSelectedModelId(state.selectedModelId);
+      if (state.selectedFamilyId) setSelectedFamilyId(state.selectedFamilyId);
+      if (state.selectedAr) setSelectedAr(state.selectedAr);
+      if (state.selectedQuality) setSelectedQuality(state.selectedQuality);
+      if (state.customWidth) setCustomWidth(state.customWidth);
+      if (state.customHeight) setCustomHeight(state.customHeight);
+      if (state.selectedEffect) setSelectedEffect(state.selectedEffect);
+      if (state.modelParameterValues) setModelParameterValues(state.modelParameterValues);
+      if (state.prompt !== undefined) setPrompt(state.prompt);
+      if (Array.isArray(state.uploadedImageUrls)) setUploadedImageUrls(state.uploadedImageUrls);
+      if (Array.isArray(state.uploadHistory)) setUploadHistory(state.uploadHistory);
+      if (typeof state.batchSize === "number" && state.batchSize >= 1 && state.batchSize <= 4) {
+        setBatchSize(state.batchSize);
+      }
+      if (Array.isArray(state.localHistory)) setLocalHistory(state.localHistory);
+    } catch (err) {
+      console.warn("Failed to restore ImageStudio persistence:", err);
+    }
+  }, [PERSIST_KEY]);
+
+  // ── Persistence: save on change ─────────────────────────────────────────
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
         const state = {
           imageMode,
+          dimensionMode,
           selectedModelId,
           selectedFamilyId,
           selectedAr,
           selectedQuality,
+          customWidth,
+          customHeight,
           selectedEffect,
           modelParameterValues,
           prompt,
@@ -1118,10 +1804,13 @@ export default function ImageStudio({
     return () => clearTimeout(timer);
   }, [
     imageMode,
+    dimensionMode,
     selectedModelId,
     selectedFamilyId,
     selectedAr,
     selectedQuality,
+    customWidth,
+    customHeight,
     selectedEffect,
     modelParameterValues,
     prompt,
@@ -1130,69 +1819,6 @@ export default function ImageStudio({
     batchSize,
     localHistory,
   ]);
-
-  const processDroppedImages = async (files) => {
-    const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
-    const tooLarge = files.filter((f) => f.size > MAX_IMAGE_SIZE);
-    if (tooLarge.length > 0) {
-      alert(
-        copy.uploadButton.tooLargeAlert.replace("{names}", tooLarge.map((f) => f.name).join(", "))
-      );
-      return;
-    }
-
-    const family = imageModelCatalog.familyById.get(selectedFamilyId);
-    const editor = getFamilyVariant(
-      imageModelCatalog,
-      family,
-      "i2i",
-      selectedModelId,
-    );
-    if (!editor) {
-      toast.error(copy.errors.noImageReferenceSupport.replace("{name}", family.name));
-      return;
-    }
-
-    setGenerating(true); // Show as generating/busy
-    try {
-      const uploadLimit = getMaxImagesForI2IModel(editor.model.id);
-      const toUpload =
-        uploadLimit === 1
-          ? files.slice(0, 1)
-          : files.slice(0, uploadLimit);
-      const urls = await Promise.all(
-        toUpload.map(async (file) => {
-          try {
-            return await uploadFile(apiKey, file);
-          } catch (err) {
-            console.error(
-              "[ImageStudio] Drop upload failed for",
-              file.name,
-              err
-            );
-            throw err;
-          }
-        })
-      );
-
-      handleUploadSelect({ urls });
-    } catch (err) {
-      alert(copy.uploadButton.uploadFailedAlert.replace("{message}", err.message));
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  // ── Handle Dropped Files ────────────────────────────────────────────────
-  useEffect(() => {
-    if (droppedFiles && droppedFiles.length > 0) {
-      const imageFiles = droppedFiles.filter(f => f.type.startsWith('image/'));
-      if (imageFiles.length > 0) {
-        processDroppedImages(imageFiles);
-      }
-      onFilesHandled?.();
-    }
-  }, [droppedFiles, onFilesHandled, processDroppedImages]);
 
   // ── Derived: current model lists & helpers ───────────────────────────────
   const currentAspectRatios = imageMode
@@ -1220,7 +1846,7 @@ export default function ImageStudio({
   );
   const referenceImageLimit = referenceVariant
     ? getModelMediaCapabilities(referenceVariant.model).image.maxItems
-    : 1;
+    : 4;
 
   const applySelectedVariant = useCallback((variant, mode, family) => {
     const model = variant.model;
@@ -1243,8 +1869,13 @@ export default function ImageStudio({
     setModelParameterValues((values) =>
       createModelParameterValues(model, values),
     );
-    setSelectedAr(ars[0] || "1:1");
-    setSelectedQuality(resolutions[0] || null);
+    const nextAr = ars[0] || "1:1";
+    const nextQual = selectedQuality || resolutions[0] || "2K";
+    setSelectedAr(nextAr);
+    setSelectedQuality(nextQual);
+    const dims = calculatePixelDimensions(nextAr, nextQual);
+    setCustomWidth(dims.width);
+    setCustomHeight(dims.height);
 
     if (nextImageMode) {
       const effects = getEffectsForI2IModel(model.id);
@@ -1257,6 +1888,88 @@ export default function ImageStudio({
       setSelectedEffect("");
     }
   }, []);
+
+  const handleFilesUpload = useCallback(async (files) => {
+    if (!files || !files.length) return;
+    const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+    const fileList = Array.from(files);
+    const tooLarge = fileList.filter((f) => f.size > MAX_IMAGE_SIZE);
+    if (tooLarge.length > 0) {
+      toast.error(
+        copy.uploadButton.tooLargeAlert.replace("{names}", tooLarge.map((f) => f.name).join(", "))
+      );
+      return;
+    }
+
+    const selection = selectionRef.current;
+    let family = imageModelCatalog.familyById.get(selection.selectedFamilyId);
+    let target = getImageReferenceVariant(
+      imageModelCatalog,
+      family,
+      selection.selectedModelId,
+    );
+
+    // If current model does not have direct reference variant, look for i2i variant in family
+    if (!target) {
+      target = getFamilyVariant(imageModelCatalog, family, "i2i", selection.selectedModelId);
+    }
+
+    // If still none, automatically fallback to flagship multi-reference model (Seedream 5.0 Edit)
+    if (!target) {
+      target = imageModelCatalog.variantById.get("bytedance-seedream-5.0-pro-edit")
+        || imageModelCatalog.variantById.get("bytedance-seedream-v5.0-edit")
+        || imageModelCatalog.variantById.get("seedream-5.0")
+        || Array.from(imageModelCatalog.variantById.values()).find(v => v.mode === "i2i");
+      if (target) {
+        family = imageModelCatalog.familyByVariantId.get(target.id);
+      }
+    }
+
+    if (!target) {
+      toast.error(copy.errors.noImageReferenceSupport.replace("{name}", family?.name || "当前模型"));
+      return;
+    }
+
+    // Check if auto-switching to i2i variant is needed
+    const currentMode = selection.imageMode ? "i2i" : "t2i";
+    if (target.model.id !== selection.selectedModelId || target.mode !== currentMode) {
+      applySelectedVariant(target, target.mode, family);
+      const targetName = imageModelPickerEntryByVariantId.get(target.id)?.name || target.model.name || family.name;
+      toast.success(
+        (copy.paramsPanel?.autoSwitchedToI2I || "已自动切换至支持参考图的模型：{model}").replace("{model}", targetName),
+        { icon: "✨", duration: 3000 }
+      );
+    }
+
+    const limit = getModelMediaCapabilities(target.model).image.maxItems || 4;
+    try {
+      const remaining = Math.max(1, limit - uploadedImageUrls.length);
+      const toUpload = fileList.slice(0, remaining);
+      const urls = await Promise.all(
+        toUpload.map(async (file) => {
+          return await uploadFile(apiKey, file);
+        })
+      );
+      setUploadedImageUrls((prev) => [...prev, ...urls].slice(0, limit));
+    } catch (err) {
+      toast.error(copy.uploadButton.uploadFailedAlert.replace("{message}", err.message));
+    }
+  }, [apiKey, applySelectedVariant, copy, uploadedImageUrls.length]);
+
+  const processDroppedImages = async (files) => {
+    await handleFilesUpload(files);
+  };
+
+  // ── Handle Dropped Files ────────────────────────────────────────────────
+  useEffect(() => {
+    if (droppedFiles && droppedFiles.length > 0) {
+      const imageFiles = droppedFiles.filter(f => f.type.startsWith('image/'));
+      if (imageFiles.length > 0) {
+        processDroppedImages(imageFiles);
+      }
+      onFilesHandled?.();
+    }
+  }, [droppedFiles, onFilesHandled, processDroppedImages]);
 
   const applyUserSelectedVariant = useCallback((variant, mode, family) => {
     if (mode === "t2i") {
@@ -1280,7 +1993,7 @@ export default function ImageStudio({
         imageModelCatalog,
         family,
         selection.selectedModelId,
-      );
+      ) || getFamilyVariant(imageModelCatalog, family, "i2i", selection.selectedModelId);
       if (!target) {
         toast.error(copy.errors.noImageReferenceSupport.replace("{name}", family.name));
         return;
@@ -1293,7 +2006,7 @@ export default function ImageStudio({
         applySelectedVariant(target, target.mode, family);
       }
     },
-    [applySelectedVariant],
+    [applySelectedVariant, copy],
   );
 
   const handleUploadClear = useCallback(() => {
@@ -1306,8 +2019,11 @@ export default function ImageStudio({
       "t2i",
       selection.selectedModelId,
     );
-    if (target) applySelectedVariant(target, "t2i", family);
-  }, [applySelectedVariant]);
+    if (target) {
+      applySelectedVariant(target, "t2i", family);
+      toast(copy.paramsPanel?.autoSwitchedToT2I || "已自动切回纯文生图模型", { icon: "🔄" });
+    }
+  }, [applySelectedVariant, copy]);
 
   // ── Model selection ──────────────────────────────────────────────────────
   const handleModelSelect = (pickerEntry, category = "all") => {
@@ -1347,8 +2063,13 @@ export default function ImageStudio({
     const family = imageModelCatalog.familyByVariantId.get(firstT2I.id);
     setSelectedModelId(firstT2I.id);
     setSelectedFamilyId(family.id);
-    setSelectedAr(ars[0] || "1:1");
+    const nextAr = ars[0] || "1:1";
+    const nextQual = resolutions[0] || "2K";
+    setSelectedAr(nextAr);
     setSelectedQuality(resolutions[0] || null);
+    const dims = calculatePixelDimensions(nextAr, nextQual);
+    setCustomWidth(dims.width);
+    setCustomHeight(dims.height);
     setSelectedEffect("");
     setModelParameterValues(createModelParameterValues(firstT2I));
   };
@@ -1357,24 +2078,47 @@ export default function ImageStudio({
   const handleGenerate = async () => {
     if (generating) return;
 
-    if (imageMode) {
-      if (uploadedImageUrls.length === 0) {
-        alert(copy.errors.uploadReferenceFirst);
+    const trimmedPrompt = (prompt || "").trim();
+    const hasImages = uploadedImageUrls && uploadedImageUrls.length > 0;
+
+    let effectiveImageMode = imageMode;
+    let targetVariant = selectedVariant;
+    let targetModelId = selectedModelId;
+
+    // Gracefully handle i2i when user has no reference images: auto switch to t2i so send is not blocked
+    if (effectiveImageMode && !hasImages) {
+      const family = imageModelCatalog.familyById.get(selectedFamilyId);
+      const t2iVar = family ? getFamilyVariant(imageModelCatalog, family, "t2i", selectedModelId) : null;
+      if (t2iVar) {
+        targetVariant = t2iVar;
+        targetModelId = t2iVar.model.id;
+      }
+      effectiveImageMode = false;
+      setImageMode(false);
+      toast(copy.paramsPanel?.autoSwitchedToT2I || "未上传参考图，已自动切回文生图", { icon: "🔄" });
+    }
+
+    if (effectiveImageMode) {
+      if (!hasImages) {
+        toast.error(copy.errors?.uploadReferenceFirst || "请先添加参考图片");
         return;
       }
-      const modelInfo = getI2IModelById(selectedModelId);
+      const modelInfo = getI2IModelById(targetModelId);
       if (modelInfo?.swapField && !swapImageUrl) {
-        alert(copy.errors.uploadSwapFaceFirst);
+        toast.error(copy.errors?.uploadSwapFaceFirst || "请先上传换脸目标图片");
         return;
       }
     } else {
-      const imageCapability = getModelMediaCapabilities(selectedVariant?.model).image;
-      if (uploadedImageUrls.length > 0 && imageCapability.maxItems === 0) {
-        alert(copy.errors.noImageReferenceSupport.replace("{name}", selectedModelDisplayName));
+      const imageCapability = getModelMediaCapabilities(targetVariant?.model)?.image;
+      if (hasImages && imageCapability?.maxItems === 0) {
+        toast.error(
+          (copy.errors?.noImageReferenceSupport || "{name} 不支持参考图").replace("{name}", selectedModelDisplayName)
+        );
         return;
       }
-      if (!prompt.trim()) {
-        alert(copy.errors.enterPromptFirst);
+      if (!trimmedPrompt && !hasImages) {
+        toast.error(copy.errors?.enterPromptFirst || "请输入提示词以生成图像");
+        textareaRef.current?.focus();
         return;
       }
     }
@@ -1383,73 +2127,117 @@ export default function ImageStudio({
     setGenerating(true);
     setGenerateError(null);
 
+    const count = Math.max(1, Math.min(4, parseInt(batchSize, 10) || 1));
+    const validW = Math.round(Math.max(256, Math.min(4096, parseInt(customWidth, 10) || 1024)) / 64) * 64;
+    const validH = Math.round(Math.max(256, Math.min(4096, parseInt(customHeight, 10) || 1024)) / 64) * 64;
+
+    const modelArs = effectiveImageMode
+      ? getAspectRatiosForI2IModel(targetModelId)
+      : getAspectRatiosForModel(targetModelId);
+    const effectiveAr = findClosestSupportedAspectRatio(validW, validH, modelArs);
+
     try {
-      const results = await Promise.all(
-        Array.from({ length: batchSize }).map(async () => {
-          if (imageMode) {
+      const settledResults = await Promise.allSettled(
+        Array.from({ length: count }).map(async () => {
+          const targetModel = targetVariant?.model || (effectiveImageMode ? getI2IModelById(targetModelId) : getModelById(targetModelId));
+          const supportsDimensions = Boolean(targetModel?.inputs?.width || targetModel?.inputs?.height);
+          const resolvedQuality = resolveModelQualityOrResolution(targetModel, selectedQuality);
+
+          if (effectiveImageMode) {
             const genParams = {
-              model: selectedModelId,
+              model: targetModelId,
               ...buildSupplementalInputPayload(
-                selectedVariant?.model,
+                targetVariant?.model,
                 modelParameterValues,
               ),
               images_list: uploadedImageUrls,
               image_url: uploadedImageUrls[0],
-              aspect_ratio: selectedAr,
+              aspect_ratio: effectiveAr,
             };
+            if (supportsDimensions) {
+              genParams.width = validW;
+              genParams.height = validH;
+            }
             if (swapImageUrl) genParams.swap_url = swapImageUrl;
-            if (prompt.trim()) genParams.prompt = prompt.trim();
-            if (currentQualityField && selectedQuality) {
-              genParams[currentQualityField] = selectedQuality;
+            if (trimmedPrompt) genParams.prompt = trimmedPrompt;
+            if (resolvedQuality?.field && resolvedQuality?.value) {
+              genParams[resolvedQuality.field] = resolvedQuality.value;
             }
             if (showEffectBtn && selectedEffect) genParams.name = selectedEffect;
             return await generateI2I(apiKey, genParams);
           } else {
-            const referenceParams = buildReferenceParams(selectedVariant?.model, {
+            const referenceParams = buildReferenceParams(targetVariant?.model, {
               imageUrls: uploadedImageUrls,
             });
             const genParams = {
-              model: selectedModelId,
+              model: targetModelId,
               ...buildSupplementalInputPayload(
-                selectedVariant?.model,
+                targetVariant?.model,
                 modelParameterValues,
               ),
               ...referenceParams,
-              prompt: prompt.trim(),
-              aspect_ratio: selectedAr,
+              prompt: trimmedPrompt,
+              aspect_ratio: effectiveAr,
             };
-            if (currentQualityField && selectedQuality) {
-              genParams[currentQualityField] = selectedQuality;
+            if (supportsDimensions) {
+              genParams.width = validW;
+              genParams.height = validH;
+            }
+            if (resolvedQuality?.field && resolvedQuality?.value) {
+              genParams[resolvedQuality.field] = resolvedQuality.value;
             }
             return await generateImage(apiKey, genParams);
           }
         })
       );
 
-      results.forEach((res) => {
-        if (res && res.url) {
-          const entry = {
-            id: res.id || Math.random().toString(36).substring(7),
-            url: res.url,
-            prompt: prompt.trim(),
-            model: selectedModelId,
-            aspect_ratio: selectedAr,
-            timestamp: new Date().toISOString(),
-          };
-          addToHistory(entry);
-          onGenerationComplete?.({
-            url: res.url,
-            model: selectedModelId,
-            prompt: prompt.trim(),
-            type: "image",
-          });
+      let successCount = 0;
+      let failureCount = 0;
+      let firstError = null;
+
+      settledResults.forEach((result) => {
+        if (result.status === "fulfilled") {
+          const res = result.value;
+          const outputUrl = extractOutputUrl(res);
+          if (outputUrl) {
+            successCount++;
+            const entry = {
+              id: res?.id || Math.random().toString(36).substring(7),
+              url: outputUrl,
+              prompt: trimmedPrompt,
+              model: targetModelId,
+              aspect_ratio: dimensionMode === "custom" ? `${validW}:${validH}` : effectiveAr,
+              timestamp: new Date().toISOString(),
+            };
+            addToHistory(entry);
+            onGenerationComplete?.({
+              url: outputUrl,
+              model: targetModelId,
+              prompt: trimmedPrompt,
+              type: "image",
+            });
+          } else {
+            failureCount++;
+            if (!firstError) firstError = new Error("生成结果未包含有效图片地址");
+          }
+        } else {
+          failureCount++;
+          if (!firstError) firstError = result.reason;
         }
       });
+
+      if (successCount > 0) {
+        toast.success("图片生成完成！", { icon: "🎨" });
+      } else if (failureCount > 0) {
+        const errMsg = formatErrorMessage(firstError, copy?.errors?.generationFailed || "生成失败，请重试");
+        toast.error(errMsg);
+        if (onGenerationError) onGenerationError(errMsg);
+      }
     } catch (e) {
       console.error("[ImageStudio] Generation failed:", e);
-      const errMsg = formatErrorMessage(e, copy.errors.generationFailed);
+      const errMsg = formatErrorMessage(e, copy?.errors?.generationFailed || "生成失败，请重试");
+      toast.error(errMsg);
       if (onGenerationError) onGenerationError(errMsg);
-      else toast.error(errMsg);
     } finally {
       setGenerating(false);
       onGenerationEnd?.();
@@ -1474,13 +2262,13 @@ export default function ImageStudio({
             {history.map((entry, idx) => (
               <div
                 key={entry.id || idx}
-                className="relative group rounded-lg overflow-hidden border border-white/10 bg-[#0a0a0a] shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col cursor-pointer"
+                className="relative group rounded-lg overflow-hidden border border-line bg-canvas shadow-elevation-3 hover:border-primary/50 transition-all duration-page flex flex-col cursor-pointer"
                 onClick={() => setFullscreenUrl(entry.url)}
               >
                 <img
                   src={entry.url}
                   alt={entry.prompt?.substring(0, 30) || copy.gallery.generatedImageAlt}
-                  className="w-full aspect-square object-cover bg-black/40 hover:opacity-80 transition-opacity"
+                  className="w-full aspect-square object-cover bg-scrim hover:opacity-80 transition-opacity"
                 />
 
                 {/* Overlay actions */}
@@ -1497,7 +2285,7 @@ export default function ImageStudio({
                       e.stopPropagation();
                       downloadImage(entry.url, `muapi-${entry.id || idx}.jpg`);
                     }}
-                    className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-primary hover:text-black transition-all border border-white/10"
+                    className="p-2 bg-scrim backdrop-blur-md rounded-full text-ink hover:bg-primary hover:text-ink-inverse transition-all border border-line"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
@@ -1514,7 +2302,7 @@ export default function ImageStudio({
                         });
                       }
                     }}
-                    className="p-2 bg-black/60 backdrop-blur-md rounded-full text-red-400 hover:bg-red-500 hover:text-white transition-all border border-white/10"
+                    className="p-2 bg-scrim backdrop-blur-md rounded-full text-danger hover:bg-danger hover:text-ink transition-all border border-line"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <polyline points="3 6 5 6 21 6" />
@@ -1551,16 +2339,16 @@ export default function ImageStudio({
                 />
 
                 {/* Prompt & Details */}
-                <div className="p-3 bg-black/80 backdrop-blur-sm border-t border-white/5 flex-1 flex flex-col justify-between gap-2">
-                  <p className="text-white/70 text-xs line-clamp-3 leading-relaxed" title={entry.prompt}>
+                <div className="p-3 bg-scrim backdrop-blur-sm border-t border-line-subtle flex-1 flex flex-col justify-between gap-2">
+                  <p className="text-ink-muted text-xs line-clamp-3 leading-relaxed" title={entry.prompt}>
                     {entry.prompt || copy.gallery.noPrompt}
                   </p>
                   <div className="flex items-center justify-between mt-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded border border-primary/20 capitalize">
+                      <span className="text-micro font-bold text-primary px-2 py-0.5 bg-primary/10 rounded border border-primary/20 capitalize">
                         {entry.model?.replace("-", " ") || copy.gallery.modelFallback}
                       </span>
-                      <span className="text-[10px] text-white/40">{entry.aspect_ratio}</span>
+                      <span className="text-micro text-ink-subtle">{entry.aspect_ratio}</span>
                     </div>
                   </div>
                 </div>
@@ -1568,31 +2356,31 @@ export default function ImageStudio({
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full animate-fade-in-up transition-all duration-700 min-h-[50vh]">
+          <div className="flex flex-col items-center justify-center h-full animate-fade-in-up transition-all duration-page min-h-[50vh]">
             {/* Overlapping floating cards */}
             <div className="flex items-center justify-center gap-1.5 md:gap-3 mb-10 select-none scale-90 sm:scale-100">
-              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-2xl -rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] flex-shrink-0">
+              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-line shadow-elevation-4 -rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/sdxl-image.avif"
                   alt="Creative asset 1"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-2xl -rotate-[4deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-line shadow-elevation-4 -rotate-[4deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash -ml-3 sm:-ml-4 flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/chroma-image.avif"
                   alt="Creative asset 2"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="w-18 h-18 sm:w-24 sm:h-24 rounded-full border border-white/10 shadow-2xl rotate-[6deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+              <div className="w-18 h-18 sm:w-24 sm:h-24 rounded-full border border-line shadow-elevation-4 rotate-[6deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash -ml-3 sm:-ml-4 flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/neta-lumina.avif"
                   alt="Creative asset 3"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-2xl rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-line shadow-elevation-4 rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash -ml-3 sm:-ml-4 flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/perfect-pony-xl.avif"
                   alt="Creative asset 4"
@@ -1602,12 +2390,12 @@ export default function ImageStudio({
             </div>
 
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-center px-4 flex flex-col items-center">
-              <span className="text-white font-black uppercase text-xl sm:text-3xl tracking-wide mb-1 opacity-90">{copy.emptyState.heading}</span>
-              <span className="text-[#22d3ee] font-black uppercase text-2xl sm:text-4xl sm:mt-1 tracking-tight">
+              <span className="text-ink font-black uppercase text-xl sm:text-3xl tracking-wide mb-1 opacity-90">{copy.emptyState.heading}</span>
+              <span className="text-brand font-black uppercase text-2xl sm:text-4xl sm:mt-1 tracking-tight">
                 {selectedModelDisplayName}
               </span>
             </h1>
-            <p className="text-white/40 text-xs sm:text-sm font-medium tracking-wide text-center max-w-lg leading-relaxed px-4">
+            <p className="text-ink-subtle text-xs sm:text-sm font-medium tracking-wide text-center max-w-lg leading-relaxed px-4">
               {copy.emptyState.subtitle}
             </p>
           </div>
@@ -1616,302 +2404,357 @@ export default function ImageStudio({
 
       {/* ── BOTTOM PROMPT BAR ── */}
       <PromptComposer>
-          {/* Top row: upload picker + textarea */}
-          <div className="flex flex-col gap-3">
-            {/* Inline list of uploaded files */}
-            <div className="flex items-center gap-2.5 flex-wrap">
-              {uploadedImageUrls && uploadedImageUrls.length > 0 && uploadedImageUrls.map((url, idx) => (
-                <div key={url} className={PROMPT_MEDIA_PREVIEW_CLASS}>
-                  <img src={url} alt="" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = uploadedImageUrls.filter((_, i) => i !== idx);
-                      setUploadedImageUrls(next);
-                      if (next.length === 0) handleUploadClear();
-                    }}
-                    className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 hover:bg-black rounded-full flex items-center justify-center text-white/85 hover:text-white text-[8px] border border-white/5"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              
-              {/* Main Upload Trigger */}
-              {referenceVariant && uploadedImageUrls.length < referenceImageLimit && (
-                <UploadButton
-                  apiKey={apiKey}
-                  maxImages={referenceImageLimit}
-                  onSelect={handleUploadSelect}
-                  onClear={handleUploadClear}
-                  initialUrls={uploadedImageUrls}
-                  persistedHistory={uploadHistory}
-                  onHistoryChange={setUploadHistory}
-                  copy={copy}
-                />
-              )}
+        {/* Hidden global file input for media picker */}
+        <input
+          ref={globalFileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            handleFilesUpload(e.target.files);
+            e.target.value = "";
+          }}
+        />
 
-              {/* Swap Image Upload Trigger */}
-              {imageMode && getI2IModelById(selectedModelId)?.swapField && (
-                <UploadButton
-                  apiKey={apiKey}
-                  maxImages={1}
-                  onSelect={({ urls }) => setSwapImageUrl(urls[0] || null)}
-                  onClear={() => setSwapImageUrl(null)}
-                  initialUrls={swapImageUrl ? [swapImageUrl] : []}
-                  label={copy.promptBar.swapFaceLabel}
-                  copy={copy}
-                />
+        {/* Top row: upload picker + textarea */}
+        <div className="flex flex-col gap-2">
+          {/* Top action row: Left '+' button (Figure 4) + Reference images cards (Figure 3) */}
+          <div className="flex items-start gap-2.5">
+            {/* Left '+' Image Reference Button (纯粹添加参考图片) */}
+            <div className="relative pt-0.5 shrink-0">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  globalFileInputRef.current?.click();
+                }}
+                className="w-8 h-8 rounded-xl border transition-all flex items-center justify-center cursor-pointer bg-wash border-line hover:bg-wash-strong hover:border-brand-ring hover:text-brand text-ink-muted active:scale-95 shadow-elevation-1"
+                title={copy.paramsPanel?.addReference || "添加参考图片"}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Reference images row if any (Figure 3) */}
+            {uploadedImageUrls && uploadedImageUrls.length > 0 && (
+              <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                <div className="flex items-center gap-2 text-[11px] font-medium text-brand pl-0.5 select-none">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
+                  <span>{copy.paramsPanel?.smartReference || "智能参考"}</span>
+                  <span className="text-ink-subtle text-micro">({uploadedImageUrls.length}/{referenceImageLimit})</span>
+                </div>
+                <div className="flex items-center gap-2.5 overflow-x-auto custom-scrollbar pb-1">
+                  {uploadedImageUrls.map((url, idx) => (
+                    <div
+                      key={url + idx}
+                      className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl border border-line-strong bg-wash overflow-hidden shadow-elevation-2 group transition-transform hover:scale-105"
+                    >
+                      <img
+                        src={url}
+                        alt={`Reference ${idx + 1}`}
+                        className="w-full h-full object-cover cursor-pointer"
+                        onClick={() => setFullscreenUrl(url)}
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const next = uploadedImageUrls.filter((_, i) => i !== idx);
+                          setUploadedImageUrls(next);
+                          if (next.length === 0) handleUploadClear();
+                        }}
+                        className="absolute top-1 right-1 w-5 h-5 bg-scrim hover:bg-danger text-ink rounded-full flex items-center justify-center text-xs shadow-elevation-2 border border-line transition-colors cursor-pointer"
+                        title="移除"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* + Append Reference Card */}
+                  {uploadedImageUrls.length < referenceImageLimit && (
+                    <button
+                      type="button"
+                      onClick={() => globalFileInputRef.current?.click()}
+                      className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl border border-dashed border-line-strong hover:border-brand bg-wash hover:bg-brand-soft flex flex-col items-center justify-center gap-1 cursor-pointer transition-all group"
+                      title={copy.paramsPanel?.addReference || "添加参考图"}
+                    >
+                      <span className="text-xl font-light text-ink-subtle group-hover:text-brand transition-colors">+</span>
+                      <span className="text-micro text-ink-subtle group-hover:text-brand transition-colors">
+                        {copy.paramsPanel?.addReference || "添加"}
+                      </span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Input prompt text area */}
+          <PromptTextarea
+            ref={textareaRef}
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && !generating && !e.nativeEvent.isComposing && e.keyCode !== 229) {
+                e.preventDefault();
+                handleGenerate();
+              }
+            }}
+            placeholder={placeholderText}
+          />
+        </div>
+
+        {/* Bottom row: Pill Controls (Figure 1) + generate */}
+        <PromptFooter>
+          {/* Left controls: Pills */}
+          <PromptControls ref={dropdownRef}>
+            {/* 1. Mode Pill: [图片生成 v] */}
+            <div className="relative" ref={modeSelectRef}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsModeSelectOpen((v) => !v);
+                  setDropdownOpen(null);
+                  setIsParamsPanelOpen(false);
+                }}
+                className={promptControlClassName({
+                  active: isModeSelectOpen,
+                })}
+              >
+                <ImageIcon size={14} strokeWidth={1.8} aria-hidden className="shrink-0 opacity-70" />
+                <span className={PROMPT_CONTROL_LABEL_CLASS}>
+                  {uploadedImageUrls.length > 0
+                    ? (copy.paramsPanel?.modeImageToImage || "图生图")
+                    : (copy.paramsPanel?.modeImageGen || "图片生成")}
+                </span>
+                <PromptChevronIcon className={isModeSelectOpen ? "rotate-180" : ""} />
+              </button>
+
+              {isModeSelectOpen && (
+                <PromptPopover
+                  onClick={(e) => e.stopPropagation()}
+                  className="min-w-[150px] p-1.5"
+                >
+                  <PromptMenuList>
+                    <PromptMenuItem
+                      selected={uploadedImageUrls.length === 0}
+                      onClick={() => {
+                        handleUploadClear();
+                        setIsModeSelectOpen(false);
+                      }}
+                    >
+                      {copy.paramsPanel?.modeImageGen || "图片生成 (文生图)"}
+                    </PromptMenuItem>
+                    <PromptMenuItem
+                      selected={uploadedImageUrls.length > 0}
+                      onClick={() => {
+                        globalFileInputRef.current?.click();
+                        setIsModeSelectOpen(false);
+                      }}
+                    >
+                      {copy.paramsPanel?.modeImageToImage || "图生图 (参考图像)"}
+                    </PromptMenuItem>
+                  </PromptMenuList>
+                </PromptPopover>
               )}
             </div>
 
-            {/* Input prompt text area */}
-            <PromptTextarea
-              ref={textareaRef}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder={placeholderText}
-            />
-          </div>
-
-          {/* Bottom row: controls + generate */}
-          <PromptFooter>
-            {/* Left controls */}
-            <PromptControls ref={dropdownRef}>
-              {/* Model button */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDropdownOpen((o) => (o === "model" ? null : "model"));
-                  }}
-                  className={promptControlClassName({
-                    active: dropdownOpen === "model",
-                  })}
-                >
-                  <div className="w-4 h-4 rounded overflow-hidden shrink-0 flex items-center justify-center bg-white/5">
-                    {(() => {
-                      const selectedModelProvider = selectedFamily.provider || 'muapi';
-                      return PROVIDER_LOGOS[selectedModelProvider] ? (
-                        <img 
-                          src={PROVIDER_LOGOS[selectedModelProvider]} 
-                          alt="" 
-                          className={`w-full h-full object-contain ${invertLogos.includes(selectedModelProvider) ? "invert" : ""}`} 
-                        />
-                      ) : (
-                        <span className="text-[9px] font-bold text-black uppercase">G</span>
-                      );
-                    })()}
-                  </div>
-                  <span className={PROMPT_CONTROL_LABEL_CLASS}>
-                    {selectedModelDisplayName}
-                  </span>
-                  <PromptChevronIcon />
-                </button>
-
-                {dropdownOpen === "model" && (
-                  <PromptPopover
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-[calc(100vw-2rem)] md:w-[480px] max-w-md md:max-w-none max-h-[70vh]"
-                  >
-                    <PromptPopoverHeader>{copy.popovers.model}</PromptPopoverHeader>
-                    <ModelDropdown
-                      selectedModel={selectedModelId}
-                      onSelect={handleModelSelect}
-                      onClose={() => setDropdownOpen(null)}
-                      copy={copy}
-                    />
-                  </PromptPopover>
-                )}
-              </div>
-
-              <ModelParameterControls
-                inputs={supplementalInputs}
-                values={modelParameterValues}
-                onChange={(key, value) =>
-                  setModelParameterValues((values) => ({ ...values, [key]: value }))
-                }
-                open={dropdownOpen === "parameters"}
-                onToggle={(event) => {
-                  event.stopPropagation();
-                  setDropdownOpen((open) =>
-                    open === "parameters" ? null : "parameters",
-                  );
-                }}
-              />
-
-              {/* Aspect ratio button */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDropdownOpen((o) => (o === "ar" ? null : "ar"));
-                  }}
-                  className={promptControlClassName({
-                    active: dropdownOpen === "ar",
-                  })}
-                >
-                  <PromptAspectRatioIcon />
-                  <span className={PROMPT_CONTROL_LABEL_CLASS}>
-                    {selectedAr}
-                  </span>
-                </button>
-
-                {dropdownOpen === "ar" && (
-                  <PromptPopover
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <SimpleDropdown
-                      title={copy.popovers.aspectRatio}
-                      options={currentAspectRatios}
-                      selected={selectedAr}
-                      onSelect={(val) => setSelectedAr(val)}
-                      onClose={() => setDropdownOpen(null)}
-                    />
-                  </PromptPopover>
-                )}
-              </div>
-
-              {/* Quality/resolution button (represented as Diamond icon) */}
-              {showQualityBtn && (
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDropdownOpen((o) => (o === "quality" ? null : "quality"));
-                    }}
-                    className={promptControlClassName({
-                      active: dropdownOpen === "quality",
-                    })}
-                  >
-                    <PromptQualityIcon />
-                    <span className={PROMPT_CONTROL_LABEL_CLASS}>
-                      {selectedQuality || currentResolutions[0]}
-                    </span>
-                  </button>
-
-                  {dropdownOpen === "quality" && (
-                    <PromptPopover
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <SimpleDropdown
-                        title={copy.popovers.resolution}
-                        options={currentResolutions}
-                        selected={selectedQuality}
-                        onSelect={(val) => setSelectedQuality(val)}
-                        onClose={() => setDropdownOpen(null)}
-                      />
-                    </PromptPopover>
-                  )}
-                </div>
-              )}
-
-              {/* Effect type button */}
-              {showEffectBtn && (
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDropdownOpen((o) => (o === "effect" ? null : "effect"));
-                    }}
-                    className={promptControlClassName({
-                      active: dropdownOpen === "effect",
-                    })}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-40 text-white">
-                      <path d="M5 3l14 9-14 9V3z" />
-                    </svg>
-                    <span className={`${PROMPT_CONTROL_LABEL_CLASS} max-w-[140px] truncate`}>
-                      {selectedEffect || copy.promptBar.effectFallback}
-                    </span>
-                  </button>
-
-                  {dropdownOpen === "effect" && (
-                    <PromptPopover
-                      onClick={(e) => e.stopPropagation()}
-                      className="min-w-[200px]"
-                    >
-                      <SimpleDropdown
-                        title={copy.popovers.effectType}
-                        options={currentEffects}
-                        selected={selectedEffect}
-                        onSelect={(val) => setSelectedEffect(val)}
-                        onClose={() => setDropdownOpen(null)}
-                      />
-                    </PromptPopover>
-                  )}
-                </div>
-              )}
-
-              {/* Batch size stepper */}
-              <div className={promptControlClassName({ compact: true, className: "select-none" })}>
-                <button
-                  type="button"
-                  onClick={() => setBatchSize(prev => Math.max(1, prev - 1))}
-                  className="text-white/40 hover:text-white/80 font-extrabold text-xs transition-colors px-1"
-                >
-                  -
-                </button>
-                <span className="text-xs font-semibold text-white/70 min-w-[24px] text-center">
-                  {batchSize}/4
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setBatchSize(prev => Math.min(4, prev + 1))}
-                  className="text-white/40 hover:text-white/80 font-extrabold text-xs transition-colors px-1"
-                >
-                  +
-                </button>
-              </div>
-
-              {/* Draw button */}
+            {/* 2. Model Pill: [Seedream 5.0 Pro ✦] (Figure 1) */}
+            <div className="relative">
               <button
                 type="button"
-                className={promptControlClassName()}
-                onClick={() => setIsDrawModalOpen(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDropdownOpen((o) => (o === "model" ? null : "model"));
+                  setIsParamsPanelOpen(false);
+                  setIsModeSelectOpen(false);
+                }}
+                className={promptControlClassName({
+                  active: dropdownOpen === "model",
+                })}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-40 text-white group-hover:text-[#22d3ee] transition-colors">
-                  <path d="M12 20h9" />
-                  <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
-                </svg>
+                <div className="size-4 shrink-0 overflow-hidden rounded-xs border border-line bg-well flex items-center justify-center">
+                  {(() => {
+                    const selectedModelProvider = selectedFamily.provider || 'muapi';
+                    const logo = getProviderLogo(selectedModelProvider);
+                    const style = getProviderStyle(selectedModelProvider);
+                    return logo ? (
+                      <img 
+                        src={logo} 
+                        alt="" 
+                        className={`w-full h-full object-contain ${invertLogos.includes(selectedModelProvider) ? "invert" : ""}`} 
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <span className="text-caption font-bold uppercase text-ink-muted">
+                        {style.text || "M"}
+                      </span>
+                    );
+                  })()}
+                </div>
                 <span className={PROMPT_CONTROL_LABEL_CLASS}>
-                  {copy.promptBar.drawButton}
+                  {selectedModelDisplayName}
                 </span>
+                <span className="text-brand text-caption font-bold" aria-hidden>✦</span>
+                <PromptChevronIcon className={dropdownOpen === "model" ? "rotate-180" : ""} />
               </button>
-            </PromptControls>
 
-            {/* Generate button */}
-            <PromptAction
-              onClick={handleGenerate}
-              disabled={generating}
+              {dropdownOpen === "model" && (
+                <PromptPopover
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-[calc(100vw-2rem)] md:w-[480px] max-w-md md:max-w-none max-h-[70vh]"
+                >
+                  <PromptPopoverHeader>
+                    {copy.modelDropdown?.selectModelHeader || copy.popovers.model}
+                  </PromptPopoverHeader>
+                  <ModelDropdown
+                    selectedModel={selectedModelId}
+                    onSelect={handleModelSelect}
+                    onClose={() => setDropdownOpen(null)}
+                    copy={copy}
+                  />
+                </PromptPopover>
+              )}
+            </div>
+
+            {/* 3. Integrated Parameters Pill: [比例/尺寸 · 分辨率 · 数量] */}
+            <div className="relative" ref={paramsPanelRef}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsParamsPanelOpen((v) => !v);
+                  setDropdownOpen(null);
+                  setIsModeSelectOpen(false);
+                }}
+                className={promptControlClassName({
+                  active: isParamsPanelOpen,
+                })}
+              >
+                <AspectLineIcon ratio={selectedAr} active={isParamsPanelOpen} />
+                <span className={PROMPT_CONTROL_LABEL_CLASS}>
+                  {(() => {
+                    const qualText = (() => {
+                      const q = String(selectedQuality || "2K").toUpperCase();
+                      if (q.includes("1K") || q === "BASIC" || q === "LOW") return "1K";
+                      if (q.includes("4K") || q === "ULTRA") return "4K ✦";
+                      return "2K ✦";
+                    })();
+                    const batchText = (
+                      copy.paramsPanel?.batchCountUnit || "{count} img"
+                    ).replace("{count}", batchSize);
+                    if (dimensionMode === "custom") {
+                      return `${customWidth}×${customHeight} PX · ${qualText} · ${batchText}`;
+                    }
+                    const arText = (!selectedAr || selectedAr === "adaptive" || selectedAr === "auto" || selectedAr === "智能")
+                      ? (copy.paramsPanel?.smartRatio || "智能比例")
+                      : selectedAr;
+                    return `${arText} · ${qualText} · ${batchText}`;
+                  })()}
+                </span>
+                <PromptChevronIcon className={isParamsPanelOpen ? "rotate-180" : ""} />
+              </button>
+
+              {isParamsPanelOpen && (
+                <PromptPopover
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-1"
+                >
+                  <ParamsPopoverPanel
+                    selectedAr={selectedAr}
+                    onSelectAr={handleSelectAr}
+                    aspectRatios={currentAspectRatios}
+                    selectedQuality={selectedQuality}
+                    onSelectQuality={handleSelectQuality}
+                    onSelectPresetDimension={handleSelectPresetDimension}
+                    resolutions={currentResolutions}
+                    batchSize={batchSize}
+                    onChangeBatchSize={(num) => setBatchSize(num)}
+                    customWidth={customWidth}
+                    customHeight={customHeight}
+                    onChangeDimensions={handleChangeDimensions}
+                    onSwapDimensions={handleSwapDimensions}
+                    dimensionMode={dimensionMode}
+                    onChangeDimensionMode={setDimensionMode}
+                    supplementalInputs={supplementalInputs}
+                    modelParameterValues={modelParameterValues}
+                    onChangeModelParameter={(key, value) =>
+                      setModelParameterValues((values) => ({ ...values, [key]: value }))
+                    }
+                    copy={copy}
+                    onClose={() => setIsParamsPanelOpen(false)}
+                  />
+                </PromptPopover>
+              )}
+            </div>
+
+            {/* 4. Draw button: [ ✏️ 绘制 ] (保留原有真实功能) */}
+            <button
+              type="button"
+              className={promptControlClassName()}
+              onClick={() => setIsDrawModalOpen(true)}
             >
+              <Pencil size={14} strokeWidth={1.8} aria-hidden className="shrink-0 opacity-70" />
+              <span className={PROMPT_CONTROL_LABEL_CLASS}>
+                {copy.promptBar.drawButton}
+              </span>
+            </button>
+          </PromptControls>
+
+          {/* Right controls: Credit info + Generate Button */}
+          <div className="flex shrink-0 items-center gap-3">
+            {/* Credits indicator */}
+            <div className="hidden select-none items-center gap-1.5 text-label text-ink-muted sm:flex">
+              <span className="font-bold text-brand" aria-hidden>✦</span>
+              <span>
+                {(copy.paramsPanel?.creditPerImage || "").replace(
+                  "{cost}",
+                  selectedQuality && String(selectedQuality).includes("4K") ? "12" : "8"
+                )}
+              </span>
+              <span className="text-caption text-ink-subtle line-through">
+                {copy.paramsPanel?.creditPerImageOriginal}
+              </span>
+            </div>
+
+            {/* Generate: `PromptAction` is the composer's designated primary
+                action and eight sibling studios already use it; the bespoke
+                40px white circle left here orphaned on its own row at 390px
+                and carried no accessible name. */}
+            <PromptAction onClick={handleGenerate} disabled={generating}>
               {generating ? (
                 <>
-                  <span className="animate-spin inline-block text-black">◌</span>
-                  {copy.promptBar.generating}
+                  <Spinner size="sm" />
+                  <span>{copy.promptBar?.generating}</span>
                 </>
               ) : (
                 <>
-                  <span>{copy.promptBar.generateButton}</span>
+                  <span>{copy.promptBar?.generateButton}</span>
+                  <ArrowUp size={16} strokeWidth={2.4} aria-hidden />
                 </>
               )}
             </PromptAction>
-          </PromptFooter>
+          </div>
+        </PromptFooter>
       </PromptComposer>
 
       {/* ── FULLSCREEN IMAGE MODAL ── */}
       {fullscreenUrl && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-scrim backdrop-blur-sm animate-fade-in"
           onClick={() => setFullscreenUrl(null)}
         >
           <button
             type="button"
-            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors border border-white/10"
+            className="absolute top-6 right-6 p-3 bg-wash-press hover:bg-wash-press rounded-full text-ink transition-colors border border-line"
             onClick={(e) => {
               e.stopPropagation();
               setFullscreenUrl(null);
@@ -1925,7 +2768,7 @@ export default function ImageStudio({
           <img
             src={fullscreenUrl}
             alt={copy.fullscreen.previewAlt}
-            className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up" 
+            className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-elevation-4 object-contain animate-scale-up" 
             onClick={(e) => e.stopPropagation()}
           />
         </div>
@@ -1939,7 +2782,7 @@ export default function ImageStudio({
         batchSize={1}
         onAddHistoryItem={addToHistory}
       />
-      <Toaster position="top-right" containerStyle={{ zIndex: 99999 }} toastOptions={{ duration: 5000, style: { background: '#18181b', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)', fontSize: '13px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', maxWidth: '440px', wordBreak: 'break-word', whiteSpace: 'pre-wrap', padding: '12px 16px' } }} />
+      <Toaster position="top-right" containerStyle={{ zIndex: 'var(--z-toast)' }} toastOptions={{ duration: 5000, style: { background: 'var(--bg-overlay)', color: 'var(--text-primary)', border: '1px solid var(--border-strong)', fontSize: 'var(--text-body-sm)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--elevation-3)', maxWidth: '440px', wordBreak: 'break-word', whiteSpace: 'pre-wrap', padding: '12px 16px' } }} />
     </div>
   );
 }

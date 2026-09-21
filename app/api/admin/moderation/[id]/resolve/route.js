@@ -1,17 +1,18 @@
-import { requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';
+import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse, resultErrorResponse } from '@/lib/admin/authz';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { checkIdempotency, completeIdempotency } from '@/lib/admin/idempotency';
+import { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';
 import { resolveModeration } from '@/lib/services/moderation';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function POST(request, context) {
+async function handlePOST(request, context) {
   const guard = await requirePermission(request, PERMISSIONS.moderationWrite);
   if (!guard.ok) return guard.response;
 
   const { id } = await context.params;
-  const idempotencyKey = request.headers.get('idempotency-key');
+  const idempotencyKey = getRequiredIdempotencyKey(request);
+  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '高风险写操作必须提供有效的 Idempotency-Key', 422, guard.requestId);
 
   const idemp = await checkIdempotency({
     scope: 'moderation_resolve',
@@ -38,9 +39,12 @@ export async function POST(request, context) {
   });
 
   if (result.error) {
-    return errorResponse('BAD_REQUEST', result.error, 400, guard.requestId);
+    await releaseIdempotency(idemp.keyHash);
+    return resultErrorResponse(result.error, guard.requestId);
   }
 
   await completeIdempotency(idemp.keyHash, result);
   return okResponse(result, guard.requestId);
 }
+
+export const POST = withAdminErrorBoundary(handlePOST);

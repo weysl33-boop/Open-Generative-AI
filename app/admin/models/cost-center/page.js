@@ -2,7 +2,7 @@ import { PageHeader } from '@/components/admin/AdminUi';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
 import { getCostCenterAnalytics } from '@/lib/services/analyticsFinancial';
-import { listProviders, listCanonicalModels } from '@/lib/repositories/aiCatalog';
+import { listProviders, listCanonicalModels } from '@/lib/services/modelCatalog';
 import CostCenterClient from './CostCenterClient';
 
 export const dynamic = 'force-dynamic';

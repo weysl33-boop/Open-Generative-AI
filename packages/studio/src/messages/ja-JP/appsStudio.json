@@ -1,0 +1,42 @@
+{
+  "hero": {
+    "badge": "収益化対応テンプレート",
+    "titleLine1": "AIアプリをローンチし、",
+    "titleLine2": "今日から収益化を始めましょう。",
+    "subtitle": "各テンプレートはStripe決済が組み込まれたフル機能のAI SaaSアプリです。わずか数分でデプロイ可能。ユーザーに課金し収益はすべてあなたのもの。AIインフラはmuapiが担当します。"
+  },
+  "steps": {
+    "stepLabel": "ステップ",
+    "deploy": {
+      "title": "数分でデプロイ",
+      "body": "オープンソースのテンプレートをForkし、muapiキーを追加してVercelにプッシュするだけ。バックエンドの構築は不要です。"
+    },
+    "collect": {
+      "title": "決済を受け取る",
+      "body": "Stripe連携済み。一括クレジット、定期購読、従量課金など独自の価格設定が可能です。"
+    },
+    "keep": {
+      "title": "収益はすべてあなたの手元に",
+      "body": "売上は直接あなたのStripeアカウントに入金されます。製品、ブランド、利益のすべてを所有できます。"
+    }
+  },
+  "card": {
+    "templateFallback": "テンプレート",
+    "github": "GitHub リポジトリ",
+    "demo": "デモを見る"
+  },
+  "footer": {
+    "moreComingSoon": "Muapi エコシステム — 新しいテンプレートも近日公開予定"
+  },
+  "modal": {
+    "deployTitle": "{appName} をデプロイ",
+    "body": "詳細情報をご入力いただければ、すぐにデプロイして収益化を開始できるよう、{appName} テンプレートとセットアップガイドをお送りします。",
+    "sending": "詳細を送信中...",
+    "getTemplate": "テンプレートを入手",
+    "maybeLater": "後で"
+  },
+  "toast": {
+    "requestSuccess": "送信完了！まもなくテンプレートの詳細をお送りします。",
+    "requestError": "登録に失敗しました。後ほど再度お試しください。"
+  }
+}

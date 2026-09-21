@@ -1,43 +1,62 @@
-import { NextResponse } from 'next/server';
-import { verifySmsCode } from '@/lib/sms';
-import { findOrCreateUserByPhone, createSession, setSessionCookie, json } from '@/lib/billing';
+import {
+  createSession,
+  findOrCreateUserByPhone,
+  json,
+  recordVerifiedPhoneLogin,
+  requiresOnboarding,
+  setSessionCookie,
+} from '@/lib/services/auth';
+import { getClientIp, guardMutation } from '@/lib/security/requestGuard';
+import { getSmsDeviceToken } from '@/lib/smsDevice';
+import { verifyPhoneOtp } from '@/lib/smsService';
+import { normalizePhone } from '@/lib/auth/phone';
 
 export const runtime = 'nodejs';
 
 export async function POST(request) {
   try {
+    const guarded = guardMutation(request, { maxBytes: 16 * 1024 });
+    if (guarded) return guarded;
+    const ip = getClientIp(request);
     const body = await request.json();
-    const phone = String(body.phone || '').trim();
-    const countryCode = String(body.countryCode || '+86').trim();
-    const code = String(body.code || '').trim();
-    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
-
-    if (!phone) {
-      return json({ error: '请输入手机号码' }, { status: 400 });
-    }
-    if (!code) {
-      return json({ error: '请输入短信验证码' }, { status: 400 });
-    }
-
-    // 1. 校验验证码
-    const verifyResult = await verifySmsCode({ phone, countryCode, code, type: 'login' });
-    if (verifyResult.error) {
-      return json({ error: verifyResult.error }, { status: 400 });
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return json({ error: '请求参数无效' }, { status: 400 });
+    if (Object.hasOwn(body, 'provider')) return json({ error: '短信通道由服务端根据手机号选择' }, { status: 400 });
+    const verified = await verifyPhoneOtp({
+      phone: body.phone,
+      countryCode: body.countryCode || '+86',
+      code: body.code,
+      challengeId: body.challengeId,
+      purpose: 'login',
+      sessionToken: request.cookies.get('ko_session')?.value || null,
+      ip,
+      deviceToken: getSmsDeviceToken(request),
+    });
+    if (!verified.success) {
+      return json({ error: verified.message || '验证码校验失败', code: verified.error || 'OTP_MISSING' }, { status: verified.status || 400 });
     }
 
-    // 2. 获取或创建用户主体与 auth_accounts 凭据
+    const normalizedPhone = normalizePhone(verified.phone, verified.countryCode);
     const result = await findOrCreateUserByPhone({
-      phone,
-      countryCode,
-      registrationSource: 'phone_sms',
+      phone: normalizedPhone.nationalNumber,
+      countryCode: verified.countryCode,
+      verificationProvider: verified.provider,
+      providerUserIdExternal: verified.providerUserIdExternal,
+      registrationSource: 'phone_sms_web',
       ip
     });
 
     if (result.error) {
-      return json({ error: result.message || '登录失败' }, { status: 403 });
+      return json({ error: result.message || '登录失败', code: result.error }, { status: result.error === 'ACCOUNT_SUSPENDED' ? 403 : 409 });
     }
 
     const { user, isNew } = result;
+    await recordVerifiedPhoneLogin({
+      userId: user.id,
+      phoneE164: verified.phone,
+      verificationProvider: verified.provider,
+      providerUserIdExternal: verified.providerUserIdExternal,
+      ip,
+    });
 
     // 3. 签发会话
     const session = await createSession(user.id);
@@ -51,16 +70,21 @@ export async function POST(request) {
         email: user.email,
         role: user.role,
         status: user.status,
+        locale: user.locale || 'zh-CN',
         credits: Number(user.credits || 0),
         loginProviders: ['phone']
       },
-      isNew
+      isNew,
+      requiresOnboarding: await requiresOnboarding(user.id),
     });
 
     setSessionCookie(response, session.token, session.expires);
+    const userLocale = user.locale || 'zh-CN';
+    response.cookies.set('NEXT_LOCALE', userLocale, { path: '/', maxAge: 31536000, sameSite: 'lax' });
+    response.cookies.set('locale', userLocale, { path: '/', maxAge: 31536000, sameSite: 'lax' });
     return response;
   } catch (error) {
-    console.error('[auth/phone/verify]', error);
+    console.error('[auth/phone/verify]', { code: error?.code || 'PHONE_AUTH_FAILED' });
     return json({ error: '登录验证失败，请稍后重试' }, { status: 500 });
   }
 }

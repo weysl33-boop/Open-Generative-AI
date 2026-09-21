@@ -1,7 +1,7 @@
 import { PageHeader } from '@/components/admin/AdminUi';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { listCanonicalModels } from '@/lib/repositories/aiCatalog';
+import { listCanonicalModels } from '@/lib/services/modelCatalog';
 import CatalogManagerClient from './CatalogManagerClient';
 
 export const dynamic = 'force-dynamic';

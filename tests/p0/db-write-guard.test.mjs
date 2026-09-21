@@ -35,6 +35,7 @@ test('P0 only the two resident daemons may declare themselves as services', () =
 
 test('P0 the write guard exempts the Next server but not ad-hoc entry points', () => {
   const previous = process.env.KOYOSIM_RUNTIME;
+  const previousGuard = process.env.KOYOSIM_DB_WRITE_GUARD;
   delete process.env.KOYOSIM_RUNTIME;
   try {
     assert.equal(writeGuardApplies(path.resolve('scripts/one-off.mjs')), true);
@@ -51,6 +52,19 @@ test('P0 the write guard exempts the Next server but not ad-hoc entry points', (
   } finally {
     if (previous === undefined) delete process.env.KOYOSIM_RUNTIME;
     else process.env.KOYOSIM_RUNTIME = previous;
+    if (previousGuard === undefined) delete process.env.KOYOSIM_DB_WRITE_GUARD;
+    else process.env.KOYOSIM_DB_WRITE_GUARD = previousGuard;
+  }
+});
+
+test('P0 a single environment flag cannot bypass the production-write guard', () => {
+  const previous = process.env.KOYOSIM_DB_WRITE_GUARD;
+  process.env.KOYOSIM_DB_WRITE_GUARD = 'off';
+  try {
+    assert.equal(writeGuardApplies(path.resolve('scripts/one-off.mjs')), true);
+  } finally {
+    if (previous === undefined) delete process.env.KOYOSIM_DB_WRITE_GUARD;
+    else process.env.KOYOSIM_DB_WRITE_GUARD = previous;
   }
 });
 

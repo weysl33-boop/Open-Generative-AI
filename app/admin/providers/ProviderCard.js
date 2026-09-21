@@ -14,17 +14,29 @@ export default function ProviderCard({ provider }) {
 
   const runTest = async () => {
     setTesting(true);
+    setMessage('');
     try {
-      const res = await fetch(`/api/admin/providers/${provider.id}/test`, { method: 'POST' });
+      const res = await fetch(`/api/admin/providers/${provider.id}/test`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': crypto.randomUUID(),
+        },
+      });
       const data = await res.json();
-      if (res.ok) {
+      if (res.ok && data.data) {
         setTestResult(data.data);
+        setMessage(`健康探针探测完成：${data.data.status} (${data.data.latency_ms || data.data.latencyMs || 0}ms)`);
+      } else {
+        setMessage(data?.error?.message || data?.error || '健康检查失败');
       }
-    } catch {}
-    finally {
+    } catch (err) {
+      setMessage(err.message || '网络连接异常');
+    } finally {
       setTesting(false);
     }
   };
+
 
   const handleRotate = async (e) => {
     e.preventDefault();
@@ -60,35 +72,41 @@ export default function ProviderCard({ provider }) {
   };
 
   return (
-    <Card className="flex flex-col justify-between">
+    <Card className="flex flex-col justify-between relative overflow-hidden border-line bg-base/90 backdrop-blur-md hover:border-brand-line hover:shadow-brand-soft transition-all duration-base shadow-elevation-3 shadow-black/40">
       <div>
-        <div className="flex items-start justify-between border-b border-white/[0.08] pb-3 mb-4">
+        <div className="flex items-start justify-between border-b border-line pb-3.5 mb-4">
           <div>
-            <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-cyan-300">
+            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-brand">
               {provider.kind === 'ai' ? 'AI MODEL ENGINE' : 'PAYMENT GATEWAY'}
             </span>
-            <h3 className="mt-1 text-lg font-bold text-white">{provider.name}</h3>
+            <h3 className="mt-1 text-base font-semibold text-ink tracking-[-0.01em] leading-6">{provider.name}</h3>
           </div>
           <StatusBadge tone={provider.configured ? 'good' : 'warn'}>
             {provider.configured ? '已就绪' : '待配置'}
           </StatusBadge>
         </div>
 
-        <p className="text-xs text-white/60 mb-4">{provider.description}</p>
+        <p className="text-xs text-ink-muted mb-4 leading-5 tracking-[-0.005em]">{provider.description}</p>
 
-        <div className="space-y-2.5 rounded-xl border border-white/[0.06] bg-black/20 p-3 text-xs">
-          <div className="flex justify-between">
-            <span className="text-white/40">通信模式</span>
-            <span className="font-medium text-white/80">{provider.mode}</span>
+        <div className="space-y-2.5 rounded-xl border border-line-subtle bg-canvas/70 p-3.5 text-xs">
+          <div className="flex justify-between items-center">
+            <span className="text-ink-muted tracking-[0.01em]">通信模式</span>
+            <span className="font-mono text-ink">{provider.mode}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-white/40">密钥存储机制</span>
-            <span className="text-cyan-200/80">写入式（不可反显明文）</span>
+          <div className="flex justify-between items-center">
+            <span className="text-ink-muted tracking-[0.01em]">密钥存储机制</span>
+            <span className="text-brand-hover font-medium">写入式（不可反显明文）</span>
           </div>
+          {provider.unavailableReason && (
+            <div className="flex justify-between items-start gap-3">
+              <span className="text-ink-muted shrink-0">未就绪原因</span>
+              <span className="text-warning text-right">{provider.unavailableReason}</span>
+            </div>
+          )}
           {testResult && (
-            <div className="flex justify-between border-t border-white/[0.05] pt-2">
-              <span className="text-white/40">最近健康状况</span>
-              <span className={testResult.status === 'healthy' ? 'text-emerald-300 font-bold' : 'text-amber-300'}>
+            <div className="flex justify-between items-center border-t border-line-subtle pt-2">
+              <span className="text-ink-muted tracking-[0.01em]">最近健康状况</span>
+              <span className={testResult.status === 'healthy' ? 'text-success font-semibold' : 'text-warning'}>
                 {testResult.status} ({testResult.latency_ms}ms)
               </span>
             </div>
@@ -97,42 +115,42 @@ export default function ProviderCard({ provider }) {
 
         {/* 密钥轮换折叠表单 */}
         {showRotate && (
-          <form onSubmit={handleRotate} className="mt-4 rounded-xl border border-white/10 bg-black/40 p-3.5 space-y-3">
-            <p className="text-[11px] font-bold text-cyan-200">安全密钥轮换（仅限超管）</p>
+          <form onSubmit={handleRotate} className="mt-4 rounded-xl border border-line bg-canvas/80 p-4 space-y-3.5 backdrop-blur-sm">
+            <p className="text-xs font-semibold text-brand-hover tracking-[-0.005em]">安全密钥轮换（仅限超管）</p>
             <div>
-              <label className="block text-[11px] text-white/50 mb-1">新密钥明文（只写一次）</label>
+              <label className="block text-xs text-ink-muted font-medium tracking-[0.01em] mb-1">新密钥明文（只写一次）</label>
               <input
                 type="password"
                 required
                 value={newKey}
                 onChange={(e) => setNewKey(e.target.value)}
                 placeholder="sk-..."
-                className="w-full rounded-lg border border-white/15 bg-[#0a0a0a] px-3 py-1.5 text-xs text-white outline-none focus:border-cyan-300/60"
+                className="h-[38px] w-full rounded-lg border border-line bg-canvas px-3 text-xs text-ink font-mono placeholder:text-ink-subtle focus:border-brand focus:ring-2 focus:ring-brand-soft outline-none transition-all"
               />
             </div>
             <div>
-              <label className="block text-[11px] text-white/50 mb-1">当前超管密码（二次确认）</label>
+              <label className="block text-xs text-ink-muted font-medium tracking-[0.01em] mb-1">当前超管密码（二次确认）</label>
               <input
                 type="password"
                 required
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
                 placeholder="你的管理员密码"
-                className="w-full rounded-lg border border-white/15 bg-[#0a0a0a] px-3 py-1.5 text-xs text-white outline-none focus:border-cyan-300/60"
+                className="h-[38px] w-full rounded-lg border border-line bg-canvas px-3 text-xs text-ink font-mono placeholder:text-ink-subtle focus:border-brand focus:ring-2 focus:ring-brand-soft outline-none transition-all"
               />
             </div>
             <div className="flex justify-end gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => setShowRotate(false)}
-                className="rounded-lg border border-white/10 px-3 py-1 text-xs text-white/60 hover:bg-white/10"
+                className="h-8 rounded-lg border border-line bg-transparent px-3 text-xs font-medium text-ink-muted hover:bg-wash-strong hover:text-ink transition active:scale-[0.98]"
               >
                 取消
               </button>
               <button
                 type="submit"
                 disabled={busy}
-                className="rounded-lg bg-cyan-300 px-3.5 py-1 text-xs font-bold text-black hover:bg-cyan-200"
+                className="h-8 rounded-lg bg-brand-active hover:bg-brand px-4 text-xs font-semibold text-ink-on-accent active:scale-[0.98] transition disabled:opacity-50"
               >
                 {busy ? '轮换中…' : '确认轮换'}
               </button>
@@ -141,12 +159,12 @@ export default function ProviderCard({ provider }) {
         )}
       </div>
 
-      <div className="mt-5 pt-3 border-t border-white/[0.06] flex items-center justify-between">
+      <div className="mt-5 pt-3.5 border-t border-line-subtle flex items-center justify-between">
         <button
           type="button"
           disabled={testing}
           onClick={runTest}
-          className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/70 hover:bg-white/10"
+          className="inline-flex h-[38px] items-center gap-1.5 rounded-lg border border-line bg-wash px-3.5 text-xs font-medium text-ink hover:bg-wash-strong hover:text-ink transition active:scale-[0.98] disabled:opacity-50 tracking-[-0.005em]"
         >
           {testing ? '探针发送中…' : '心跳诊断探针'}
         </button>
@@ -154,13 +172,13 @@ export default function ProviderCard({ provider }) {
         <button
           type="button"
           onClick={() => setShowRotate(!showRotate)}
-          className="rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-1.5 text-xs font-bold text-cyan-200 hover:bg-cyan-300/20"
+          className="inline-flex h-[38px] items-center rounded-lg border border-brand-line bg-brand-soft px-4 text-xs font-semibold text-brand-hover hover:bg-brand-pressed active:scale-[0.98] transition tracking-[-0.005em]"
         >
           {showRotate ? '收起' : '轮换密钥 ⚙'}
         </button>
       </div>
 
-      {message && <p className="mt-2 text-xs text-cyan-200">{message}</p>}
+      {message && <p className="mt-2 text-xs text-brand-hover">{message}</p>}
     </Card>
   );
 }

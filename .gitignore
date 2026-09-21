@@ -29,6 +29,7 @@ release/
 
 # Next.js
 .next/
+.next-*/
 out/
 
 # Local runtime/session data and generated archives
@@ -53,7 +54,22 @@ test-results/
 
 # Runtime IP-block state written by the app
 lib/security/ip_block_state.json
-
 # 运行时镜像绝不能进版本库：带着 enabled:true 被部署出去等于直接锁死境内全部访问
 data/ip_block_state.json
 data/china_ip_ranges.json
+
+# Local release snapshots and merchant key material must never be committed.
+release-staging/
+支付宝密钥/
+.qoder/
+nav-audit-results/
+audit_summary_generated.json
+frontend_audit_issues.json
+chunks.progress
+test_ping.txt
+
+# UI drift audit baseline, per-run reports and evidence screenshots
+.ui-drift/
+audit_screenshots/
+runtime_ui_audit_result.json
+source_ui_audit_result.json

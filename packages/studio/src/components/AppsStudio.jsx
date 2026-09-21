@@ -11,6 +11,10 @@ import { registerAppInterest, getAppInterests } from '../muapi.js';
 import toast, { Toaster } from 'react-hot-toast';
 import en from '../messages/en/appsStudio.json';
 import zh from '../messages/zh/appsStudio.json';
+import ja from "../messages/ja-JP/appsStudio.json";
+import ko from "../messages/ko-KR/appsStudio.json";
+import zhTw from "../messages/zh-TW/appsStudio.json";
+import es from "../messages/es/appsStudio.json";
 import { resolveCopy } from '../i18nUtils';
 
 const templateApps = [
@@ -19,8 +23,6 @@ const templateApps = [
     description: "Launch a headshot SaaS in minutes. Charge $5–$20 per set, keep all profits. Stripe payments & user accounts included.",
     icon: FaUserTie,
     color: "blue",
-    repo: "https://github.com/SamurAIGPT/ai-headshot-generator",
-    hosted: "https://ai-headshot-generator-xi.vercel.app/",
     thumbnail: "https://cdn.muapi.ai/apps/d9c39378f60e48098f6b6ce657dc18b5.png",
     isTemplate: true
   },
@@ -29,8 +31,6 @@ const templateApps = [
     description: "Your own AI image generation platform, ready to monetize. Add credit packs or subscriptions and start earning from day one.",
     icon: FaHandSparkles,
     color: "amber",
-    repo: "https://github.com/SamurAIGPT/nano-banana-generator",
-    hosted: "https://nano-banana-generator-psi.vercel.app",
     thumbnail: "https://cdn.muapi.ai/data/2/874086171651/Screenshot_2026-04-15_103743.png",
     isTemplate: true
   },
@@ -39,8 +39,6 @@ const templateApps = [
     description: "Deploy a premium AI art studio and sell access to users. Full Stripe integration lets you collect revenue immediately after launch.",
     icon: FaMagic,
     color: "purple",
-    repo: "https://github.com/SamurAIGPT/seedance-2-generator",
-    hosted: "https://seedance-2-generator.vercel.app/",
     thumbnail: "https://cdn.muapi.ai/apps/4cd1f49d48934d448e7f493f9d5e476e.png",
     isTemplate: true
   },
@@ -49,8 +47,6 @@ const templateApps = [
     description: "Launch your own AI-powered video clipping SaaS. Download YouTube videos and extract viral highlights with ease.",
     icon: FaVideo,
     color: "emerald",
-    repo: "https://github.com/SamurAIGPT/ai-clipping-generator",
-    hosted: "https://ai-clipping-generator.vercel.app/",
     thumbnail: "https://cdn.muapi.ai/data/2/883345778103/cca8b5bb-25f1-40fe-928e-53dce2c8c928.png",
     isTemplate: true
   },
@@ -59,8 +55,6 @@ const templateApps = [
     description: "The complete Veo 3.1 video generation suite. Monetize text-to-video, image-to-video, and reference-to-video workflows with ease.",
     icon: FaVideo,
     color: "indigo",
-    repo: "https://github.com/SamurAIGPT/veo4-video-generator",
-    hosted: "https://veo4-video-generator.vercel.app/",
     thumbnail: "https://cdn.muapi.ai/data/2/901343404247/94ac6d86-be4e-4b70-b1e6-96d7e3692604.png",
     isTemplate: true
   }
@@ -133,7 +127,7 @@ const dummyAppsData = [
 ];
 
 export default function AppsStudio({ apiKey, locale = 'en' }) {
-  const copy = resolveCopy(en, zh, locale);
+  const copy = resolveCopy(en, { 'zh-CN': zh, 'ja-JP': ja, 'ko-KR': ko, 'zh-TW': zhTw, es }, locale);
   const [selectedApp, setSelectedApp] = useState(null);
   const [isRequesting, setIsRequesting] = useState(false);
   const [requestedApps, setRequestedApps] = useState([]);
@@ -178,19 +172,19 @@ export default function AppsStudio({ apiKey, locale = 'en' }) {
     return (
       <div 
         key={app.name}
-        className="group bg-[#0a0a0a] border border-white/5 rounded-lg flex flex-col overflow-hidden transition-all duration-300 hover:border-white/10 hover:bg-[#0f0f0f] hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1"
+        className="group bg-canvas border border-line-subtle rounded-lg flex flex-col overflow-hidden transition-all duration-page hover:border-line hover:bg-base hover:shadow-elevation-4 hover:shadow-info-soft hover:-translate-y-1"
       >
         {/* Thumbnail Section */}
-        <div className="relative h-44 w-full overflow-hidden bg-white/5">
+        <div className="relative h-44 w-full overflow-hidden bg-wash">
           {app.thumbnail ? (
             <img
               src={app.thumbnail}
               alt={app.name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-page group-hover:scale-110"
             />
           ) : (
-            <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br ${cardGradient} transition-colors group-hover:scale-110 duration-700`}>
-              <app.icon className={`text-4xl opacity-20 group-hover:opacity-40 transition-opacity text-white`} />
+            <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br ${cardGradient} transition-colors group-hover:scale-110 duration-page`}>
+              <app.icon className={`text-4xl opacity-20 group-hover:opacity-40 transition-opacity text-ink`} />
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
@@ -199,58 +193,33 @@ export default function AppsStudio({ apiKey, locale = 'en' }) {
         {/* Content Section */}
         <div className="p-5 flex flex-col flex-1 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-lg text-[#22d3ee] border border-white/5 group-hover:border-white/10 transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-wash flex items-center justify-center text-lg text-brand border border-line-subtle group-hover:border-line transition-colors">
               <app.icon />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold text-white uppercase tracking-tight truncate">{app.name}</h3>
-              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">{app.category || copy.card.templateFallback}</p>
+              <h3 className="text-sm font-bold text-ink uppercase tracking-tight truncate">{app.name}</h3>
+              <p className="text-micro text-ink-subtle font-bold uppercase tracking-widest">{app.category || copy.card.templateFallback}</p>
             </div>
           </div>
           
-          <p className="text-xs text-white/50 leading-relaxed font-medium line-clamp-2 min-h-[2.5rem]">{app.description}</p>
+          <p className="text-xs text-ink-subtle leading-relaxed font-medium line-clamp-2 min-h-[2.5rem]">{app.description}</p>
           
           {/* Action Buttons */}
           <div className="flex items-center gap-2 pt-2">
-            {isDummy ? (
-              <>
-                <button
-                  onClick={() => setSelectedApp(app)}
-                  className="flex-1 py-2 bg-white/5 text-white rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/10 transition-all border border-white/5 active:scale-95"
-                >
-                  <FaGithub className="text-xs" />
-                  {copy.card.github}
-                </button>
-                <button
-                  onClick={() => setSelectedApp(app)}
-                  className="flex-1 py-2 bg-[#22d3ee]/10 text-[#22d3ee] rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#22d3ee]/20 transition-all border border-[#22d3ee]/20 active:scale-95"
-                >
-                  <FaExternalLinkAlt className="text-[9px]" />
-                  {copy.card.demo}
-                </button>
-              </>
-            ) : (
-              <>
-                <a
-                  href={app.repo || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 py-2 bg-white/5 text-white rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/10 transition-all border border-white/5 active:scale-95"
-                >
-                  <FaGithub className="text-xs" />
-                  {copy.card.github}
-                </a>
-                <a
-                  href={app.hosted || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 py-2 bg-[#22d3ee]/10 text-[#22d3ee] rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#22d3ee]/20 transition-all border border-[#22d3ee]/20 active:scale-95"
-                >
-                  <FaExternalLinkAlt className="text-[9px]" />
-                  {copy.card.demo}
-                </a>
-              </>
-            )}
+            <button
+              onClick={() => setSelectedApp(app)}
+              className="flex-1 py-2 bg-wash text-ink rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-wash-press transition-all border border-line-subtle active:scale-95"
+            >
+              <FaRocket className="text-xs text-brand" />
+              {copy.card.getTemplate || '获取应用'}
+            </button>
+            <button
+              onClick={() => setSelectedApp(app)}
+              className="flex-1 py-2 bg-brand/10 text-brand rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-brand/20 transition-all border border-line-accent/20 active:scale-95"
+            >
+              <FaExternalLinkAlt className="text-micro" />
+              {copy.card.demo || '查看演示'}
+            </button>
           </div>
         </div>
       </div>
@@ -258,21 +227,21 @@ export default function AppsStudio({ apiKey, locale = 'en' }) {
   };
 
   return (
-    <div className="h-full w-full flex flex-col items-center bg-[#030303] overflow-y-auto custom-scrollbar relative">
+    <div className="h-full w-full flex flex-col items-center bg-canvas overflow-y-auto custom-scrollbar relative">
       <Toaster position="bottom-right" reverseOrder={false} />
       
       <div className="flex flex-col gap-10 items-center w-full max-w-7xl pt-12 pb-24 px-6">
         
         {/* Header Section */}
         <div className="text-center space-y-6 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#22d3ee]/10 border border-[#22d3ee]/20 rounded-full">
-            <FaDollarSign className="text-[#22d3ee] text-xs" />
-            <span className="text-[10px] font-black text-[#22d3ee] uppercase tracking-widest">{copy.hero.badge}</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-brand/10 border border-line-accent/20 rounded-full">
+            <FaDollarSign className="text-brand text-xs" />
+            <span className="text-micro font-black text-brand uppercase tracking-widest">{copy.hero.badge}</span>
           </div>
-          <h1 className="text-5xl font-black text-white tracking-tighter leading-[0.9]">
+          <h1 className="text-5xl font-black text-ink tracking-tighter leading-[0.9]">
             {copy.hero.titleLine1}<br />{copy.hero.titleLine2}
           </h1>
-          <p className="text-white/40 text-sm font-medium leading-relaxed max-w-xl mx-auto">
+          <p className="text-ink-subtle text-sm font-medium leading-relaxed max-w-xl mx-auto">
             {copy.hero.subtitle}
           </p>
         </div>
@@ -284,14 +253,14 @@ export default function AppsStudio({ apiKey, locale = 'en' }) {
             { icon: FaCreditCard, step: "02", title: copy.steps.collect.title, body: copy.steps.collect.body },
             { icon: FaDollarSign, step: "03", title: copy.steps.keep.title, body: copy.steps.keep.body },
           ].map(({ icon: Icon, step, title, body }) => (
-            <div key={step} className="flex items-start gap-4 bg-[#0a0a0a] border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors">
-              <div className="w-12 h-12 shrink-0 rounded-2xl bg-white/5 flex items-center justify-center text-[#22d3ee] border border-white/5">
+            <div key={step} className="flex items-start gap-4 bg-canvas border border-line-subtle rounded-2xl p-6 hover:border-line transition-colors">
+              <div className="w-12 h-12 shrink-0 rounded-2xl bg-wash flex items-center justify-center text-brand border border-line-subtle">
                 <Icon className="text-lg" />
               </div>
               <div>
-                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">{copy.steps.stepLabel} {step}</p>
-                <h3 className="text-sm font-bold text-white mb-1.5">{title}</h3>
-                <p className="text-xs text-white/40 leading-relaxed font-medium">{body}</p>
+                <p className="text-micro font-black text-ink-subtle uppercase tracking-widest mb-1">{copy.steps.stepLabel} {step}</p>
+                <h3 className="text-sm font-bold text-ink mb-1.5">{title}</h3>
+                <p className="text-xs text-ink-subtle leading-relaxed font-medium">{body}</p>
               </div>
             </div>
           ))}
@@ -305,9 +274,9 @@ export default function AppsStudio({ apiKey, locale = 'en' }) {
 
         {/* Footer Accent */}
         <div className="pt-24 pb-12 flex flex-col items-center gap-4">
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/5 rounded-full border border-white/5">
-            <span className="block w-1.5 h-1.5 rounded-full bg-[#22d3ee] animate-pulse" />
-            <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">{copy.footer.moreComingSoon}</span>
+          <div className="inline-flex items-center gap-3 px-4 py-2 bg-wash rounded-full border border-line-subtle">
+            <span className="block w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
+            <span className="text-micro font-black text-ink-subtle uppercase tracking-widest">{copy.footer.moreComingSoon}</span>
           </div>
         </div>
       </div>
@@ -315,16 +284,16 @@ export default function AppsStudio({ apiKey, locale = 'en' }) {
       {/* Get Template Modal */}
       {selectedApp && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedApp(null)} />
-          <div className="relative bg-[#0a0a0a] border border-white/10 w-full max-w-md rounded-2xl p-8 space-y-8 animate-scale-up shadow-2xl">
+          <div className="absolute inset-0 bg-scrim backdrop-blur-sm animate-fade-in" onClick={() => setSelectedApp(null)} />
+          <div className="relative bg-canvas border border-line w-full max-w-md rounded-2xl p-8 space-y-8 animate-scale-up shadow-elevation-4">
             <div className="flex flex-col items-center text-center space-y-4">
-              <div className="w-20 h-20 rounded-[28px] bg-[#22d3ee]/10 border border-[#22d3ee]/20 flex items-center justify-center text-4xl text-[#22d3ee] mb-2">
+              <div className="w-20 h-20 rounded-2xl bg-brand/10 border border-line-accent/20 flex items-center justify-center text-4xl text-brand mb-2">
                 <selectedApp.icon />
               </div>
-              <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+              <h2 className="text-2xl font-black text-ink uppercase tracking-tight">
                 {copy.modal.deployTitle.replace('{appName}', selectedApp.name)}
               </h2>
-              <p className="text-sm font-medium text-white/40 leading-relaxed px-4">
+              <p className="text-sm font-medium text-ink-subtle leading-relaxed px-4">
                 {copy.modal.body.split('{appName}').map((part, i, arr) => (
                   <React.Fragment key={i}>
                     {part}
@@ -338,13 +307,13 @@ export default function AppsStudio({ apiKey, locale = 'en' }) {
               <button
                 onClick={handleRequestAccess}
                 disabled={isRequesting}
-                className="w-full py-4 bg-[#22d3ee] text-black rounded-md text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#22d3ee]/90 transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                className="w-full py-4 bg-brand text-ink-on-accent rounded-md text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-brand/90 transition-all shadow-elevation-2 active:scale-95 disabled:opacity-50"
               >
                 {isRequesting ? copy.modal.sending : copy.modal.getTemplate}
               </button>
               <button
                 onClick={() => setSelectedApp(null)}
-                className="w-full py-4 bg-white/5 border border-white/10 text-white/60 rounded-md text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white/10 transition-all"
+                className="w-full py-4 bg-wash border border-line text-ink-muted rounded-md text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-wash-press transition-all"
               >
                 {copy.modal.maybeLater}
               </button>

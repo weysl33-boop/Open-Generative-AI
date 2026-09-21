@@ -1,10 +1,20 @@
-# Open Generative AI: Technical Documentation & Context
+# koyosim: Technical Documentation & Context
 
-This document serves as a comprehensive knowledge base for the Open Generative AI project. It details the architecture, key components, API integration patterns, and state management strategies used in the application.
+This document serves as a comprehensive knowledge base for the koyosim project. It details the architecture, key components, API integration patterns, and state management strategies used in the application.
+
+## 0. 核心部署铁律（严禁只修改本地）
+
+> [!IMPORTANT]
+> **线上同步铁律**：严禁只修改本地代码而不同步服务器！
+> 本地任何功能改动、UI 调整、样式或文案修改，必须：
+> 1. 本地构建并验证；
+> 2. 同步源码及预构建产物部署到云服务器 A (`43.155.166.90` 路径 `/home/wwwroot/AI/domain/koyosim.com/web`)；
+> 3. 平滑重启 `koyosim.service` 与 `koyosim-worker.service`；
+> 4. 执行线上连通性与内容自检（curl 验证页面 Title、关键品牌标识、静态资源），确保线上 100% 生效后方可向用户汇报。
 
 ## 1. Project Vision & Overview
 
-**Open Generative AI** is an ambitious open-source project for AI image and video generation.
+**koyosim** is an ambitious AI image and video creative workspace studio.
 
 - **Core Goal:** To build a feature-complete, self-hosted generative AI studio, starting with **Image Generation** (Nano) and expanding into **Video Generation** (Cinema) and other creative tools.
 - **Current State:** The Image Studio ("Nano Banana Pro" interface) is fully operational, featuring a premium dark-mode UI, history management, and multi-model support via the [Muapi.ai](https://muapi.ai) engine.

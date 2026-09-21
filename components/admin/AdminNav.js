@@ -1,112 +1,242 @@
 'use client';
 
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { hasPermission, PERMISSIONS } from '@/lib/admin/permissions';
+import {
+  LayoutDashboard,
+  Users,
+  CreditCard,
+  Clapperboard,
+  Cpu,
+  Megaphone,
+  Plug2,
+  Wallet,
+  Shield,
+  ChevronDown,
+} from 'lucide-react';
+import { hasPermission } from '@/lib/admin/permissions';
+import { ADMIN_NAV_GROUPS, matchAdminRoute } from '@/lib/admin/navigation';
 
-const NAV_GROUPS = [
-  {
-    label: '工作台',
-    items: [
-      { href: '/admin', label: '运营概览', permission: PERMISSIONS.dashboardRead, exact: true },
-    ],
-  },
-  {
-    label: '用户与权限',
-    items: [
-      { href: '/admin/users', label: '用户管理', permission: PERMISSIONS.usersRead },
-      { href: '/admin/admins', label: '管理员与角色', permission: PERMISSIONS.adminsWrite },
-      { href: '/admin/security/sessions', label: '会话与安全', permission: PERMISSIONS.sessionsRevoke },
-    ],
-  },
-  {
-    label: '计费与权益',
-    items: [
-      { href: '/admin/subscriptions', label: '订阅管理', permission: PERMISSIONS.billingRead },
-      { href: '/admin/orders', label: '订单与支付', permission: PERMISSIONS.billingRead },
-      { href: '/admin/credits', label: '额度账本', permission: PERMISSIONS.creditsRead },
-      { href: '/admin/coupons', label: '卡密与兑换码', permission: PERMISSIONS.creditsRead },
-      { href: '/admin/plans', label: '套餐配置', permission: PERMISSIONS.plansRead },
-    ],
-  },
-  {
-    label: '内容与任务',
-    items: [
-      { href: '/admin/generations', label: '生成任务', permission: PERMISSIONS.generationsRead, exact: true },
-      { href: '/admin/generations/failures', label: '失败任务排查', permission: PERMISSIONS.generationsRead },
-      { href: '/admin/moderation', label: '内容审核', permission: PERMISSIONS.moderationRead },
-    ],
-  },
-  {
-    label: '模型与集成',
-    items: [
-      { href: '/admin/models', label: '模型开关与成本', permission: PERMISSIONS.providersRead },
-      { href: '/admin/providers/ai', label: 'AI 供应商状态', permission: PERMISSIONS.providersRead },
-      { href: '/admin/providers/payments', label: '支付渠道', permission: PERMISSIONS.providersRead },
-      { href: '/admin/webhooks', label: 'Webhook 事件', permission: PERMISSIONS.webhooksRead },
-    ],
-  },
-  {
-    label: '系统',
-    items: [
-      { href: '/admin/health', label: '系统健康', permission: PERMISSIONS.healthRead },
-      { href: '/admin/settings', label: '系统设置与前端', permission: PERMISSIONS.settingsRead },
-      { href: '/admin/audit', label: '审计日志', permission: PERMISSIONS.auditRead },
-    ],
-  },
-];
+const NAV_ICONS = {
+  LayoutDashboard,
+  Users,
+  CreditCard,
+  Clapperboard,
+  Cpu,
+  Megaphone,
+  Plug2,
+  Wallet,
+  Shield,
+};
 
-export default function AdminNav({ user, onItemClick }) {
+export default function AdminNav({ user, collapsed = false, onItemClick, onRequestExpand, openGroupRequest }) {
   const pathname = usePathname();
   const role = user?.role || 'user';
 
+  const matched = useMemo(() => matchAdminRoute(pathname), [pathname]);
+
+  // 展开状态记录（以稳定 id 为键，菜单改名不影响状态）
+  const [openGroups, setOpenGroups] = useState({});
+
+  const toggleGroup = (groupId) => {
+    setOpenGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
+
+  // 根据当前路径自动展开包含激活项的分类
+  useEffect(() => {
+    if (matched) {
+      setOpenGroups((prev) => (prev[matched.group.id] ? prev : { ...prev, [matched.group.id]: true }));
+    }
+  }, [matched]);
+
+  // 折叠 rail 点击父级后，由 Shell 请求展开对应分组
+  useEffect(() => {
+    if (openGroupRequest) {
+      const groupId = String(openGroupRequest).split(':')[0];
+      setOpenGroups((prev) => ({ ...prev, [groupId]: true }));
+    }
+  }, [openGroupRequest]);
+
+  const visibleGroups = useMemo(
+    () =>
+      ADMIN_NAV_GROUPS.map((group) => ({
+        ...group,
+        items: group.items.filter((item) => hasPermission(role, item.permission)),
+      })).filter((group) => group.items.length > 0),
+    [role]
+  );
+
+  // ── 折叠 rail：仅显示一级图标，悬浮出名称提示 ──
+  if (collapsed) {
+    return (
+      <nav aria-label="管理后台导航" className="flex flex-col items-center gap-1.5">
+        {visibleGroups.map((group) => {
+          const IconComponent = NAV_ICONS[group.icon] || LayoutDashboard;
+          const hasActiveChild = matched?.group.id === group.id;
+
+          if (group.items.length === 1) {
+            const item = group.items[0];
+            return (
+              <Link
+                key={group.id}
+                href={item.href}
+                onClick={onItemClick}
+                aria-label={group.label}
+                className={`group relative flex size-10 items-center justify-center rounded-lg border transition-colors duration-base active:scale-95 ${
+                  hasActiveChild
+                    ? 'border-brand-line bg-brand-soft text-brand'
+                    : 'border-transparent text-ink-muted hover:bg-wash hover:text-ink'
+                }`}
+              >
+                <IconComponent className="size-4" />
+                <NavTooltip label={group.label} />
+              </Link>
+            );
+          }
+
+          return (
+            <button
+              key={group.id}
+              type="button"
+              onClick={() => onRequestExpand?.(group.id)}
+              aria-label={`${group.label}（点击展开菜单）`}
+              className={`group relative flex size-10 items-center justify-center rounded-lg border transition-colors duration-base active:scale-95 ${
+                hasActiveChild
+                  ? 'border-brand-line bg-brand-soft text-brand'
+                  : 'border-transparent text-ink-muted hover:bg-wash hover:text-ink'
+              }`}
+            >
+              <IconComponent className="size-4" />
+              {hasActiveChild && (
+                <span className="absolute right-0.5 top-1.5 size-1.5 rounded-full bg-brand" />
+              )}
+              <NavTooltip label={group.label} />
+            </button>
+          );
+        })}
+      </nav>
+    );
+  }
+
   return (
-    <nav aria-label="管理后台导航" className="space-y-6">
-      {NAV_GROUPS.map((group) => {
-        // 根据角色权限裁剪过滤菜单项
-        const visibleItems = group.items.filter((item) =>
-          hasPermission(role, item.permission)
-        );
+    <nav aria-label="管理后台导航" className="space-y-1">
+      {visibleGroups.map((group) => {
+        const IconComponent = NAV_ICONS[group.icon] || LayoutDashboard;
+        const hasActiveChild = matched?.group.id === group.id;
+        const isOpen = !!openGroups[group.id];
 
-        if (!visibleItems.length) return null;
+        // 仅单个菜单项的分组（如“工作台”）直接渲染为顶级直通路由链接
+        if (group.items.length === 1) {
+          const item = group.items[0];
+          const active = matched?.item.id === item.id;
+          return (
+            <Link
+              key={group.id}
+              href={item.href}
+              onClick={onItemClick}
+              className={`group relative flex h-10 items-center gap-2.5 rounded-lg border px-3 text-body-sm font-medium tracking-wide transition-colors duration-base active:scale-95 ${
+                active
+                  ? 'border-brand-line bg-brand-soft font-semibold text-brand'
+                  : 'border-transparent text-ink-muted hover:border-line-subtle hover:bg-wash hover:text-ink'
+              }`}
+            >
+              {active && (
+                <span className="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-brand" />
+              )}
+              <IconComponent
+                className={`size-4 shrink-0 transition-colors ${
+                  active ? 'text-brand' : 'text-ink-muted group-hover:text-ink'
+                }`}
+              />
+              <span className="truncate">{group.label}</span>
+            </Link>
+          );
+        }
 
+        // 父级无独立页面：点击整行仅做展开/折叠，不做跳转
         return (
-          <div key={group.label}>
-            <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/30">
-              {group.label}
-            </p>
-            <div className="space-y-1">
-              {visibleItems.map((item) => {
-                const active = item.exact
-                  ? pathname === item.href
-                  : pathname === item.href || (pathname.startsWith(`${item.href}/`) && !item.exact);
+          <div key={group.id}>
+            <button
+              type="button"
+              onClick={() => toggleGroup(group.id)}
+              aria-expanded={isOpen}
+              className={`group flex h-10 w-full items-center justify-between rounded-lg px-3 text-body-sm tracking-wide transition-colors duration-base active:scale-95 ${
+                hasActiveChild
+                  ? 'font-semibold text-ink'
+                  : 'font-medium text-ink-muted hover:bg-wash hover:text-ink'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 truncate">
+                <IconComponent
+                  className={`size-4 shrink-0 transition-colors ${
+                    hasActiveChild ? 'text-brand' : 'text-ink-muted group-hover:text-ink'
+                  }`}
+                />
+                <span className="truncate">{group.label}</span>
+              </div>
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={onItemClick}
-                    className={`group relative flex h-11 items-center rounded-xl px-3 text-[13px] font-medium transition-all ${
-                      active
-                        ? 'bg-cyan-300/10 text-cyan-200 shadow-sm shadow-cyan-300/10'
-                        : 'text-white/60 hover:bg-white/[0.05] hover:text-white'
-                    }`}
-                  >
-                    <span
-                      className={`mr-3 h-2 w-2 rounded-full transition-transform ${
-                        active
-                          ? 'bg-[#22d3ee] shadow-[0_0_8px_rgba(34,211,238,0.8)] scale-110'
-                          : 'bg-white/20 group-hover:bg-white/40'
-                      }`}
-                    />
-                    <span className="truncate">{item.label}</span>
-                  </Link>
-                );
-              })}
+              <div className="flex items-center gap-1.5">
+                {hasActiveChild && !isOpen && (
+                  <span className="size-1.5 rounded-full bg-brand" />
+                )}
+                <ChevronDown
+                  className={`size-3.5 transition-transform duration-base ease-standard ${
+                    hasActiveChild ? 'text-brand' : 'text-ink-muted group-hover:text-ink'
+                  } ${isOpen ? 'rotate-180' : ''}`}
+                />
+              </div>
+            </button>
+
+            {/* 下滑展开的二级子菜单 (CSS Grid 丝滑高度自适应过渡) */}
+            <div
+              className={`grid transition-[grid-template-rows,opacity] duration-base ease-standard ${
+                isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+              }`}
+            >
+              <div className="overflow-hidden">
+                <div className="relative mt-1 ml-5 space-y-0.5 border-l border-line-subtle pb-1 pl-3.5">
+                  {group.items.map((item) => {
+                    const active = matched?.item.id === item.id;
+
+                    return (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        onClick={onItemClick}
+                        aria-current={active ? 'page' : undefined}
+                        className={`group relative flex h-9 items-center rounded-lg border px-2.5 text-body-sm tracking-wide transition-colors duration-base active:scale-95 ${
+                          active
+                            ? 'border-brand-line bg-brand-soft font-semibold text-brand'
+                            : 'border-transparent font-normal text-ink-muted hover:border-line-subtle hover:bg-wash hover:text-ink'
+                        }`}
+                      >
+                        <span
+                          className={`mr-2.5 size-1 shrink-0 rounded-full transition-colors duration-base ${
+                            active ? 'bg-brand' : 'bg-line-strong group-hover:bg-wash-press'
+                          }`}
+                        />
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         );
       })}
     </nav>
+  );
+}
+
+function NavTooltip({ label }) {
+  return (
+    <span
+      role="tooltip"
+      className="pointer-events-none absolute left-full top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-md border border-line-subtle bg-surface px-2.5 py-1.5 text-caption font-medium text-ink shadow-elevation-3 group-hover:block"
+    >
+      {label}
+    </span>
   );
 }

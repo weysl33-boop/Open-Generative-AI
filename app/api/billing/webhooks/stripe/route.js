@@ -1,35 +1,38 @@
-import crypto from 'node:crypto';
-import { json, recordWebhookEvent } from '@/lib/billing';
-import { dispatchStripeEvent } from '@/lib/services/webhookDispatcher';
+import { json } from '@/lib/services/auth';
+import { paymentNotificationOutcome } from '@/lib/payments/provider';
+import { verifyStripeWebhookSignature } from '@/lib/payments/stripeProvider';
+import { getStripeWebhookSecret } from '@/lib/payments/providerCredentials';
+import { handleStripeWebhookEvent } from '@/lib/services/webhookDispatcher';
 
 export const runtime = 'nodejs';
 
-function verifyStripeSignature(rawBody, signatureHeader, secret) {
-  if (!signatureHeader || !secret) return false;
-  const parts = Object.fromEntries(signatureHeader.split(',').map((part) => {
-    const [key, value] = part.split('=', 2);
-    return [key, value];
-  }));
-  if (!parts.t || !parts.v1) return false;
-  const age = Math.abs(Math.floor(Date.now() / 1000) - Number(parts.t));
-  if (!Number.isFinite(age) || age > 300) return false;
-  const expected = crypto.createHmac('sha256', secret).update(`${parts.t}.${rawBody}`).digest('hex');
-  const left = Buffer.from(expected, 'utf8');
-  const right = Buffer.from(parts.v1, 'utf8');
-  return left.length === right.length && crypto.timingSafeEqual(left, right);
-}
-
 export async function POST(request) {
   const rawBody = await request.text();
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  let secret;
+  try { secret = await getStripeWebhookSecret(); } catch (error) {
+    console.error('[billing/webhooks/stripe/config]', { code: error.code || 'SECRET_READ_FAILED' });
+  }
   if (!secret) return json({ error: 'Stripe webhook 尚未配置' }, { status: 503 });
-  if (!verifyStripeSignature(rawBody, request.headers.get('stripe-signature'), secret)) {
+  if (!verifyStripeWebhookSignature(rawBody, request.headers.get('stripe-signature'), secret)) {
     return json({ error: '无效的 Stripe 签名' }, { status: 400 });
   }
   let event;
   try { event = JSON.parse(rawBody); } catch { return json({ error: '无效的事件数据' }, { status: 400 }); }
-  if (!await recordWebhookEvent('stripe', event.id, event)) return json({ received: true, duplicate: true });
-
-  await dispatchStripeEvent(event);
-  return json({ received: true });
+  if (!event?.id || typeof event.id !== 'string' || event.id.length > 200) {
+    return json({ error: '事件缺少有效 ID' }, { status: 400 });
+  }
+  try {
+    const result = await handleStripeWebhookEvent({ event, headers: { 'stripe-signature': request.headers.get('stripe-signature') } });
+    const outcome = paymentNotificationOutcome({ result });
+    if (outcome === 'ack') return json({ received: true, action: result.action, duplicate: Boolean(result.duplicate) });
+    if (outcome === 'retry') {
+      console.error('[billing/webhooks/stripe/retry]', { code: String(result?.action || 'WEBHOOK_RETRYABLE') });
+      return json({ error: 'Webhook 依赖的订单尚未同步，将允许上游重试', action: result.action }, { status: 500 });
+    }
+    console.error('[billing/webhooks/stripe/reject]', { code: String(result?.action || 'WEBHOOK_REJECTED') });
+    return json({ error: '事件未通过校验，需在 Webhook 台账中人工处理后重放', action: result.action }, { status: 400 });
+  } catch (error) {
+    console.error('[billing/webhooks/stripe]', { code: error.code || 'WEBHOOK_ERROR' });
+    return json({ error: 'Webhook 处理失败，将允许安全重试' }, { status: 500 });
+  }
 }

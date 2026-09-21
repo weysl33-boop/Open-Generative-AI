@@ -2,59 +2,584 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  background: #050505;
-  color: white;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
 :root {
-  --color-primary: #22d3ee;
-  --bg-app: #030303;
-  --bg-panel: #0a0a0a;
-  --bg-card: #111111;
-  --border-color: rgba(255,255,255,0.05);
-  --border-radius-xl: 0.75rem;
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  /* ============================================================
+     KOYO STUDIO DESIGN TOKENS — SINGLE SOURCE OF TRUTH
+     Visual direction: "Premium AI Creative Workspace"
+     Every surface, text, border, accent, radius, height, motion
+     and layer value in the product must resolve from this block.
+     See docs/UI_DESIGN_SYSTEM.md. Do not add ad-hoc values in
+     business components; extend this block instead.
+     ============================================================ */
+
+  /* --- Surface elevation: neutral, dark-first, content is the hero --- */
+  --bg-canvas: #0a0b0d;          /* page floor behind everything */
+  --bg-base: #0e1013;            /* workbench / studio shell */
+  --bg-surface: #131519;         /* panels, sidebars, composer */
+  --bg-surface-raised: #191c21;  /* cards, hoverable rows */
+  --bg-overlay: #202429;         /* modals, popovers, menus, toasts */
+  --bg-subtle: #101216;          /* idle input wells, inset areas */
+  --bg-inverse: #f4f5f7;         /* light chips on dark surfaces */
+  /* Glass variants: the only permitted translucent surfaces. Tailwind cannot
+     apply /opacity to a var() colour, so the alpha lives in the token. */
+  --bg-surface-glass: rgba(19, 21, 25, 0.92);   /* prompt composer */
+  --bg-overlay-glass: rgba(32, 36, 41, 0.97);   /* popover, dropdown */
+
+  /* --- Text hierarchy ---
+     Measured against the full surface ramp (canvas -> overlay):
+       primary    13.4 .. 16.9 : 1  AAA
+       secondary   6.2 ..  7.9 : 1  AA at every size
+       tertiary    4.5 ..  5.7 : 1  AA at every size
+       disabled    1.9 ..  2.4 : 1  exempt (WCAG 1.4.3 inactive controls)
+     tertiary was #6e737b and fell to 3.27:1 on --bg-overlay, which failed
+     AA; it is lifted here rather than restricted to large text. */
+  --text-primary: #ededf0;
+  --text-secondary: #a0a4ab;
+  --text-tertiary: #868b8f;
+  --text-disabled: #4a4e55;
+  --text-inverse: #0a0b0d;
+  --text-on-accent: #03151a;     /* >=7.8:1 on every accent state, AAA */
+
+  /* --- Borders: alpha-based so they read on every surface --- */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-accent: rgba(34, 211, 238, 0.45);
+
+  /* --- Brand accent: the only saturated colour in the UI.
+         Reserved for primary action, focus, active, progress. --- */
+  --accent-primary: #22d3ee;
+  --accent-hover: #56dcf5;
+  --accent-active: #0eb8d1;
+  --accent-soft: rgba(34, 211, 238, 0.12);
+  --accent-pressed: rgba(34, 211, 238, 0.20);
+  /* Explicit alpha tokens: Tailwind cannot apply /opacity to var() colours,
+     so every translucent accent usage resolves from one of these. */
+  --accent-ring: rgba(34, 211, 238, 0.45);
+  --accent-line: rgba(34, 211, 238, 0.30);
+
+  /* --- Feedback (400-level for legibility on dark) --- */
+  --success: #34d399;
+  --success-soft: rgba(52, 211, 153, 0.14);
+  --success-line: rgba(52, 211, 153, 0.32);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.14);
+  --warning-line: rgba(251, 191, 36, 0.32);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.14);
+  --danger-hover: rgba(248, 113, 113, 0.22);
+  --danger-pressed: rgba(248, 113, 113, 0.32);
+  --danger-line: rgba(248, 113, 113, 0.32);
+  --danger-ring: rgba(248, 113, 113, 0.45);
+  --info: #60a5fa;
+  --info-soft: rgba(96, 165, 250, 0.14);
+  --info-line: rgba(96, 165, 250, 0.32);
+
+  /* Neutral translucent washes — the only allowed white-alpha values */
+  --hover-neutral: rgba(255, 255, 255, 0.04);
+  --hover-neutral-strong: rgba(255, 255, 255, 0.07);
+  --press-neutral: rgba(255, 255, 255, 0.10);
+
+  /* --- Radius: exactly 6 steps + full --- */
+  --radius-xs: 4px;    /* badge, tiny tag */
+  --radius-sm: 6px;    /* control-sm, menu item */
+  --radius-md: 8px;    /* button, input, select */
+  --radius-lg: 12px;   /* dropdown, popover, small card */
+  --radius-xl: 16px;   /* card, panel, modal */
+  --radius-2xl: 20px;  /* prompt composer shell */
+  --radius-full: 9999px;
+
+  /* --- Control height contract --- */
+  --control-xs: 28px;
+  --control-sm: 32px;
+  --control-md: 38px;    /* DEFAULT across all studios */
+  --control-lg: 44px;
+  --header-h: 56px;
+  --sidebar-w: 240px;
+  --sidebar-w-collapsed: 60px;
+  /* Studio configuration column. Every studio that shows a left parameter
+     panel uses this width so switching studios does not resize the shell. */
+  --panel-w: 400px;
+  /* Prompt composer grows between these two bounds; mobile is deliberately
+     shorter so it never covers the canvas it is generating into. */
+  --composer-max-h: 152px;
+  --composer-max-h-md: 256px;
+  /* 16px gutter each side so the shell never touches the viewport edge. */
+  --composer-w-mobile: calc(100% - 32px);
+  /* Composer popovers grow downward from the trigger; 45vh keeps the
+     parameter list from covering the whole canvas on a short viewport. */
+  --popover-max-h: 45vh;
+
+  /* --- Spacing: 4px base grid --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* --- Typography scale --- */
+  /* --- Typography ---
+     Inter and Jost are self-hosted by next/font in app/layout.js; the
+     generated family is reached through --font-inter / --font-jost so the
+     variable-subset fallbacks Next injects are honoured. No Google Fonts
+     @import: a render-blocking request to fonts.googleapis.com is a
+     measurable first-paint liability for the primary CN audience, and it
+     duplicated the Jost load that next/font already performs. */
+  --font-sans: var(--font-inter), "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", "Menlo", monospace;
+  --text-display: 32px;
+  --text-page-title: 24px;
+  --text-section-title: 18px;
+  --text-card-title: 15px;
+  --text-body: 14px;
+  --text-body-sm: 13px;
+  --text-label: 12px;
+  --text-caption: 11px;
+  --text-micro: 10px;   /* floor of the scale: dense studio chips & counters */
+  /* Line heights travel with their size so a font utility is complete. */
+  --lh-display: 40px;
+  --lh-page-title: 32px;
+  --lh-section-title: 26px;
+  --lh-card-title: 22px;
+  --lh-body: 20px;
+  --lh-body-sm: 18px;
+  --lh-label: 16px;
+  --lh-caption: 14px;
+  --lh-micro: 14px;
+  --tracking-display: -0.025em;
+  --tracking-title: -0.02em;
+  --tracking-body: -0.005em;
+
+  /* --- Elevation: no coloured glow anywhere --- */
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --elevation-2: 0 4px 12px rgba(0, 0, 0, 0.50);
+  --elevation-3: 0 12px 32px rgba(0, 0, 0, 0.60);
+  --elevation-4: 0 24px 64px -12px rgba(0, 0, 0, 0.80);
+
+  /* --- Motion --- */
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 240ms;
+  --motion-page: 300ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* --- Z-index layers: never invent a number outside this ladder --- */
+  --z-base: 0;
+  --z-raised: 1;
+  --z-sticky: 10;
+  --z-header: 40;
+  --z-drawer: 50;
+  --z-dropdown: 60;
+  --z-popover: 70;
+  --z-overlay: 80;
+  --z-modal: 90;
+  --z-toast: 100;
+  --z-tooltip: 110;
+
+  /* --- Scrollbar --- */
+  --scrollbar-thumb: rgba(255, 255, 255, 0.16);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.30);
+  --scrollbar-size: 10px;
+
+  /* --- Range slider geometry ---
+     `appearance: none` without an explicit thumb renders an invisible handle
+     in Chromium, so a slider styled only with Tailwind utilities becomes an
+     un-grabbable bar. The geometry lives here with the pseudo-elements that
+     need it; utilities cannot reach ::-webkit-slider-thumb from a class. */
+  --range-h: 24px;
+  --range-track: rgba(255, 255, 255, 0.14);
+  --range-thumb: var(--text-primary);
+  --range-thumb-size: 14px;
+
+  /* --- Floating layer geometry ---
+     Viewport-relative, so they cannot come from the 4px spacing grid; they
+     live here instead of as ad-hoc calc()s scattered through components. */
+  --scrim: rgba(3, 4, 5, 0.72);
+  --modal-w: calc(100vw - 32px);      /* never edge-to-edge on desktop */
+  --modal-max-h: calc(100vh - 64px);  /* keeps a dialog off the header and dock */
+  --sheet-max-h: 88vh;                /* mobile bottom sheet */
+  --drawer-max-h: 85vh;               /* side drawer on small viewports */
+  --menu-min-w: 176px;                /* narrowest usable dropdown */
+  --popover-min-w: 176px;
+  --toast-w: 340px;                   /* generation/notification stack */
+
+  /* --- Radix / shadcn legacy mapping — derived, never set directly --- */
+  --background: var(--bg-canvas);
+  --foreground: var(--text-primary);
+  --card: var(--bg-surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-overlay);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--accent-primary);
+  --primary-foreground: var(--text-on-accent);
+  --secondary: var(--bg-surface-raised);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--bg-subtle);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--accent-primary);
+  --accent-foreground: var(--text-on-accent);
+  --destructive: var(--danger);
+  --border: var(--border-default);
+  --input: var(--bg-subtle);
+  --ring: var(--accent-primary);
+  --radius: var(--radius-md);
 }
 
-.glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
+
+@layer base {
+  * {
+    border-color: var(--border-subtle);
+  }
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+  body {
+    min-height: 100vh;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--lh-body);
+    letter-spacing: var(--tracking-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button:not(:disabled), [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  ::selection {
+    background: var(--accent-pressed);
+    color: var(--text-primary);
+  }
+
+  /* Focus is never removed, only ever replaced. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
+
+  /* One discoverable, low-noise scrollbar everywhere. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    border-radius: var(--radius-full);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
 }
 
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+@layer components {
+  /* Page Container Contract */
+  .page-shell {
+    width: 100%;
+    max-width: 1360px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+  }
+  @media (min-width: 640px) {
+    .page-shell {
+      padding-left: var(--space-8);
+      padding-right: var(--space-8);
+    }
+  }
+  @media (min-width: 1024px) {
+    .page-shell {
+      padding-left: 48px;
+      padding-right: 48px;
+    }
+  }
 
-.scrollbar-none::-webkit-scrollbar {
-  height: 2px;
-  width: 2px;
+  /* Placeholder sweep. The only looping animation permitted in the product,
+     because it communicates "waiting" and nothing else. */
+  .skeleton {
+    background-color: var(--hover-neutral);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--hover-neutral-strong) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1600ms var(--ease-standard) infinite;
+  }
 }
-.scrollbar-none::-webkit-scrollbar-track {
+
+/* Scrollbars that must stay invisible on purpose: horizontal rails only,
+   where a persistent affordance would break the layout. Vertical scroll
+   regions must keep the default discoverable scrollbar. */
+.scrollbar-rail {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-rail::-webkit-scrollbar {
+  display: none;
+}
+
+/* Range inputs. The control is 24px tall so the hit area clears the touch
+   minimum while the groove stays a 4px line; the thumb is centred on the
+   track by pulling it back half its own height. */
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: var(--range-h);
   background: transparent;
+  cursor: pointer;
 }
-.scrollbar-none::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
+.range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--range-track);
 }
-.scrollbar-none::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--range-thumb-size);
+  height: var(--range-thumb-size);
+  margin-top: calc((4px - var(--range-thumb-size)) / 2);
+  border-radius: var(--radius-full);
+  background: var(--range-thumb);
 }
-.scrollbar-none {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+.range::-moz-range-track {
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--range-track);
+}
+.range::-moz-range-thumb {
+  width: var(--range-thumb-size);
+  height: var(--range-thumb-size);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--range-thumb);
+}
+.range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+.range:focus {
+  outline: none;
+}
+.range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px var(--accent-ring);
+}
+.range:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px var(--accent-ring);
 }
 
-@keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ------------------------------------------------------------
+   DEPRECATED aliases. Kept only so the staged migration does not
+   break existing pages; the guard script rejects NEW usage and
+   these are removed once the ledger in docs/UI_MIGRATION.md is clear.
+   New code must use the global scrollbar (base layer) or .scrollbar-rail.
+   ------------------------------------------------------------ */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
-.animate-fade-in-up { animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.custom-scrollbar::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: var(--radius-full);
+}
+.no-scrollbar,
+.admin-sidebar-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar,
+.admin-sidebar-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Standard Keyframe Animations
+   These animate the independent `translate` / `scale` properties, never
+   `transform`. A keyframe that writes `transform` overrides any Tailwind
+   `-translate-x-1/2` or Radix popper positioning on the same element for as
+   long as the animation is running (and forever, under `fill: both`) — which
+   visibly snapped every centred dialog out of place and shifted every
+   dropdown off its trigger. */
+@keyframes fadeIn {
+  from { opacity: 0; translate: 0 4px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; scale: 0.97; }
+  to { opacity: 1; scale: 1; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--motion-base) var(--ease-enter) both;
+}
+.animate-scale-in {
+  animation: scaleIn var(--motion-base) var(--ease-enter) both;
+}
+
+/* A11y Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* koyosim Brand Typography - Jost Medium (中粗体 500) */
+.font-brand {
+  font-family: var(--font-jost), 'Jost', system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.font-jost {
+  font-family: var(--font-jost), 'Jost', system-ui, -apple-system, sans-serif;
+}
+
+/* Global Site Banner Special Animations */
+@keyframes bannerShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  50%, 100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes bannerRadar {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.animate-banner-shimmer {
+  animation: bannerShimmer 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-banner-radar {
+  animation: bannerRadar 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Ambient Diffusion Glow & Mesh Aura Keyframes */
+@keyframes bannerAuraBreathe {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.15) translateY(-2px);
+    opacity: 0.95;
+  }
+}
+
+@keyframes bannerAuraDrift {
+  0% {
+    transform: translate(-10%, 0%) scale(1);
+  }
+  50% {
+    transform: translate(15%, -8%) scale(1.12);
+  }
+  100% {
+    transform: translate(-10%, 0%) scale(1);
+  }
+}
+
+.animate-banner-aura {
+  animation: bannerAuraBreathe 6s ease-in-out infinite;
+}
+
+.animate-banner-drift {
+  animation: bannerAuraDrift 9s ease-in-out infinite;
+}
+
+/* Ambient Overflow Glow (向下溢出映射到页面背景) */
+.banner-ambient-glow {
+  box-shadow: 0 16px 36px -10px rgba(56, 189, 248, 0.25), 0 0 20px -2px rgba(168, 85, 247, 0.2);
+}
+
+/* Screenshot-matched pricing accents and elevations, scoped to the canonical plan page. */
+.pricing-page {
+  --pricing-lime: #9de32c;
+  --pricing-lime-soft: #10200c;
+  --pricing-pink: #e02ca9;
+  --pricing-pink-soft: #291226;
+  --pricing-pink-wash: #21101e;
+  --pricing-page-bg: #07080a;
+  --pricing-card-bg: #0c0d10;
+  --pricing-panel-bg: #141519;
+  --pricing-surface-bg: #202124;
+  --pricing-raised-bg: #242529;
+  --pricing-frame-bg: #1b1c20;
+  --pricing-paid-bg: #222328;
+}
+
+.pricing-page-bg { background-color: var(--pricing-page-bg); }
+.pricing-card-bg { background-color: var(--pricing-card-bg); }
+.pricing-panel-bg { background-color: var(--pricing-panel-bg); }
+.pricing-surface-bg { background-color: var(--pricing-surface-bg); }
+.pricing-raised-bg { background-color: var(--pricing-raised-bg); }
+.pricing-frame-bg { background-color: var(--pricing-frame-bg); }
+.pricing-paid-bg { background-color: var(--pricing-paid-bg); }
+.pricing-lime-bg { background-color: var(--pricing-lime); }
+.pricing-lime-soft-bg { background-color: var(--pricing-lime-soft); }
+.pricing-lime-text { color: var(--pricing-lime); }
+.pricing-lime-border { border-color: var(--pricing-lime); }
+.pricing-lime-glow { box-shadow: 0 0 22px rgb(157 227 44 / 16%); }
+.pricing-pink-bg { background-color: var(--pricing-pink); }
+.pricing-pink-soft-bg { background-color: var(--pricing-pink-soft); }
+.pricing-pink-wash-bg { background-color: var(--pricing-pink-wash); }
+.pricing-pink-text { color: var(--pricing-pink); }
+.pricing-pink-border { border-color: var(--pricing-pink); }
+.pricing-pink-glow { box-shadow: 0 0 24px rgb(224 44 169 / 18%); }
+.pricing-pink-outline { border-color: color-mix(in srgb, var(--pricing-pink) 45%, transparent); }
+.pricing-pink-hover-border:hover { border-color: var(--pricing-pink); }
+.pricing-avatar-bg { background-color: #9c6bf0; }
+.pricing-pink-bg:hover { background-color: #d91a97; }

@@ -1,5 +1,6 @@
-import { getUserFromRequest, json } from '../../../../../lib/billing.js';
+import { getUserFromRequest, json } from '../../../../../lib/services/auth.js';
 import { getCreditWallet } from '../../../../../lib/financial/index.js';
+import { publicErrorMessage } from '../../../../../lib/security/publicError.js';
 
 export const runtime = 'nodejs';
 
@@ -14,6 +15,6 @@ export async function GET(request) {
     });
   } catch (error) {
     console.error('[api/financial/credits/wallet]', error);
-    return json({ error: error.message || '获取积分状态失败' }, { status: 500 });
+    return json({ error: publicErrorMessage(error, '获取积分状态失败') }, { status: 500 });
   }
 }

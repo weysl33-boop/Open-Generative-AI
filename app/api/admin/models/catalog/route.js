@@ -1,6 +1,6 @@
 import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { listCanonicalModels, upsertCanonicalModel, getCanonicalModelById } from '@/lib/repositories/aiCatalog';
+import { listCanonicalModels, upsertCanonicalModel, getCanonicalModelById } from '@/lib/services/modelCatalog';
 import { logAudit } from '@/lib/admin/audit';
 
 export const runtime = 'nodejs';

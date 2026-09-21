@@ -1,8 +1,11 @@
 import Link from 'next/link';
-import { listOrders } from '@/lib/repositories/billing';
+import { listOrders } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
 import AdminActionForm from '@/components/admin/AdminActionForm';
+import ExportButton from '@/components/admin/ExportButton';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 
 function formatDate(value) {
   return value
@@ -11,6 +14,7 @@ function formatDate(value) {
 }
 
 export default async function OrdersPage({ searchParams }) {
+  await requireAdminPagePermission(PERMISSIONS.billingRead);
   const params = toSearchParams(await searchParams);
   const result = await listOrders(params);
 
@@ -22,7 +26,7 @@ export default async function OrdersPage({ searchParams }) {
         <div>
           <CopyableId id={row.id} />
           {row.provider_order_id && (
-            <div className="mt-1 text-[11px] text-white/40">
+            <div className="mt-1 text-[11px] text-ink-subtle">
               外部: <CopyableId id={row.provider_order_id} />
             </div>
           )}
@@ -33,7 +37,7 @@ export default async function OrdersPage({ searchParams }) {
       key: 'user',
       label: '支付用户',
       render: (row) => (
-        <Link href={`/admin/users/${row.user_id}`} className="font-semibold text-white hover:text-cyan-200">
+        <Link href={`/admin/users/${row.user_id}`} className="font-semibold text-ink hover:text-brand-hover">
           {row.email}
         </Link>
       ),
@@ -43,7 +47,7 @@ export default async function OrdersPage({ searchParams }) {
       key: 'amount',
       label: '金额',
       render: (row) => (
-        <span className="font-mono font-bold text-white">
+        <span className="font-mono font-bold text-ink">
           {(row.amount_minor / 100).toFixed(2)} {row.currency}
         </span>
       ),
@@ -84,9 +88,9 @@ export default async function OrdersPage({ searchParams }) {
             confirmMessage="确认对该订单执行退款？此操作将立即变更订单状态并追加审计记录。"
           />
         ) : row.status === 'refunded' ? (
-          <span className="text-xs text-white/30">已退款</span>
+          <span className="text-xs text-ink-subtle">已退款</span>
         ) : (
-          <span className="text-xs text-white/30">—</span>
+          <span className="text-xs text-ink-subtle">—</span>
         ),
     },
   ];
@@ -98,13 +102,7 @@ export default async function OrdersPage({ searchParams }) {
         title="订单与支付"
         description="查看全平台交易订单、渠道支付结果与结算流水，可按需发起原路退款或补发权益。"
       >
-        <a
-          href="/api/admin/export/orders"
-          download
-          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/70 hover:bg-white/10 transition"
-        >
-          ⬇ 导出订单 CSV
-        </a>
+        <ExportButton type="orders" label="导出订单 CSV" />
       </PageHeader>
 
       <Card className="mb-6">
@@ -113,13 +111,13 @@ export default async function OrdersPage({ searchParams }) {
             name="q"
             defaultValue={params.get('q') || ''}
             placeholder="搜索订单号、外部流水号或邮箱…"
-            className="min-w-[240px] flex-1 rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-xs text-white outline-none focus:border-cyan-300/50"
+            className="min-w-[240px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
           />
 
           <select
             name="status"
             defaultValue={params.get('status') || ''}
-            className="rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-xs text-white/70 outline-none focus:border-cyan-300/50"
+            className="rounded-xl border border-line bg-canvas px-3 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
           >
             <option value="">全部状态</option>
             <option value="pending">待支付 (pending)</option>
@@ -130,7 +128,7 @@ export default async function OrdersPage({ searchParams }) {
           <select
             name="provider"
             defaultValue={params.get('provider') || ''}
-            className="rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-xs text-white/70 outline-none focus:border-cyan-300/50"
+            className="rounded-xl border border-line bg-canvas px-3 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
           >
             <option value="">全部渠道</option>
             <option value="wechat">微信支付</option>
@@ -140,7 +138,7 @@ export default async function OrdersPage({ searchParams }) {
 
           <button
             type="submit"
-            className="rounded-xl bg-cyan-300 px-5 py-2.5 text-xs font-bold text-black hover:bg-cyan-200"
+            className="rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-ink-on-accent hover:bg-brand"
           >
             筛选
           </button>

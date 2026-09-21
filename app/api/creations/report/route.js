@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getUserFromRequest } from '@/lib/billing';
+import { getUserFromRequest } from '@/lib/services/auth';
 import { reportCreation } from '@/lib/services/moderation';
+import { guardMutation } from '@/lib/security/requestGuard';
 
 export const runtime = 'nodejs';
 
@@ -9,6 +10,9 @@ export async function POST(request) {
   if (!user) {
     return NextResponse.json({ error: '请先登录后再提交举报' }, { status: 401 });
   }
+
+  const guarded = guardMutation(request, { maxBytes: 32 * 1024 });
+  if (guarded) return guarded;
 
   try {
     const body = await request.json();

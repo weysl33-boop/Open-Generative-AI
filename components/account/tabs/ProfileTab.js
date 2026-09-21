@@ -1,26 +1,40 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ShieldCheck, Hash, AlertTriangle, Camera, UploadCloud, Loader2 } from 'lucide-react';
-import { GoogleIcon, XIcon, TikTokIcon, WeChatIcon, PhoneIcon, MailIcon } from '@/components/SocialIcons';
+import { Hash, AlertTriangle, Camera, UploadCloud, Loader2, Globe2, UserRound } from 'lucide-react';
+import { COUNTRY_CODES, GENDER_OPTIONS } from '@/lib/onboarding/schema';
+import { DouyinIcon, GoogleIcon, QQIcon, TikTokIcon, WeChatIcon, XIcon, PhoneIcon, MailIcon } from '@/components/SocialIcons';
+import { completePhoneCaptchaChallenge } from '@/lib/auth/phone-captcha-client';
+
+const SOCIAL_ACCOUNT_PROVIDERS = {
+  wechat: { title: '微信账号', shortName: '微信', icon: WeChatIcon, description: '微信快捷登录' },
+  qq: { title: 'QQ 账号', shortName: 'QQ', icon: QQIcon, description: 'QQ 快捷登录' },
+  douyin: { title: '抖音账号', shortName: '抖音', icon: DouyinIcon, description: '抖音快捷登录' },
+  google: { title: 'Google 账号', shortName: 'Google', icon: GoogleIcon, description: 'Google 全球化快捷登录' },
+  x: { title: 'X 账号', shortName: 'X', icon: XIcon, description: 'X 社交账号快捷登录' },
+  tiktok: { title: 'TikTok 账号', shortName: 'TikTok', icon: TikTokIcon, description: 'TikTok 全球化快捷登录' },
+};
+const SOCIAL_ACCOUNT_PROVIDER_ORDER = ['wechat', 'qq', 'douyin', 'google', 'x', 'tiktok'];
+const PHONE_DIAL_CODES = ['+86', '+1', '+44', '+49', '+61', '+65', '+81', '+82', '+852', '+853', '+886'];
 
 function SettingRow({ icon, title, description, action }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-white/[0.06] py-3.5 last:border-0 min-h-[62px]">
+    <div className="flex items-center justify-between gap-4 border-b border-line-subtle py-3.5 last:border-0 min-h-16">
       <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-2">
         {icon && (
-          <div className="size-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 shadow-inner">
+          <div className="size-9 rounded-xl bg-wash border border-line-subtle flex items-center justify-center shrink-0">
             {icon}
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-gray-200 truncate">{title}</p>
-          <p className="mt-0.5 text-xs text-gray-400 truncate">{description}</p>
+          <p className="text-sm font-medium text-ink truncate">{title}</p>
+          <p className="mt-0.5 text-xs text-ink-muted truncate">{description}</p>
         </div>
       </div>
       <div className="shrink-0 flex items-center justify-end gap-2">
@@ -36,6 +50,10 @@ export default function ProfileTab({
   setProfileName,
   profileBio,
   setProfileBio,
+  profileCountry,
+  setProfileCountry,
+  profileGender,
+  setProfileGender,
   onSaveProfile,
   onProfileUpdated,
   busy,
@@ -45,8 +63,21 @@ export default function ProfileTab({
   const [oauthConnecting, setOauthConnecting] = useState(null);
   const fileInputRef = useRef(null);
 
+  // 国家名按当前语言渲染，省掉 43 个国家 × 6 份文案目录
+  const countryNames = useMemo(() => {
+    try {
+      const display = new Intl.DisplayNames([user?.locale || 'zh-CN'], { type: 'region', fallback: 'code' });
+      return Object.fromEntries(COUNTRY_CODES.map((code) => [code, display.of(code) || code]));
+    } catch {
+      return Object.fromEntries(COUNTRY_CODES.map((code) => [code, code]));
+    }
+  }, [user?.locale]);
+
   const [currentProviders, setCurrentProviders] = useState(user?.loginProviders || ['phone']);
   const [currentAccounts, setCurrentAccounts] = useState(user?.authAccounts || []);
+  const [socialOptions, setSocialOptions] = useState(null);
+  const [socialOptionsError, setSocialOptionsError] = useState(false);
+  const [socialOptionsRetry, setSocialOptionsRetry] = useState(0);
   const [currentPhone, setCurrentPhone] = useState(user?.phone || '');
   const [currentEmail, setCurrentEmail] = useState(user?.email || '');
 
@@ -58,6 +89,23 @@ export default function ProfileTab({
     if (user?.email) setCurrentEmail(user?.email);
   }, [user]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    setSocialOptions(null);
+    setSocialOptionsError(false);
+    fetch('/api/auth/social-options', { cache: 'no-store', signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Unable to load regional social providers');
+        const result = await response.json();
+        if (!Array.isArray(result.providers)) throw new Error('Invalid social provider response');
+        setSocialOptions(result);
+      })
+      .catch((error) => {
+        if (error.name !== 'AbortError') setSocialOptionsError(true);
+      });
+    return () => controller.abort();
+  }, [socialOptionsRetry]);
+
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -68,22 +116,33 @@ export default function ProfileTab({
   // 手机号与邮箱绑定弹窗状态
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [inputPhone, setInputPhone] = useState('');
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+86');
   const [inputCode, setInputCode] = useState('');
+  const [phoneChallengeId, setPhoneChallengeId] = useState('');
+  const [phoneCaptchaChallenge, setPhoneCaptchaChallenge] = useState(null);
+  const [phoneCountdown, setPhoneCountdown] = useState(0);
+  const phoneTimerRef = useRef(null);
+  const phoneCaptchaHostRef = useRef(null);
   const [phoneNotice, setPhoneNotice] = useState('');
   const [phoneBusy, setPhoneBusy] = useState(false);
 
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [inputEmail, setInputEmail] = useState('');
+  const [emailVerificationCode, setEmailVerificationCode] = useState('');
+  const [emailVerificationPending, setEmailVerificationPending] = useState(false);
   const [emailNotice, setEmailNotice] = useState('');
   const [emailBusy, setEmailBusy] = useState(false);
 
-  // 微信绑定与 Toast 状态
-  const [wechatModalOpen, setWechatModalOpen] = useState(false);
+  // Toast 状态
   const [toastMessage, setToastMessage] = useState('');
 
   const showToast = useCallback((msg) => {
     setToastMessage(msg);
     window.setTimeout(() => setToastMessage(''), 3000);
+  }, []);
+
+  useEffect(() => () => {
+    if (phoneTimerRef.current) clearInterval(phoneTimerRef.current);
   }, []);
 
   // 监听第三方授权回调消息
@@ -197,25 +256,70 @@ export default function ProfileTab({
   const [unbindError, setUnbindError] = useState('');
 
   const userNumber = user?.userNumber || '650410';
+  const visibleSocialProviderIds = [...new Set([
+    ...(socialOptions?.providers || []).map((provider) => provider.id),
+    ...currentProviders,
+    ...currentAccounts.map((account) => account.provider),
+  ])]
+    .filter((provider) => SOCIAL_ACCOUNT_PROVIDERS[provider])
+    .sort((a, b) => SOCIAL_ACCOUNT_PROVIDER_ORDER.indexOf(a) - SOCIAL_ACCOUNT_PROVIDER_ORDER.indexOf(b));
 
   const handleSendPhoneCode = async () => {
     if (!inputPhone) return setPhoneNotice('请输入手机号');
+    if (phoneCountdown > 0) return;
     setPhoneBusy(true);
     setPhoneNotice('');
     try {
-      const res = await fetch('/api/auth/phone/send-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: inputPhone, countryCode: '+86' }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setPhoneNotice(data.notice || (data.devCode ? `验证码已发送（测试码: ${data.devCode}）` : '验证码已发送'));
+      const postSendCode = async (extra = {}) => {
+        const response = await fetch('/api/auth/phone/send-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: inputPhone, countryCode: phoneCountryCode, purpose: 'bind', ...extra }),
+        });
+        return { response, data: await response.json() };
+      };
+      let outcome;
+      if (phoneCaptchaChallenge) {
+        outcome = await completePhoneCaptchaChallenge(phoneCaptchaChallenge, {
+          postSendCode,
+          locale: user?.locale || 'zh-CN',
+          container: phoneCaptchaHostRef.current,
+        });
       } else {
-        setPhoneNotice(data.error || '验证码发送失败');
+        outcome = await postSendCode();
+        if (outcome.response.status === 428 && outcome.data.requiresCaptcha) {
+          setPhoneChallengeId(outcome.data.challengeId);
+          setPhoneCaptchaChallenge(outcome.data);
+          outcome = await completePhoneCaptchaChallenge(outcome.data, {
+            postSendCode,
+            locale: user?.locale || 'zh-CN',
+            container: phoneCaptchaHostRef.current,
+          });
+        }
       }
+      if (!outcome.response.ok || !outcome.data.success) {
+        if (outcome.response.status !== 428) {
+          setPhoneCaptchaChallenge(null);
+          setPhoneChallengeId('');
+        }
+        throw new Error(outcome.data.error || '验证码发送失败');
+      }
+      setPhoneChallengeId(outcome.data.challengeId);
+      setPhoneCaptchaChallenge(null);
+      setPhoneCountdown(Number(outcome.data.cooldown) || 60);
+      if (phoneTimerRef.current) clearInterval(phoneTimerRef.current);
+      phoneTimerRef.current = setInterval(() => {
+        setPhoneCountdown((previous) => {
+          if (previous <= 1) {
+            clearInterval(phoneTimerRef.current);
+            return 0;
+          }
+          return previous - 1;
+        });
+      }, 1000);
+      setPhoneNotice('验证码已发送');
     } catch {
-      setPhoneNotice('网络请求异常');
+      setPhoneNotice('安全验证或验证码发送失败，请稍后重试');
     } finally {
       setPhoneBusy(false);
     }
@@ -224,21 +328,25 @@ export default function ProfileTab({
   const handleBindPhone = async (e) => {
     e.preventDefault();
     if (!inputPhone || !inputCode) return setPhoneNotice('请完整输入手机号与验证码');
+    if (!phoneChallengeId) return setPhoneNotice('请先获取验证码');
     setPhoneBusy(true);
     try {
       const res = await fetch('/api/user/phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: inputPhone, countryCode: '+86', code: inputCode }),
+        body: JSON.stringify({ phone: inputPhone, countryCode: phoneCountryCode, code: inputCode, challengeId: phoneChallengeId }),
       });
       const data = await res.json();
       if (res.ok) {
         showToast('手机号绑定成功');
-        setCurrentPhone(inputPhone);
+        setCurrentPhone(data.phone || inputPhone);
         if (!currentProviders.includes('phone')) {
           setCurrentProviders([...currentProviders, 'phone']);
         }
         setPhoneModalOpen(false);
+        setPhoneChallengeId('');
+        setPhoneCaptchaChallenge(null);
+        setPhoneCountdown(0);
       } else {
         setPhoneNotice(data.error || '绑定失败');
       }
@@ -252,21 +360,34 @@ export default function ProfileTab({
   const handleBindEmail = async (e) => {
     e.preventDefault();
     if (!inputEmail) return setEmailNotice('请输入邮箱地址');
+    if (emailVerificationPending && !/^\d{6}$/.test(emailVerificationCode)) {
+      return setEmailNotice('请输入邮件中的 6 位验证码');
+    }
     setEmailBusy(true);
     try {
       const res = await fetch('/api/user/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: inputEmail }),
+        body: JSON.stringify({
+          email: inputEmail,
+          ...(emailVerificationPending ? { code: emailVerificationCode } : {}),
+        }),
       });
       const data = await res.json();
       if (res.ok) {
+        if (data.verificationRequired) {
+          setEmailVerificationPending(true);
+          setEmailNotice('验证码已发送，10 分钟内有效，请查收邮件后确认');
+          return;
+        }
         showToast('安全邮箱绑定成功');
-        setCurrentEmail(inputEmail);
+        setCurrentEmail(data.email || inputEmail);
         if (!currentProviders.includes('email')) {
           setCurrentProviders([...currentProviders, 'email']);
         }
         setEmailModalOpen(false);
+        setEmailVerificationPending(false);
+        setEmailVerificationCode('');
       } else {
         setEmailNotice(data.error || '绑定失败');
       }
@@ -372,14 +493,9 @@ export default function ProfileTab({
   const textActionBtn = (label, onClick, isDanger = false) => (
     <Button
       type="button"
-      size="sm"
-      variant="secondary"
+      size="xs"
+      variant={isDanger ? 'danger' : 'secondary'}
       onClick={onClick}
-      className={`h-7 px-3 text-xs font-medium rounded-full border transition-all cursor-pointer ${
-        isDanger
-          ? 'border-red-500/25 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/40'
-          : 'border-white/[0.08] hover:border-white/20 text-gray-200 hover:text-white'
-      }`}
     >
       {label}
     </Button>
@@ -389,18 +505,18 @@ export default function ProfileTab({
     <div className="flex flex-col gap-6 w-full">
       {/* 顶部标题区 */}
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-white">个人资料与账号体系</h1>
-        <p className="mt-1 text-xs text-gray-400">管理您的不可变 6 位数字身份 ID、基本资料及多登录凭据绑定。</p>
+        <h1 className="text-xl font-bold tracking-tight text-ink">个人资料与账号体系</h1>
+        <p className="mt-1 text-xs text-ink-muted">管理您的不可变 6 位数字身份 ID、基本资料及多登录凭据绑定。</p>
       </div>
 
       {/* 个人基本信息卡片 (包含不可更改 6 位数随机数字 ID，逻辑参考 QQ 号) */}
-      <Card className="rounded-[18px] border border-white/[0.07] bg-[#1a1b1f] p-6 shadow-sm">
+      <Card padding="lg">
         <CardHeader className="p-0 pb-5 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-sm font-semibold text-white">个人基本信息</CardTitle>
-            <p className="mt-0.5 text-xs text-gray-400">您的数字 ID 为全局唯一不可变凭证，与 QQ 号逻辑一致。</p>
+            <CardTitle className="text-sm font-semibold text-ink">个人基本信息</CardTitle>
+            <p className="mt-0.5 text-xs text-ink-muted">您的数字 ID 为全局唯一不可变凭证，与 QQ 号逻辑一致。</p>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-mono">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-success-line bg-success-soft text-success text-xs font-mono">
             <Hash className="size-3.5" />
             <span>UID: {userNumber}</span>
           </div>
@@ -408,16 +524,16 @@ export default function ProfileTab({
         <CardContent className="p-0">
           <form onSubmit={onSaveProfile} className="flex max-w-xl flex-col gap-4">
             {/* 创作者个性化头像更换模块 */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl bg-[#121316]/70 border border-white/[0.06]">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl bg-well border border-line-subtle">
               <div className="relative group shrink-0">
                 {currentAvatarUrl ? (
                   <img
                     src={currentAvatarUrl}
                     alt="用户头像"
-                    className="w-16 h-16 rounded-full object-cover ring-2 ring-cyan-400/50 shadow-lg shadow-cyan-500/10 group-hover:brightness-90 transition-all"
+                    className="w-16 h-16 rounded-full object-cover ring-2 ring-brand-ring shadow-elevation-2 group-hover:brightness-90 transition-[filter] duration-fast ease-standard"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/20 via-zinc-800 to-zinc-900 border border-cyan-400/30 flex items-center justify-center text-xl font-bold text-cyan-300 shadow-md">
+                  <div className="w-16 h-16 rounded-full bg-raised border border-line-accent flex items-center justify-center text-xl font-bold text-brand shadow-elevation-1">
                     {(profileName || user?.email || 'U').slice(0, 1).toUpperCase()}
                   </div>
                 )}
@@ -425,23 +541,23 @@ export default function ProfileTab({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={avatarUploading}
-                  className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
+                  className="absolute inset-0 flex items-center justify-center bg-scrim rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
                   title="点击更换头像"
                 >
-                  <Camera className="size-5 text-white" />
+                  <Camera className="size-5 text-ink" />
                 </button>
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-white flex items-center gap-1.5">
+                <p className="text-xs font-semibold text-ink flex items-center gap-1.5">
                   <span>创作者头像</span>
                   {currentAvatarUrl && (
-                    <span className="text-[10px] text-cyan-400 font-normal px-1.5 py-0.5 rounded bg-cyan-950/40 border border-cyan-500/20">
+                    <span className="text-caption text-brand font-normal px-1.5 py-0.5 rounded bg-brand-soft border border-line-accent">
                       已自定义
                     </span>
                   )}
                 </p>
-                <p className="text-[11px] text-zinc-400 mt-0.5">
+                <p className="text-caption text-ink-muted mt-0.5">
                   支持 JPG、PNG、WebP、GIF 格式，大小不超过 5MB，推荐 1:1 正方形图片。
                 </p>
                 <div className="flex items-center gap-2.5 mt-2.5">
@@ -462,16 +578,16 @@ export default function ProfileTab({
                     size="sm"
                     disabled={avatarUploading}
                     onClick={() => fileInputRef.current?.click()}
-                    className="h-7 px-3 text-xs bg-white/10 hover:bg-white/15 text-white border border-white/15 rounded-full cursor-pointer flex items-center gap-1.5"
+                    className="flex items-center gap-1.5"
                   >
                     {avatarUploading ? (
                       <>
-                        <Loader2 className="size-3 animate-spin text-cyan-400" />
+                        <Loader2 className="size-3 animate-spin text-brand" />
                         <span>上传同步中…</span>
                       </>
                     ) : (
                       <>
-                        <UploadCloud className="size-3.5 text-cyan-400" />
+                        <UploadCloud className="size-3.5 text-brand" />
                         <span>更换新头像</span>
                       </>
                     )}
@@ -481,7 +597,7 @@ export default function ProfileTab({
                       type="button"
                       disabled={avatarUploading}
                       onClick={handleRemoveAvatar}
-                      className="text-[11px] text-zinc-400 hover:text-red-400 transition-colors cursor-pointer px-2 py-1"
+                      className="text-caption text-ink-muted hover:text-danger transition-colors cursor-pointer px-2 py-1"
                     >
                       恢复默认
                     </button>
@@ -490,29 +606,75 @@ export default function ProfileTab({
               </div>
             </div>
 
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-gray-300">
+            <label className="flex flex-col gap-1.5 text-xs font-medium text-ink">
               <span className="flex items-center justify-between">
                 <span>用户唯一数字 ID (不可修改)</span>
-                <span className="text-[11px] text-zinc-500">终身绑定 · 支持直接登录</span>
+                <span className="text-caption text-ink-subtle">终身绑定 · 支持直接登录</span>
               </span>
               <Input
                 value={`#${userNumber}`}
                 disabled
-                className="bg-[#121316]/60 border-white/[0.05] text-zinc-400 font-mono cursor-not-allowed select-all"
+                className="font-mono select-all"
               />
             </label>
 
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-gray-300">
+            <label className="flex flex-col gap-1.5 text-xs font-medium text-ink">
               展示昵称
               <Input
                 value={profileName}
                 onChange={(event) => setProfileName(event.target.value)}
                 maxLength={30}
                 placeholder="请输入创作者昵称"
-                className="bg-[#121316] border-white/[0.08] text-white focus:border-white/30"
               />
             </label>
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-gray-300">
+
+            {/* 引导页只收昵称与头像，国家与性别留到这里补全。
+                下拉里没有空值项，所以选定之后只能改选别的，回不到未填状态。 */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5 text-xs font-medium text-ink">
+                <span className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Globe2 className="size-3.5 text-ink-muted" />
+                    国家或地区
+                  </span>
+                  {!profileCountry && <span className="text-caption text-warning">待补全</span>}
+                </span>
+                <Select value={profileCountry || ''} onValueChange={setProfileCountry}>
+                  <SelectTrigger size="md" aria-label="国家或地区">
+                    <SelectValue placeholder="请选择国家或地区" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COUNTRY_CODES.map((code) => (
+                      <SelectItem key={code} value={code}>{countryNames[code]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-caption text-ink-subtle">用于内容合规与本地化，选定后不可清空。</span>
+              </div>
+
+              <div className="flex flex-col gap-1.5 text-xs font-medium text-ink">
+                <span className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <UserRound className="size-3.5 text-ink-muted" />
+                    性别
+                  </span>
+                  {!profileGender && <span className="text-caption text-warning">待补全</span>}
+                </span>
+                <Select value={profileGender || ''} onValueChange={setProfileGender}>
+                  <SelectTrigger size="md" aria-label="性别">
+                    <SelectValue placeholder="请选择性别" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GENDER_OPTIONS.map((option) => (
+                      <SelectItem key={option.code} value={option.code}>{option.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-caption text-ink-subtle">仅用于偏好推荐，可随时改选，选定后不可清空。</span>
+              </div>
+            </div>
+
+            <label className="flex flex-col gap-1.5 text-xs font-medium text-ink">
               个人简介
               <Textarea
                 rows={4}
@@ -520,17 +682,16 @@ export default function ProfileTab({
                 onChange={(event) => setProfileBio(event.target.value)}
                 maxLength={150}
                 placeholder="介绍你的创作专长和风格（例如：科幻场景、写实人像、运镜微距…）"
-                className="bg-[#121316] border-white/[0.08] text-white focus:border-white/30 resize-none"
+                className="resize-none"
               />
             </label>
             <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-gray-500">最多 150 字</span>
+              <span className="text-xs text-ink-subtle">最多 150 字</span>
               <Button
                 type="submit"
                 variant="primary"
                 size="md"
                 disabled={busy}
-                className="bg-white text-black hover:bg-gray-200 font-semibold px-5 rounded-full h-8 text-xs"
               >
                 {busy ? '正在保存…' : '保存资料修改'}
               </Button>
@@ -540,20 +701,20 @@ export default function ProfileTab({
       </Card>
 
       {/* 账号权限与多渠道绑定/解绑卡片 (满足要求：可解绑手机号、邮箱、社交登录) */}
-      <Card className="rounded-[18px] border border-white/[0.07] bg-[#1a1b1f] p-6 shadow-sm">
+      <Card padding="lg">
         <CardHeader className="p-0 pb-4">
-          <CardTitle className="text-sm font-semibold text-white">登录凭证与第三方绑定</CardTitle>
-          <p className="mt-0.5 text-xs text-gray-400">
+          <CardTitle className="text-sm font-semibold text-ink">登录凭证与第三方绑定</CardTitle>
+          <p className="mt-0.5 text-xs text-ink-muted">
             支持绑定或解绑任意登录渠道；系统内置防孤儿账号保护，保障随时可登录。
           </p>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="divide-y divide-white/[0.06]">
+          <div className="divide-y divide-line-subtle">
             {/* 手机号 */}
             <SettingRow
-              icon={<PhoneIcon className="size-4 text-emerald-400" />}
+              icon={<PhoneIcon className="size-4 text-success" />}
               title="手机号绑定"
-              description={currentPhone ? `${user?.phoneCountryCode || '+86'} ${currentPhone}` : '未绑定手机号'}
+                  description={currentPhone ? (currentPhone.startsWith('+') ? currentPhone : `${user?.phoneCountryCode || '+86'} ${currentPhone}`) : '未绑定手机号'}
               action={
                 currentPhone ? (
                   <>
@@ -579,7 +740,7 @@ export default function ProfileTab({
 
             {/* 安全邮箱 */}
             <SettingRow
-              icon={<MailIcon className="size-4 text-blue-400" />}
+              icon={<MailIcon className="size-4 text-info" />}
               title="安全邮箱"
               description={currentEmail || '未设置安全邮箱'}
               action={
@@ -605,188 +766,111 @@ export default function ProfileTab({
               }
             />
 
-            {/* 微信 */}
-            {(() => {
-              const wechatAcc = currentAccounts.find((a) => a.provider === 'wechat');
-              const isBound = currentProviders.includes('wechat');
-              const accountText = wechatAcc?.providerUsername || wechatAcc?.providerUserId;
-              return (
-                <SettingRow
-                  icon={<WeChatIcon className="size-4.5" />}
-                  title="微信账号"
-                  description={
-                    isBound
-                      ? (accountText ? `已关联账号: ${accountText}` : '已关联微信快捷登录')
-                      : '微信扫码快捷登录与公众号提醒'
-                  }
-                  action={
-                    isBound ? (
-                      <>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
-                          已关联
-                        </span>
-                        {textActionBtn('解绑', () => {
-                          setUnbindError('');
-                          setUnbindTarget({ type: 'oauth', provider: 'wechat', label: '微信' });
-                        }, true)}
-                      </>
-                    ) : (
-                      textActionBtn('关联微信', () => {
-                        setWechatModalOpen(true);
-                      })
-                    )
-                  }
-                />
-              );
-            })()}
+            {!socialOptions && (
+              <div className="flex items-center justify-between gap-3 py-2 text-xs text-ink-muted" role={socialOptionsError ? 'alert' : 'status'}>
+                <span>{socialOptionsError ? '无法识别当前网络地区；已绑定账号仍可管理。' : '正在根据当前网络地区加载社交绑定方式…'}</span>
+                {socialOptionsError && (
+                  <button
+                    type="button"
+                    className="shrink-0 text-info underline underline-offset-2"
+                    onClick={() => setSocialOptionsRetry((value) => value + 1)}
+                  >
+                    重试
+                  </button>
+                )}
+              </div>
+            )}
 
-            {/* Google */}
-            {(() => {
-              const googleAcc = currentAccounts.find((a) => a.provider === 'google');
-              const isBound = currentProviders.includes('google');
-              const accountText = googleAcc?.providerEmail || googleAcc?.providerUsername || (isBound ? currentEmail : null);
-              return (
-                <SettingRow
-                  icon={<GoogleIcon className="size-4" />}
-                  title="Google 账号"
-                  description={
-                    isBound
-                      ? (accountText ? `已绑定账号: ${accountText}` : '已授权 Google 全球化快捷登录')
-                      : 'Google One Tap 全球化快捷登录'
-                  }
-                  action={
-                    isBound ? (
-                      <>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-white/10 bg-white/[0.06] text-gray-300">
-                          已授权
-                        </span>
-                        {textActionBtn('换绑', () => handleConnectOAuth('google'))}
-                        {textActionBtn('解绑', () => {
-                          setUnbindError('');
-                          setUnbindTarget({ type: 'oauth', provider: 'google', label: `Google (${accountText || '账号'})` });
-                        }, true)}
-                      </>
-                    ) : (
-                      textActionBtn('绑定 Google', () => handleConnectOAuth('google'))
-                    )
-                  }
-                />
-              );
-            })()}
+            {visibleSocialProviderIds.map((provider) => {
+              const spec = SOCIAL_ACCOUNT_PROVIDERS[provider];
+              const ProviderIcon = spec.icon;
+              const providerOptions = socialOptions?.providers?.find((item) => item.id === provider);
+              const isAvailable = providerOptions?.available === true;
+              const isBound = currentProviders.includes(provider);
+              const account = currentAccounts.find((item) => item.provider === provider);
+              const accountText = provider === 'google'
+                ? (account?.providerEmail || account?.providerUsername || (isBound ? currentEmail : null))
+                : provider === 'x'
+                  ? (account?.providerUsername ? `@${account.providerUsername}` : account?.providerEmail)
+                  : (account?.providerUsername || account?.providerUserId);
+              const description = isBound
+                ? (accountText ? `已绑定账号: ${accountText}` : `已绑定${spec.shortName}快捷登录`)
+                : isAvailable
+                  ? spec.description
+                  : providerOptions
+                    ? `${spec.shortName}登录尚未接入，暂不可绑定`
+                    : '此方式不属于当前 IP 地区的登录选项';
 
-            {/* X / Twitter */}
-            {(() => {
-              const xAcc = currentAccounts.find((a) => a.provider === 'x');
-              const isBound = currentProviders.includes('x');
-              const accountText = xAcc?.providerUsername ? `@${xAcc.providerUsername}` : xAcc?.providerEmail;
               return (
                 <SettingRow
-                  icon={<XIcon className="size-3.5 text-white" />}
-                  title="X (Twitter) 账号"
-                  description={
-                    isBound
-                      ? (accountText ? `已授权账号: ${accountText}` : '已授权 X 快捷登录')
-                      : 'X 社交账号快捷登录'
-                  }
-                  action={
-                    isBound ? (
-                      <>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-white/10 bg-white/[0.06] text-gray-300">
-                          已授权
-                        </span>
-                        {textActionBtn('换绑', () => handleConnectOAuth('x'))}
-                        {textActionBtn('解绑', () => {
-                          setUnbindError('');
-                          setUnbindTarget({ type: 'oauth', provider: 'x', label: `X (${accountText || '账号'})` });
-                        }, true)}
-                      </>
-                    ) : (
-                      textActionBtn('绑定 X', () => handleConnectOAuth('x'))
-                    )
-                  }
+                  key={provider}
+                  icon={<ProviderIcon className="size-4 text-ink" />}
+                  title={spec.title}
+                  description={description}
+                  action={isBound ? (
+                    <>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-line bg-wash-strong text-xs font-medium text-ink">
+                        已绑定
+                      </span>
+                      {isAvailable && textActionBtn('换绑', () => handleConnectOAuth(provider))}
+                      {textActionBtn('解绑', () => {
+                        setUnbindError('');
+                        setUnbindTarget({ type: 'oauth', provider, label: `${spec.shortName} (${accountText || '账号'})` });
+                      }, true)}
+                    </>
+                  ) : isAvailable ? (
+                    textActionBtn(`绑定 ${spec.shortName}`, () => handleConnectOAuth(provider))
+                  ) : (
+                    <span className="inline-flex items-center rounded-full border border-line-subtle bg-wash px-2.5 py-1 text-xs text-ink-muted">
+                      {providerOptions ? '接入准备中' : socialOptions ? '当前地区不可用' : '暂不可用'}
+                    </span>
+                  )}
                 />
               );
-            })()}
-
-            {/* TikTok */}
-            {(() => {
-              const tiktokAcc = currentAccounts.find((a) => a.provider === 'tiktok');
-              const isBound = currentProviders.includes('tiktok');
-              const accountText = tiktokAcc?.providerUsername || tiktokAcc?.providerUserId;
-              return (
-                <SettingRow
-                  icon={<TikTokIcon className="size-3.5 text-pink-400" />}
-                  title="TikTok 账号"
-                  description={
-                    isBound
-                      ? (accountText ? `已授权账号: ${accountText}` : '已授权 TikTok 快捷登录')
-                      : 'TikTok 移动端与短视频快捷登录'
-                  }
-                  action={
-                    isBound ? (
-                      <>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-white/10 bg-white/[0.06] text-gray-300">
-                          已授权
-                        </span>
-                        {textActionBtn('换绑', () => handleConnectOAuth('tiktok'))}
-                        {textActionBtn('解绑', () => {
-                          setUnbindError('');
-                          setUnbindTarget({ type: 'oauth', provider: 'tiktok', label: `TikTok (${accountText || '账号'})` });
-                        }, true)}
-                      </>
-                    ) : (
-                      textActionBtn('绑定 TikTok', () => handleConnectOAuth('tiktok'))
-                    )
-                  }
-                />
-              );
-            })()}
+            })}
           </div>
         </CardContent>
       </Card>
 
       {/* 账户安全卡片 */}
-      <Card className="rounded-[18px] border border-white/[0.07] bg-[#1a1b1f] p-6 shadow-sm">
+      <Card padding="lg">
         <CardHeader className="p-0 pb-4">
-          <CardTitle className="text-sm font-semibold text-white">独立登录密码</CardTitle>
-          <p className="mt-0.5 text-xs text-gray-400">
+          <CardTitle className="text-sm font-semibold text-ink">独立登录密码</CardTitle>
+          <p className="mt-0.5 text-xs text-ink-muted">
             设置密码后，可使用您的 6 位数字 ID ({userNumber}) 直接输入密码登录系统。
           </p>
         </CardHeader>
         <CardContent className="p-0">
           <form onSubmit={handlePasswordChange} className="flex max-w-sm flex-col gap-3">
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-gray-300">
+            <label className="flex flex-col gap-1.5 text-xs font-medium text-ink">
               当前密码 (初次设置可留空)
               <Input
                 type="password"
                 value={oldPassword}
                 onChange={(event) => setOldPassword(event.target.value)}
                 placeholder="请输入当前登录密码"
-                className="bg-[#121316] border-white/[0.08] text-white"
               />
             </label>
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-gray-300">
+            <label className="flex flex-col gap-1.5 text-xs font-medium text-ink">
               新密码
               <Input
                 type="password"
                 value={newPassword}
                 onChange={(event) => setNewPassword(event.target.value)}
                 placeholder="至少 8 位包含字母和数字"
-                className="bg-[#121316] border-white/[0.08] text-white"
               />
             </label>
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-gray-300">
+            <label className="flex flex-col gap-1.5 text-xs font-medium text-ink">
               确认新密码
               <Input
                 type="password"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 placeholder="再次输入新密码"
-                className="bg-[#121316] border-white/[0.08] text-white"
               />
             </label>
             {pwdMessage && (
-              <p className={`text-xs mt-1 ${pwdSuccess ? 'text-emerald-400' : 'text-red-400'}`}>
+              <p className={`text-xs mt-1 ${pwdSuccess ? 'text-success' : 'text-danger'}`}>
                 {pwdMessage}
               </p>
             )}
@@ -795,7 +879,7 @@ export default function ProfileTab({
               variant="outline"
               size="md"
               disabled={pwdBusy}
-              className="mt-2 h-8 px-4 text-xs font-medium rounded-full border-white/10 bg-white/[0.04] text-gray-200 hover:bg-white/[0.08] hover:text-white w-fit cursor-pointer"
+              className="mt-2 w-fit"
             >
               {pwdBusy ? '正在更新…' : '设置/更新登录密码'}
             </Button>
@@ -804,11 +888,11 @@ export default function ProfileTab({
       </Card>
 
       {/* 注销账户警告 */}
-      <div className="rounded-[18px] border border-red-500/20 bg-red-500/[0.04] p-5">
+      <div className="rounded-xl border border-danger-line bg-danger-soft p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-red-400">注销账户</p>
-            <p className="mt-0.5 text-xs text-gray-400">
+            <p className="text-sm font-semibold text-danger">注销账户</p>
+            <p className="mt-0.5 text-xs text-ink-muted">
               注销后作品库、剩余 K 币与积分资产将被永久清除且不可恢复。
             </p>
           </div>
@@ -818,24 +902,24 @@ export default function ProfileTab({
                 type="button"
                 variant="danger"
                 size="sm"
-                className="h-8 px-4 text-xs font-semibold rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 shrink-0 cursor-pointer"
+                className="shrink-0"
               >
                 注销账户
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="border-white/[0.10] bg-[#13151c] text-white">
+            <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-white">确认注销账户？</AlertDialogTitle>
-                <AlertDialogDescription className="text-gray-400">
+                <AlertDialogTitle>确认注销账户？</AlertDialogTitle>
+                <AlertDialogDescription>
                   这是不可逆操作。提交后当前会话将立即注销，账户进入冻结保护期。
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="border-white/[0.10] bg-white/[0.04] text-gray-300 hover:bg-white/[0.08]">
+                <AlertDialogCancel>
                   取消
                 </AlertDialogCancel>
                 <AlertDialogAction
-                  className="bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 cursor-pointer"
+                  variant="danger"
                   onClick={handleDeactivate}
                 >
                   确认注销
@@ -848,36 +932,58 @@ export default function ProfileTab({
 
       {/* 手机绑定弹窗 */}
       {phoneModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#16171b] p-6 shadow-2xl">
-            <h3 className="text-base font-semibold text-white">绑定/更换手机号</h3>
-            <p className="text-xs text-gray-400 mt-1 mb-4">输入手机号码及收到的短信验证码</p>
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-scrim backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-sm rounded-xl border border-line bg-surface p-6 shadow-elevation-4">
+            <h3 className="text-base font-semibold text-ink">绑定/更换手机号</h3>
+            <p className="text-xs text-ink-muted mt-1 mb-4">输入手机号码及收到的短信验证码</p>
             <form onSubmit={handleBindPhone} className="flex flex-col gap-3">
               <div className="flex gap-2">
+                <Select value={phoneCountryCode} onValueChange={(value) => {
+                  setPhoneCountryCode(value);
+                  setPhoneChallengeId('');
+                  setPhoneCaptchaChallenge(null);
+                  setPhoneCountdown(0);
+                  if (phoneTimerRef.current) clearInterval(phoneTimerRef.current);
+                }}>
+                  <SelectTrigger className="w-24 shrink-0" aria-label="国家区号">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PHONE_DIAL_CODES.map((dialCode) => (
+                      <SelectItem key={dialCode} value={dialCode}>{dialCode}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Input
                   value={inputPhone}
-                  onChange={(e) => setInputPhone(e.target.value)}
+                  onChange={(e) => {
+                    setInputPhone(e.target.value);
+                    setPhoneChallengeId('');
+                    setPhoneCaptchaChallenge(null);
+                    setPhoneCountdown(0);
+                    if (phoneTimerRef.current) clearInterval(phoneTimerRef.current);
+                  }}
                   placeholder="请输入手机号"
-                  className="bg-[#101114] border-white/10 text-white flex-1"
+                  className="flex-1"
                 />
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={phoneBusy}
+                  disabled={phoneBusy || phoneCountdown > 0}
                   onClick={handleSendPhoneCode}
-                  className="h-9 px-3 text-xs border-white/10 bg-white/[0.04] text-gray-200 shrink-0 cursor-pointer"
+                  className="shrink-0"
                 >
-                  {phoneBusy ? '发送中' : '获取验证码'}
+                  {phoneBusy ? '发送中' : phoneCountdown > 0 ? `${phoneCountdown}s 后重发` : '获取验证码'}
                 </Button>
               </div>
+              <div ref={phoneCaptchaHostRef} aria-hidden="true" className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0" />
               <Input
                 value={inputCode}
                 onChange={(e) => setInputCode(e.target.value)}
                 placeholder="请输入短信验证码"
-                className="bg-[#101114] border-white/10 text-white"
               />
               {phoneNotice && (
-                <p className="text-xs text-cyan-400">{phoneNotice}</p>
+                <p className="text-xs text-brand">{phoneNotice}</p>
               )}
               <div className="flex items-center justify-end gap-2 mt-2">
                 <Button
@@ -885,7 +991,7 @@ export default function ProfileTab({
                   variant="ghost"
                   size="sm"
                   onClick={() => setPhoneModalOpen(false)}
-                  className="text-gray-400 hover:text-white text-xs cursor-pointer"
+                  className="text-ink-muted hover:text-ink text-xs cursor-pointer"
                 >
                   取消
                 </Button>
@@ -893,8 +999,7 @@ export default function ProfileTab({
                   type="submit"
                   variant="primary"
                   size="sm"
-                  disabled={phoneBusy}
-                  className="bg-white text-black font-semibold text-xs px-4 rounded-full cursor-pointer"
+                  disabled={phoneBusy || !phoneChallengeId}
                 >
                   确认绑定
                 </Button>
@@ -906,28 +1011,47 @@ export default function ProfileTab({
 
       {/* 邮箱绑定弹窗 */}
       {emailModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#16171b] p-6 shadow-2xl">
-            <h3 className="text-base font-semibold text-white">绑定/换绑安全邮箱</h3>
-            <p className="text-xs text-gray-400 mt-1 mb-4">输入您的常用工作或个人邮箱地址</p>
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-scrim backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-sm rounded-xl border border-line bg-surface p-6 shadow-elevation-4">
+            <h3 className="text-base font-semibold text-ink">绑定/换绑安全邮箱</h3>
+            <p className="text-xs text-ink-muted mt-1 mb-4">输入您的常用工作或个人邮箱地址</p>
             <form onSubmit={handleBindEmail} className="flex flex-col gap-3">
               <Input
                 type="email"
                 value={inputEmail}
-                onChange={(e) => setInputEmail(e.target.value)}
+                onChange={(e) => {
+                  setInputEmail(e.target.value);
+                  setEmailVerificationPending(false);
+                  setEmailVerificationCode('');
+                }}
                 placeholder="name@example.com"
-                className="bg-[#101114] border-white/10 text-white"
+                disabled={emailVerificationPending}
               />
+              {emailVerificationPending && (
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={emailVerificationCode}
+                  onChange={(e) => setEmailVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="6 位邮箱验证码"
+                />
+              )}
               {emailNotice && (
-                <p className="text-xs text-cyan-400">{emailNotice}</p>
+                <p className="text-xs text-brand">{emailNotice}</p>
               )}
               <div className="flex items-center justify-end gap-2 mt-2">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => setEmailModalOpen(false)}
-                  className="text-gray-400 hover:text-white text-xs cursor-pointer"
+                  onClick={() => {
+                    setEmailModalOpen(false);
+                    setEmailVerificationPending(false);
+                    setEmailVerificationCode('');
+                  }}
+                  className="text-ink-muted hover:text-ink text-xs cursor-pointer"
                 >
                   取消
                 </Button>
@@ -936,9 +1060,8 @@ export default function ProfileTab({
                   variant="primary"
                   size="sm"
                   disabled={emailBusy}
-                  className="bg-white text-black font-semibold text-xs px-4 rounded-full cursor-pointer"
                 >
-                  确认保存
+                  {emailVerificationPending ? '确认绑定' : '发送验证码'}
                 </Button>
               </div>
             </form>
@@ -948,18 +1071,18 @@ export default function ProfileTab({
 
       {/* 解绑确认模态弹窗 */}
       {unbindTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#16171b] p-6 shadow-2xl">
-            <div className="flex items-center gap-2.5 text-amber-400 mb-2">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-scrim backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-sm rounded-xl border border-line bg-surface p-6 shadow-elevation-4">
+            <div className="flex items-center gap-2.5 text-warning mb-2">
               <AlertTriangle className="size-5" />
-              <h3 className="text-base font-semibold text-white">确认解绑 {unbindTarget.label}？</h3>
+              <h3 className="text-base font-semibold text-ink">确认解绑 {unbindTarget.label}？</h3>
             </div>
-            <p className="text-xs text-gray-300 leading-relaxed mb-4">
+            <p className="text-xs text-ink leading-relaxed mb-4">
               解绑后，您将无法再使用该渠道快捷登录。您的 6 位数字身份 ID (#{userNumber})、创作资产与积分将不受影响。
             </p>
 
             {unbindError && (
-              <div className="mb-4 p-3 rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 text-xs leading-relaxed">
+              <div className="mb-4 p-3 rounded-xl border border-danger-line bg-danger-soft text-danger text-xs leading-relaxed">
                 {unbindError}
               </div>
             )}
@@ -971,7 +1094,7 @@ export default function ProfileTab({
                 size="sm"
                 disabled={unbinding}
                 onClick={() => setUnbindTarget(null)}
-                className="text-gray-400 hover:text-white text-xs cursor-pointer"
+                className="text-ink-muted hover:text-ink text-xs cursor-pointer"
               >
                 取消
               </Button>
@@ -981,34 +1104,8 @@ export default function ProfileTab({
                 size="sm"
                 disabled={unbinding}
                 onClick={confirmExecuteUnbind}
-                className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 font-semibold text-xs px-4 rounded-full cursor-pointer"
               >
                 {unbinding ? '正在解绑…' : '确认解绑'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 微信绑定提示弹窗 */}
-      {wechatModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#16171b] p-6 shadow-2xl text-center">
-            <div className="mx-auto flex size-12 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 mb-4">
-              <ShieldCheck className="size-6" />
-            </div>
-            <h3 className="text-base font-semibold text-white">微信扫码关联</h3>
-            <p className="mt-2 text-xs text-gray-300 leading-relaxed text-left">
-              微信公众号与扫码快捷登录通道正在进行开放平台服务对齐。您当前可以通过已绑定的手机号验证码进行安全登录与消费，若需微信通知提醒，可关注官方公众号。
-            </p>
-            <div className="mt-6 flex justify-end">
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => setWechatModalOpen(false)}
-                className="bg-white text-black hover:bg-gray-200 text-xs px-5 rounded-full cursor-pointer"
-              >
-                我知道了
               </Button>
             </div>
           </div>
@@ -1019,7 +1116,7 @@ export default function ProfileTab({
       {toastMessage && (
         <div
           role="status"
-          className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 rounded-full border border-white/15 bg-[#1f2128]/95 px-5 py-2 text-xs font-medium text-white shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-2"
+          className="fixed top-6 left-1/2 -translate-x-1/2 z-toast flex items-center gap-2 rounded-full border border-line-strong bg-overlay-glass px-5 py-2 text-xs font-medium text-ink shadow-elevation-4 backdrop-blur-md animate-in fade-in slide-in-from-top-2"
         >
           <span>{toastMessage}</span>
         </div>

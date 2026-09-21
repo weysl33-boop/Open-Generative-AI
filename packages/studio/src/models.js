@@ -31421,3 +31421,47 @@ export const audioModels = [
 ];
 
 export const getAudioModelById = (id) => audioModels.find(m => m.id === id);
+
+// PostgreSQL owns the active model directory. The Studio catalog remains a
+// presentation/parameter schema, but it must be filtered by the server
+// response before a workbench mounts. Mutating the existing arrays preserves
+// the API consumed by the legacy workbench components without reintroducing a
+// second source of truth for availability or pricing.
+const MODEL_DIRECTORY_ARRAYS = [
+  t2iModels,
+  i2iModels,
+  t2vModels,
+  i2vModels,
+  v2vModels,
+  audioModels,
+  lipsyncModels,
+  imageLipSyncModels,
+  videoLipSyncModels,
+  recastModels,
+  motionControlModels,
+];
+
+let activeModelIds = null;
+
+export function isModelActive(modelId) {
+  return activeModelIds === null || activeModelIds.has(String(modelId));
+}
+
+export function applyActiveModelDirectory(rows) {
+  const activeIds = new Set(
+    (Array.isArray(rows) ? rows : [])
+      .filter((row) => row && row.id && row.isActive !== false)
+      .map((row) => String(row.id)),
+  );
+  activeModelIds = activeIds;
+
+  for (const catalog of MODEL_DIRECTORY_ARRAYS) {
+    const active = catalog.filter((model) => activeIds.has(String(model.id)));
+    catalog.splice(0, catalog.length, ...active);
+  }
+
+  return {
+    activeCount: activeIds.size,
+    visibleCount: MODEL_DIRECTORY_ARRAYS.reduce((count, catalog) => count + catalog.length, 0),
+  };
+}

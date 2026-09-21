@@ -1,0 +1,35 @@
+{
+  "hero": {
+    "badge": "開発者＆AIエージェント向け",
+    "title": "MCP ＆ CLI ツール",
+    "description": "ターミナル、IDE、またはMCP対応アシスタントから直接 koyosim を利用。既存のワークフローを中断することなく、100以上のモデルで映画級の画像、動画、音声を生成できます。"
+  },
+  "quickStart": {
+    "sectionLabel": "クイックスタート",
+    "steps": {
+      "installCli": "CLIツールをインストール",
+      "signIn": "サインイン",
+      "addSkills": "スキルを追加"
+    }
+  },
+  "features": {
+    "cli": {
+      "description": "ターミナルから14種類以上のAIモデルを直接実行して画像、動画、音声を生成。人間向けのカラー表示とエージェント向けのJSON構造化出力（--output-json、--jq フィルタリング）の両方に対応。非同期ワークフロー、ファイルアップロード、クレジット残高追跡をサポート。"
+    },
+    "mcp": {
+      "description": "Claude、Cursor、Windsurf、その他あらゆるMCP対応アシスタントを100以上の生成モデルに直結。ホスト型エンドポイントのためローカル導入不要。入出力スキーマ完備の19種類の構造化ツール、非同期ポーリング、アカウント管理機能を提供。"
+    },
+    "skills": {
+      "description": "Claude Code、Cursor、Gemini CLI 向けマルチモーダルツールキット。Cinema Director、Nano-Banana、UI Designer、Logo Creator、Seedance 2、AI Clipping、YouTube Shorts などのプリセットを内包。セマンティック終了コードとJSON出力によるエージェント最適化設計。"
+    }
+  },
+  "viewOnGithub": "GitHub でソースを見る",
+  "examples": {
+    "sectionLabel": "実行例",
+    "imageGeneration": "画像生成",
+    "textToVideo": "テキストから動画生成",
+    "audioCreation": "音声・楽曲制作",
+    "runSkill": "スキルを実行"
+  },
+  "footer": "オープンソース · MIT ライセンス · Claude、Cursor、Windsurf、Gemini CLI に完全対応"
+}

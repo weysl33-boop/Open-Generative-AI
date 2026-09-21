@@ -24,40 +24,37 @@ export default function LoginSuccessOverlay({ user, provider = null, onComplete,
 
   return (
     <div
-      className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in p-4"
+      className="fixed inset-0 z-modal flex items-center justify-center bg-scrim backdrop-blur-md animate-fade-in p-4"
       role="dialog"
       aria-modal="true"
     >
-      <div className="relative w-full max-w-[380px] rounded-3xl border border-cyan-500/30 bg-[#12141c]/95 p-7 text-center shadow-[0_20px_70px_rgba(6,182,212,0.25)] backdrop-blur-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-        {/* 背景微光光晕 */}
-        <div className="absolute -top-24 -left-24 size-48 rounded-full bg-cyan-500/20 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 size-48 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
+      <div className="relative w-full max-w-[380px] rounded-2xl border border-line bg-overlay-glass p-7 text-center shadow-elevation-3 backdrop-blur-2xl overflow-hidden animate-in zoom-in-95 duration-base">
 
-        {/* 顶部动态勾选与微光动画 */}
+        {/* 顶部动态勾选：进度环用 brand，落地为 elevation，不做彩色发光 */}
         <div className="relative mx-auto mb-4 flex size-20 items-center justify-center">
-          <div className="absolute inset-0 rounded-full border-2 border-cyan-400/40 border-t-cyan-300 animate-spin duration-1000" />
-          <div className="size-16 rounded-full bg-gradient-to-tr from-cyan-500/30 to-blue-500/20 flex items-center justify-center shadow-[0_0_25px_rgba(6,182,212,0.4)]">
-            <CheckCircle2 className="size-9 text-cyan-300 animate-in zoom-in-75 duration-300" />
+          <div className="absolute inset-0 rounded-full border-2 border-line border-t-brand animate-spin duration-1000" />
+          <div className="size-16 rounded-full bg-brand-soft border border-brand-line flex items-center justify-center shadow-elevation-2">
+            <CheckCircle2 className="size-9 text-brand animate-in zoom-in-75 duration-page" />
           </div>
         </div>
 
         {/* 标题与欢迎文案 */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-[11px] font-semibold text-cyan-300 mb-2.5">
-          <Sparkles className="size-3 text-cyan-400" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-soft border border-brand-line text-caption font-semibold text-brand mb-2.5">
+          <Sparkles className="size-3 text-brand" />
           <span>{providerLabel} 登录成功</span>
         </div>
 
-        <h3 className="text-xl font-bold tracking-tight text-white mb-1.5">
+        <h3 className="text-xl font-bold tracking-tight text-ink mb-1.5">
           欢迎回来，{name}
         </h3>
-        <p className="text-xs text-gray-400 leading-relaxed mb-6">
+        <p className="text-xs text-ink-muted leading-relaxed mb-6">
           已成功同步您的算力额度与专属创作历史，正在载入您的创作看板…
         </p>
 
         {/* 进度微动画条 */}
-        <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden mb-4">
+        <div className="w-full bg-wash-press h-1 rounded-full overflow-hidden mb-4">
           <div
-            className="h-full bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full animate-[progress_1.5s_ease-out_forwards]"
+            className="h-full bg-gradient-to-r from-brand to-info rounded-full animate-[progress_1.5s_ease-out_forwards]"
             style={{ animationDuration: `${duration}ms` }}
           />
         </div>
@@ -65,7 +62,7 @@ export default function LoginSuccessOverlay({ user, provider = null, onComplete,
         <button
           type="button"
           onClick={() => onComplete?.()}
-          className="inline-flex items-center justify-center gap-1.5 text-xs text-cyan-300 hover:text-cyan-200 transition-colors font-medium cursor-pointer"
+          className="inline-flex items-center justify-center gap-1.5 text-xs text-brand-hover hover:text-brand-hover transition-colors font-medium cursor-pointer"
         >
           <span>立即前往创作看板</span>
           <ArrowRight className="size-3.5" />

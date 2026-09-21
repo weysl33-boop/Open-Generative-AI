@@ -1,0 +1,35 @@
+{
+  "hero": {
+    "badge": "面向開發者与 AI 智慧代理",
+    "title": "MCP 与 CLI",
+    "description": "在終端、IDE 或任何兼容 MCP 的助手中使用 koyosim。跨 100 多個模型生成電影級圖像、影片与音訊——無需離開你的工作流程。"
+  },
+  "quickStart": {
+    "sectionLabel": "快速開始",
+    "steps": {
+      "installCli": "安裝命令行工具",
+      "signIn": "登入",
+      "addSkills": "添加技能包"
+    }
+  },
+  "features": {
+    "cli": {
+      "description": "在終端中跨 14 種以上 AI 模型生成圖像、影片和音訊。雙重輸出模式——面向人類的彩色輸出，以及面向智慧代理的 JSON 輸出（--output-json、--jq 過滤）。支援異步工作流、文件上傳和額度追踪。"
+    },
+    "mcp": {
+      "description": "將 Claude、Cursor、Windsurf 及任何兼容 MCP 的助手連接到 100 多個生成式模型。托管端點，無需安裝。提供 19 個帶輸入/輸出模式的結構化工具，支援異步輪詢和帳戶管理。"
+    },
+    "skills": {
+      "description": "面向 Claude Code、Cursor 和 Gemini CLI 的多模態工具包。內置 Cinema Director、Nano-Banana、UI Designer、Logo Creator、Seedance 2、AI 剪輯和 YouTube Shorts 預設。原生適配智慧代理，支援 JSON 輸出和語義化退出碼。"
+    }
+  },
+  "viewOnGithub": "在 GitHub 上檢視",
+  "examples": {
+    "sectionLabel": "示例",
+    "imageGeneration": "圖像生成",
+    "textToVideo": "文字轉影片",
+    "audioCreation": "音訊創作",
+    "runSkill": "運行技能"
+  },
+  "footer": "開源 · MIT 授權 · 支援 Claude、Cursor、Windsurf 和 Gemini CLI"
+}

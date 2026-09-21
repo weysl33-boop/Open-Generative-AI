@@ -51,19 +51,19 @@ console.log(task.outputUrl);`,
   };
 
   return (
-    <div className="max-w-4xl mx-auto rounded-2xl overflow-hidden border border-white/[0.1] bg-[#0c0f17]/90 backdrop-blur-xl shadow-2xl shadow-cyan-500/5">
+    <div className="max-w-4xl mx-auto rounded-2xl overflow-hidden border border-line bg-base/90 backdrop-blur-xl shadow-elevation-4 shadow-brand-soft">
       {/* 终端顶部状态栏 */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.08] bg-white/[0.02]">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-line bg-wash">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500/80" />
-          <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-          <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
-          <span className="ml-3 text-xs font-mono text-neutral-400">api.koyosim.com/v1/multimodal/generate</span>
+          <div className="w-3 h-3 rounded-full bg-danger" />
+          <div className="w-3 h-3 rounded-full bg-warning" />
+          <div className="w-3 h-3 rounded-full bg-success" />
+          <span className="ml-3 text-xs font-mono text-ink-muted">api.koyosim.com/v1/multimodal/generate</span>
         </div>
 
         {/* 语言切换器与复制 */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-black/40 p-1 rounded-lg border border-white/[0.06] text-xs font-mono">
+          <div className="flex items-center gap-1 bg-scrim p-1 rounded-lg border border-line-subtle text-xs font-mono">
             {['curl', 'python', 'node'].map((lang) => (
               <button
                 key={lang}
@@ -71,7 +71,7 @@ console.log(task.outputUrl);`,
                 className={`px-2.5 py-1 rounded transition-all ${
                   activeLang === lang
                     ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
-                    : 'text-neutral-400 hover:text-white'
+                    : 'text-ink-muted hover:text-ink'
                 }`}
               >
                 {lang === 'curl' ? 'cURL' : lang === 'python' ? 'Python' : 'Node.js'}
@@ -81,7 +81,7 @@ console.log(task.outputUrl);`,
 
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1 text-xs text-neutral-400 hover:text-white px-2 py-1 rounded bg-white/[0.04] border border-white/[0.06] transition-colors"
+            className="flex items-center gap-1 text-xs text-ink-muted hover:text-ink px-2 py-1 rounded bg-wash border border-line-subtle transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -92,19 +92,19 @@ console.log(task.outputUrl);`,
       </div>
 
       {/* 终端代码体 */}
-      <div className="p-6 font-mono text-xs leading-relaxed overflow-x-auto bg-[#080a10]">
-        <pre className="text-neutral-200">
+      <div className="p-6 font-mono text-xs leading-relaxed overflow-x-auto bg-canvas">
+        <pre className="text-ink">
           <code>{codeSnippets[activeLang]}</code>
         </pre>
       </div>
 
       {/* 实时响应指示条 */}
-      <div className="px-6 py-2.5 border-t border-white/[0.06] bg-black/40 flex items-center justify-between text-[11px] font-mono text-neutral-500">
+      <div className="px-6 py-2.5 border-t border-line-subtle bg-scrim flex items-center justify-between text-[11px] font-mono text-ink-subtle">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400" />
-          <span className="text-neutral-400">Response: 200 OK (142ms)</span>
+          <span className="w-2 h-2 rounded-full bg-success" />
+          <span className="text-ink-muted">Response: 200 OK (142ms)</span>
         </div>
-        <span className="text-neutral-500">Streaming: Supported</span>
+        <span className="text-ink-subtle">Streaming: Supported</span>
       </div>
     </div>
   );

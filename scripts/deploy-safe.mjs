@@ -1,5 +1,48 @@
+import fs from 'node:fs';
 import http from 'node:http';
-import { execSync } from 'node:child_process';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+const rootDir = process.cwd();
+const currentNext = path.join(rootDir, '.next');
+const previousNext = path.join(rootDir, '.next-previous');
+const artifactInput = String(process.env.DEPLOY_ARTIFACT_DIR || '').trim();
+const serviceName = String(process.env.DEPLOY_SERVICE_NAME || 'koyosim.service').trim();
+
+function resolveArtifact() {
+  if (!artifactInput) throw new Error('DEPLOY_ARTIFACT_DIR is required; deploy a prebuilt, verified Next.js artifact.');
+  const artifact = path.resolve(rootDir, artifactInput);
+  const relative = path.relative(rootDir, artifact);
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error('DEPLOY_ARTIFACT_DIR must point to a directory inside the application release root.');
+  }
+  if (artifact === currentNext || artifact === previousNext) {
+    throw new Error('DEPLOY_ARTIFACT_DIR must be a separate staging directory.');
+  }
+  if (!fs.existsSync(path.join(artifact, 'BUILD_ID'))) {
+    throw new Error(`Next.js BUILD_ID is missing from deployment artifact: ${artifact}`);
+  }
+  return artifact;
+}
+
+function switchToArtifact(artifact) {
+  fs.rmSync(previousNext, { recursive: true, force: true });
+  if (fs.existsSync(currentNext)) fs.renameSync(currentNext, previousNext);
+  try {
+    fs.renameSync(artifact, currentNext);
+  } catch (error) {
+    if (fs.existsSync(previousNext) && !fs.existsSync(currentNext)) fs.renameSync(previousNext, currentNext);
+    throw error;
+  }
+}
+
+function rollbackRelease() {
+  if (!fs.existsSync(previousNext)) return false;
+  const failedNext = path.join(rootDir, `.next-failed-${Date.now()}`);
+  if (fs.existsSync(currentNext)) fs.renameSync(currentNext, failedNext);
+  fs.renameSync(previousNext, currentNext);
+  return true;
+}
 
 async function fetchInternal(path, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -9,7 +52,7 @@ async function fetchInternal(path, headers = {}) {
       path,
       method: 'GET',
       headers: {
-        'Host': 'go.koyosim.com',
+        'Host': 'www.koyosim.com',
         ...headers,
       }
     }, (res) => {
@@ -48,39 +91,40 @@ async function main() {
   console.log('🚀 [KoyoSIM Deploy] 启动生产安全平滑发布流水线');
   console.log('==============================================');
 
-  // 1. 安全多版本构建
-  console.log('[Step 1/3] 执行安全增量构建 (保留多版本静态资产)...');
-  execSync('node scripts/build-safe.mjs', { stdio: 'inherit' });
+  // 1. Accept only an artifact produced and checked by a sufficiently sized
+  // build environment. Production hosts must not compile the application.
+  const artifact = resolveArtifact();
+  console.log('[Step 1/3] 校验预构建 Next.js 产物:', artifact);
+  switchToArtifact(artifact);
 
-  // 2. 修复属主权限并重启服务
-  console.log('[Step 2/3] 平滑重载应用服务...');
   try {
-    try {
-      execSync('sudo chown -R www:www .next data 2>/dev/null', { stdio: 'ignore' });
-    } catch {}
-    try {
-      execSync('sudo systemctl restart go-koyosim.service', { stdio: 'inherit' });
-      console.log('✓ go-koyosim.service 重启指令执行完毕');
-    } catch (cmdErr) {
-      console.warn('⚠️ 注意: 当前用户直接执行 sudo systemctl 失败，尝试无需 sudo 或提示手动重启:', cmdErr.message);
-    }
-  } catch (e) {
-    console.warn('⚠️ 重启步骤提示:', e.message);
-  }
+    // 2. Restart only after the artifact has been atomically switched.
+    console.log('[Step 2/3] 平滑重载应用服务...');
+    execFileSync('sudo', ['systemctl', 'restart', serviceName], { stdio: 'inherit' });
+    console.log('✓ ' + serviceName + ' 重启指令执行完毕');
 
-  // 等待服务监听端口
-  await new Promise(r => setTimeout(r, 2000));
+    // 等待服务监听端口
+    await new Promise(r => setTimeout(r, 2000));
 
-  // 3. 部署自检
-  console.log('[Step 3/3] 正在对新版本进行自动化连通性验收...');
-  try {
+    // 3. 部署自检
+    console.log('[Step 3/3] 正在对新版本进行自动化连通性验收...');
     await verifyDeployment();
     console.log('==============================================');
-    console.log('🎉 恭喜！KoyoSIM AI Studio 平滑发布成功，服务坚如磐石！');
+    console.log('🎉 KoyoSIM AI Studio 预构建产物发布并通过连通性验收；旧版本保留在 .next-previous。');
     console.log('==============================================');
   } catch (err) {
     console.error('❌ 部署自检未通过:', err.message);
-    process.exit(1);
+    if (rollbackRelease()) {
+      try {
+        execFileSync('sudo', ['systemctl', 'restart', serviceName], { stdio: 'inherit' });
+        console.error('已回滚到 .next-previous 并重启服务；失败版本已保留为 .next-failed-* 供调查。');
+      } catch (rollbackError) {
+        console.error('自动回滚后重启失败，请立即按 .next-previous 手动恢复:', rollbackError.message);
+      }
+    } else {
+      console.error('没有可用的旧版本目录，无法自动回滚。');
+    }
+    process.exitCode = 1;
   }
 }
 

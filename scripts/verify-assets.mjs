@@ -1,5 +1,5 @@
-﻿async function verifyAllAssets() {
-  const adminUrl = 'https://go.koyosim.com/admin';
+async function verifyAllAssets() {
+  const adminUrl = 'https://www.koyosim.com/admin';
   const cookie = 'ko_session=pd22H1-ceVCTMe5KHcbSHAEeqWF821_3hbWUBDMBIxk';
   
   console.log('1. 获取最新 /admin HTML...');
@@ -21,7 +21,7 @@
   
   let failed = 0;
   for (const asset of matches) {
-    const fullUrl = `https://go.koyosim.com${asset}`;
+    const fullUrl = `https://www.koyosim.com${asset}`;
     try {
       const assetRes = await fetch(fullUrl);
       if (assetRes.status !== 200) {

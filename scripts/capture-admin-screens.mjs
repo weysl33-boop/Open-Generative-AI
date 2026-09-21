@@ -55,18 +55,18 @@ async function main() {
   await page.setCookie({
     name: 'ko_session',
     value: SESSION_TOKEN,
-    domain: 'go.koyosim.com',
+    domain: 'www.koyosim.com',
     path: '/',
     httpOnly: true,
     secure: true
   });
 
   const pagesToCapture = [
-    { name: 'admin_dashboard.png', url: 'https://go.koyosim.com/admin' },
-    { name: 'admin_users.png', url: 'https://go.koyosim.com/admin/users' },
-    { name: 'admin_plans.png', url: 'https://go.koyosim.com/admin/plans' },
-    { name: 'admin_settings.png', url: 'https://go.koyosim.com/admin/settings' },
-    { name: 'admin_health.png', url: 'https://go.koyosim.com/admin/health' }
+    { name: 'admin_dashboard.png', url: 'https://www.koyosim.com/admin' },
+    { name: 'admin_users.png', url: 'https://www.koyosim.com/admin/users' },
+    { name: 'admin_plans.png', url: 'https://www.koyosim.com/admin/plans' },
+    { name: 'admin_settings.png', url: 'https://www.koyosim.com/admin/settings' },
+    { name: 'admin_health.png', url: 'https://www.koyosim.com/admin/health' }
   ];
 
   for (const item of pagesToCapture) {

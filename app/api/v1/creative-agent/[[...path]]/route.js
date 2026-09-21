@@ -1,16 +1,14 @@
 import { NextResponse } from 'next/server';
+import { getUserFromRequest } from '@/lib/services/auth';
+import { guardMutation } from '@/lib/security/requestGuard';
+import { publicErrorMessage } from '@/lib/security/publicError';
+import { resolveProviderApiKey } from '@/lib/security/byok';
+import { isCreativeAgentInferenceRequest } from '@/lib/security/legacyProxyPolicy';
 
 const MUAPI_BASE = 'https://api.muapi.ai';
 
-function getApiKey(request) {
-    const authHeader = request.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        return authHeader.substring(7);
-    }
-    const headerKey = request.headers.get('x-api-key');
-    if (headerKey) return headerKey;
-    // Cookie-based auth removed for security: no HttpOnly flag exposes key to XSS (CWE-522)
-    return null;
+async function getApiKey(request) {
+    return resolveProviderApiKey(request);
 }
 
 function cleanHeaders(request) {
@@ -24,6 +22,8 @@ function cleanHeaders(request) {
 }
 
 export async function GET(request, { params }) {
+    const user = await getUserFromRequest(request);
+    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });
     const slug = await params;
     const pathSegments = slug.path || [];
     const path = pathSegments.join('/');
@@ -32,34 +32,43 @@ export async function GET(request, { params }) {
     const targetUrl = `${MUAPI_BASE}/api/v1/creative-agent/${path}${search}`;
 
     const headers = cleanHeaders(request);
-    const apiKey = getApiKey(request);
-    // NOTE: credential logging removed for security (CWE-200)
-
-    if (apiKey) headers.set('x-api-key', apiKey);
+    const apiKey = await getApiKey(request);
+    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'Creative Agent 服务暂未配置或不可用' }, { status: 503 });
+    if (apiKey.key) headers.set('x-api-key', apiKey.key);
 
     try {
         const response = await fetch(targetUrl, { headers, method: 'GET' });
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
-        console.error(`[creative-agent proxy GET ERROR] ${targetUrl}:`, error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('[creative-agent proxy GET ERROR]', { code: error.code || 'UPSTREAM_ERROR' });
+        return NextResponse.json({ error: publicErrorMessage(error, 'Creative Agent 请求暂时不可用') }, { status: 500 });
     }
 }
 
 export async function POST(request, { params }) {
+    const user = await getUserFromRequest(request);
+    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });
+    const guarded = guardMutation(request, { maxBytes: 512 * 1024 });
+    if (guarded) return guarded;
     const slug = await params;
     const pathSegments = slug.path || [];
+    if (isCreativeAgentInferenceRequest(pathSegments, 'POST')) {
+        return NextResponse.json(
+            { error: 'Creative Agent 推理暂未接入平台额度结算，暂不可用', code: 'BILLING_REQUIRED' },
+            { status: 402 },
+        );
+    }
     const path = pathSegments.join('/');
     
     const { search } = new URL(request.url);
     const targetUrl = `${MUAPI_BASE}/api/v1/creative-agent/${path}${search}`;
 
     const headers = cleanHeaders(request);
-    const apiKey = getApiKey(request);
-    // NOTE: credential logging removed for security (CWE-200)
+    const apiKey = await getApiKey(request);
+    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'Creative Agent 服务暂未配置或不可用' }, { status: 503 });
 
-    if (apiKey) headers.set('x-api-key', apiKey);
+    if (apiKey.key) headers.set('x-api-key', apiKey.key);
 
     try {
         const body = await request.arrayBuffer();
@@ -67,12 +76,16 @@ export async function POST(request, { params }) {
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
-        console.error(`[creative-agent proxy POST ERROR] ${targetUrl}:`, error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('[creative-agent proxy POST ERROR]', { code: error.code || 'UPSTREAM_ERROR' });
+        return NextResponse.json({ error: publicErrorMessage(error, 'Creative Agent 请求暂时不可用') }, { status: 500 });
     }
 }
 
 export async function PATCH(request, { params }) {
+    const user = await getUserFromRequest(request);
+    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });
+    const guarded = guardMutation(request, { maxBytes: 512 * 1024 });
+    if (guarded) return guarded;
     const slug = await params;
     const pathSegments = slug.path || [];
     const path = pathSegments.join('/');
@@ -81,10 +94,10 @@ export async function PATCH(request, { params }) {
     const targetUrl = `${MUAPI_BASE}/api/v1/creative-agent/${path}${search}`;
 
     const headers = cleanHeaders(request);
-    const apiKey = getApiKey(request);
-    // NOTE: credential logging removed for security (CWE-200)
+    const apiKey = await getApiKey(request);
+    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'Creative Agent 服务暂未配置或不可用' }, { status: 503 });
 
-    if (apiKey) headers.set('x-api-key', apiKey);
+    if (apiKey.key) headers.set('x-api-key', apiKey.key);
 
     try {
         const body = await request.arrayBuffer();
@@ -92,12 +105,16 @@ export async function PATCH(request, { params }) {
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
-        console.error(`[creative-agent proxy PATCH ERROR] ${targetUrl}:`, error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('[creative-agent proxy PATCH ERROR]', { code: error.code || 'UPSTREAM_ERROR' });
+        return NextResponse.json({ error: publicErrorMessage(error, 'Creative Agent 请求暂时不可用') }, { status: 500 });
     }
 }
 
 export async function DELETE(request, { params }) {
+    const user = await getUserFromRequest(request);
+    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });
+    const guarded = guardMutation(request, { maxBytes: 32 * 1024 });
+    if (guarded) return guarded;
     const slug = await params;
     const pathSegments = slug.path || [];
     const path = pathSegments.join('/');
@@ -106,17 +123,17 @@ export async function DELETE(request, { params }) {
     const targetUrl = `${MUAPI_BASE}/api/v1/creative-agent/${path}${search}`;
 
     const headers = cleanHeaders(request);
-    const apiKey = getApiKey(request);
-    // NOTE: credential logging removed for security (CWE-200)
+    const apiKey = await getApiKey(request);
+    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'Creative Agent 服务暂未配置或不可用' }, { status: 503 });
 
-    if (apiKey) headers.set('x-api-key', apiKey);
+    if (apiKey.key) headers.set('x-api-key', apiKey.key);
 
     try {
         const response = await fetch(targetUrl, { method: 'DELETE', headers });
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
-        console.error(`[creative-agent proxy DELETE ERROR] ${targetUrl}:`, error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('[creative-agent proxy DELETE ERROR]', { code: error.code || 'UPSTREAM_ERROR' });
+        return NextResponse.json({ error: publicErrorMessage(error, 'Creative Agent 请求暂时不可用') }, { status: 500 });
     }
 }

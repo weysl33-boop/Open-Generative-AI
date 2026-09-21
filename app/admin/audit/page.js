@@ -1,6 +1,8 @@
 import { queryAuditLogs } from '@/lib/admin/audit';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 
 function formatDate(value) {
   return value
@@ -9,6 +11,7 @@ function formatDate(value) {
 }
 
 export default async function AuditPage({ searchParams }) {
+  await requireAdminPagePermission(PERMISSIONS.auditRead);
   const params = toSearchParams(await searchParams);
   const result = await queryAuditLogs(params);
 
@@ -18,7 +21,7 @@ export default async function AuditPage({ searchParams }) {
       label: '管理动作',
       render: (row) => (
         <div>
-          <span className="font-semibold text-white font-mono text-xs">{row.action}</span>
+          <span className="font-semibold text-ink font-mono text-xs">{row.action}</span>
           {row.request_id && (
             <div className="mt-0.5">
               <CopyableId id={row.request_id} label="ReqId" />
@@ -32,7 +35,7 @@ export default async function AuditPage({ searchParams }) {
       label: '操作管理员',
       render: (row) => (
         <div>
-          <p className="text-white/90 text-xs">{row.actor_email}</p>
+          <p className="text-ink text-xs">{row.actor_email}</p>
           <div className="mt-0.5">
             <CopyableId id={row.actor_id} />
           </div>
@@ -44,9 +47,9 @@ export default async function AuditPage({ searchParams }) {
       label: '变更目标',
       render: (row) => (
         <div>
-          <span className="text-white/40 text-[11px] uppercase tracking-wider">{row.target_type || '系统'}</span>
+          <span className="text-ink-subtle text-[11px] uppercase tracking-wider">{row.target_type || '系统'}</span>
           {row.target_id && (
-            <div className="mt-0.5 font-mono text-xs text-white/70">
+            <div className="mt-0.5 font-mono text-xs text-ink-muted">
               <CopyableId id={row.target_id} />
             </div>
           )}
@@ -76,11 +79,11 @@ export default async function AuditPage({ searchParams }) {
       render: (row) => (
         <div className="max-w-[280px] font-mono text-[11px]">
           {row.after ? (
-            <pre className="truncate rounded-md bg-black/40 p-1.5 text-white/60" title={JSON.stringify(row.after, null, 2)}>
+            <pre className="truncate rounded-md bg-scrim p-1.5 text-ink-muted" title={JSON.stringify(row.after, null, 2)}>
               {JSON.stringify(row.after)}
             </pre>
           ) : (
-            <span className="text-white/30">—</span>
+            <span className="text-ink-subtle">—</span>
           )}
         </div>
       ),
@@ -106,13 +109,13 @@ export default async function AuditPage({ searchParams }) {
             name="q"
             defaultValue={params.get('q') || ''}
             placeholder="搜索管理员邮箱、动作名称或目标 ID…"
-            className="min-w-[260px] flex-1 rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-xs text-white outline-none focus:border-cyan-300/50"
+            className="min-w-[260px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
           />
 
           <select
             name="risk"
             defaultValue={params.get('risk') || ''}
-            className="rounded-xl border border-white/10 bg-[#0a0a0a] px-3.5 py-2.5 text-xs text-white/70 outline-none focus:border-cyan-300/50"
+            className="rounded-xl border border-line bg-canvas px-3.5 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
           >
             <option value="">全部风险级别</option>
             <option value="high">High (高危操作)</option>
@@ -122,7 +125,7 @@ export default async function AuditPage({ searchParams }) {
 
           <button
             type="submit"
-            className="rounded-xl bg-cyan-300 px-5 py-2.5 text-xs font-bold text-black hover:bg-cyan-200"
+            className="rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-ink-on-accent hover:bg-brand"
           >
             筛选日志
           </button>

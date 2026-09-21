@@ -18,6 +18,33 @@ function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+const runtimeCatalogs = Object.create(null);
+
+export function setRuntimeLocaleCatalog(locale, catalog) {
+  if (!locale || !catalog || typeof catalog !== 'object') return;
+  runtimeCatalogs[locale] = catalog;
+}
+
+function scoreBundle(candidate, reference) {
+  if (!isPlainObject(candidate) || !isPlainObject(reference)) return 0;
+  return Object.keys(reference).reduce((score, key) => score + (Object.prototype.hasOwnProperty.call(candidate, key) ? 1 : 0), 0);
+}
+
+function findRuntimeBundle(locale, reference) {
+  const studioBundles = runtimeCatalogs[locale]?.studio;
+  if (!studioBundles || !isPlainObject(reference)) return null;
+  let best = null;
+  let bestScore = 0;
+  for (const candidate of Object.values(studioBundles)) {
+    const score = scoreBundle(candidate, reference);
+    if (score > bestScore) {
+      best = candidate;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
 export function mergeCopy(base, override) {
   if (!override) return base;
   if (!base) return override;
@@ -37,5 +64,19 @@ export function mergeCopy(base, override) {
 // when locale === 'en'). Always returns a fully-populated copy object.
 export function resolveCopy(en, localeBundle, locale) {
   if (!locale || locale === 'en') return en;
-  return mergeCopy(en, localeBundle);
+
+  // The host application uses explicit BCP-47 locale values while the
+  // original Studio package used the legacy `zh` alias. Accept both without
+  // ever applying Simplified Chinese to Japanese, Korean, or Traditional
+  // Chinese screens. A component may pass either its legacy `zh` bundle or a
+  // map such as `{ 'zh-CN': zh, 'ja-JP': ja }` while migrating bundles.
+  const normalizedLocale = locale === 'zh' ? 'zh-CN' : locale;
+  const runtimeBundle = findRuntimeBundle(normalizedLocale, en);
+  const selectedBundle = runtimeBundle || (localeBundle && Object.prototype.hasOwnProperty.call(localeBundle, normalizedLocale)
+    ? localeBundle[normalizedLocale]
+    : normalizedLocale === 'zh-CN'
+      ? localeBundle
+      : undefined);
+
+  return mergeCopy(en, selectedBundle);
 }

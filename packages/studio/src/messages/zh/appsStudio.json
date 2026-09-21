@@ -22,7 +22,7 @@
   },
   "card": {
     "templateFallback": "模板",
-    "github": "Github",
+    "github": "GitHub 仓库",
     "demo": "演示"
   },
   "footer": {

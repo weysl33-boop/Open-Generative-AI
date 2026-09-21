@@ -1,17 +1,18 @@
-import { requirePermission, okResponse, errorResponse, verifyAdminPassword } from '@/lib/admin/authz';
+import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse, verifyAdminPassword } from '@/lib/admin/authz';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { checkIdempotency, completeIdempotency } from '@/lib/admin/idempotency';
+import { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';
 import { setUserRole } from '@/lib/services/users';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function PUT(request, context) {
+async function handlePUT(request, context) {
   const guard = await requirePermission(request, PERMISSIONS.adminsWrite);
   if (!guard.ok) return guard.response;
 
   const { id } = await context.params;
-  const idempotencyKey = request.headers.get('idempotency-key');
+  const idempotencyKey = getRequiredIdempotencyKey(request);
+  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '角色变更必须提供有效的 Idempotency-Key', 422, guard.requestId);
 
   const idemp = await checkIdempotency({
     scope: 'admin_role_change',
@@ -30,11 +31,12 @@ export async function PUT(request, context) {
   } catch {}
 
   // 二次密码校验
-  if (!verifyAdminPassword(guard.user.id, body.adminPassword)) {
+  if (!await verifyAdminPassword(guard.user.id, body.adminPassword)) {
+    await releaseIdempotency(idemp.keyHash);
     return errorResponse('UNAUTHORIZED', '管理员密码二次验证失败，拒绝执行', 403, guard.requestId);
   }
 
-  const result = setUserRole({
+  const result = await setUserRole({
     actor: guard.user,
     userId: id,
     role: body.role,
@@ -42,9 +44,12 @@ export async function PUT(request, context) {
   });
 
   if (result.error) {
-    return errorResponse('BAD_REQUEST', result.error, 400, guard.requestId);
+    await releaseIdempotency(idemp.keyHash);
+    return errorResponse('VALIDATION_ERROR', result.error, 422, guard.requestId);
   }
 
   await completeIdempotency(idemp.keyHash, result);
   return okResponse(result, guard.requestId);
 }
+
+export const PUT = withAdminErrorBoundary(handlePUT);

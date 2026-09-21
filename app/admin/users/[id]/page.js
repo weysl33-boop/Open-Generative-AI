@@ -4,6 +4,8 @@ import { getUserDetailFull } from '@/lib/services/users';
 import { roleLabel } from '@/lib/admin/permissions';
 import { Card, DataTable, PageHeader, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
 import UserDetailTabs from './UserDetailTabs';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 
 function formatDate(value) {
   return value
@@ -12,6 +14,7 @@ function formatDate(value) {
 }
 
 export default async function UserDetailPage({ params }) {
+  await requireAdminPagePermission(PERMISSIONS.usersRead);
   const { id } = await params;
   const detail = await getUserDetailFull(id);
 
@@ -31,7 +34,7 @@ export default async function UserDetailPage({ params }) {
       >
         <Link
           href="/admin/users"
-          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/70 hover:bg-white/10"
+          className="rounded-xl border border-line bg-wash px-4 py-2 text-xs font-semibold text-ink-muted hover:bg-wash-press"
         >
           ← 返回用户列表
         </Link>
@@ -40,7 +43,7 @@ export default async function UserDetailPage({ params }) {
       {/* 顶部身份卡片 */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>
-          <p className="text-xs text-white/40">账户状态</p>
+          <p className="text-xs text-ink-subtle">账户状态</p>
           <div className="mt-2 flex items-center gap-2">
             <StatusBadge tone={user.status === 'suspended' ? 'danger' : 'good'}>
               {user.status === 'suspended' ? '已封禁' : '正常'}
@@ -52,21 +55,21 @@ export default async function UserDetailPage({ params }) {
         </Card>
 
         <Card>
-          <p className="text-xs text-white/40">可用模型额度</p>
-          <p className="mt-2 text-3xl font-extrabold text-cyan-200">{user.credits}</p>
-          <p className="mt-1 text-[11px] text-white/35">可直接用于 AI 图像/视频生成</p>
+          <p className="text-xs text-ink-subtle">可用模型额度</p>
+          <p className="mt-2 text-3xl font-extrabold text-brand-hover">{user.credits}</p>
+          <p className="mt-1 text-[11px] text-ink-subtle">可直接用于 AI 图像/视频生成</p>
         </Card>
 
         <Card>
-          <p className="text-xs text-white/40">活跃会话数</p>
-          <p className="mt-2 text-2xl font-bold text-white">{detail.sessions.length}</p>
-          <p className="mt-1 text-[11px] text-white/35">未过期的合法 HttpOnly 凭据</p>
+          <p className="text-xs text-ink-subtle">活跃会话数</p>
+          <p className="mt-2 text-2xl font-bold text-ink">{detail.sessions.length}</p>
+          <p className="mt-1 text-[11px] text-ink-subtle">未过期的合法 HttpOnly 凭据</p>
         </Card>
 
         <Card>
-          <p className="text-xs text-white/40">生成记录总计</p>
-          <p className="mt-2 text-2xl font-bold text-white">{detail.creations.length}</p>
-          <p className="mt-1 text-[11px] text-white/35">涵盖所有 Studio 模块</p>
+          <p className="text-xs text-ink-subtle">生成记录总计</p>
+          <p className="mt-2 text-2xl font-bold text-ink">{detail.creations.length}</p>
+          <p className="mt-1 text-[11px] text-ink-subtle">涵盖所有 Studio 模块</p>
         </Card>
       </div>
 

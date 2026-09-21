@@ -1,22 +1,31 @@
-import { getAllModelsOverview } from '@/lib/services/models';
-import { PageHeader } from '@/components/admin/AdminUi';
-import ModelsManagerClient from './ModelsManagerClient';
+import { getModelCenterSnapshot } from '@/lib/services/models';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS, hasPermission } from '@/lib/admin/permissions';
+import ModelControlCenter from './ModelControlCenter';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ModelsPage() {
-  const rawModels = await getAllModelsOverview();
-  const models = JSON.parse(JSON.stringify(rawModels));
+const VIEW_PARAM_KEYS = ['q', 'status', 'type', 'provider', 'channel', 'route', 'sort', 'view'];
+
+function readViewParams(searchParams) {
+  const params = {};
+  for (const key of VIEW_PARAM_KEYS) {
+    const value = searchParams?.[key];
+    if (typeof value === 'string') params[key] = value;
+    else if (Array.isArray(value)) params[key] = value.filter((item) => typeof item === 'string').join(',');
+  }
+  return params;
+}
+
+export default async function ModelsPage({ searchParams }) {
+  const user = await requireAdminPagePermission(PERMISSIONS.modelsRead);
+  const [snapshot, params] = await Promise.all([getModelCenterSnapshot(), searchParams]);
 
   return (
-    <>
-      <PageHeader
-        eyebrow="模型中枢与成本计费"
-        title="模型开关与成本定价"
-        description="管理 Studio 各模型（Hailuo 2.3、Kling 3.0 Pro、Veo 2、Luma、Flux 等）的启用状态、官方上游成本价（USD）以及向用户收取的 Credits 扣点数。"
-      />
-
-      <ModelsManagerClient initialModels={models} />
-    </>
+    <ModelControlCenter
+      initialSnapshot={JSON.parse(JSON.stringify(snapshot))}
+      initialParams={readViewParams(params)}
+      canWrite={hasPermission(user.role, PERMISSIONS.modelsWrite)}
+    />
   );
 }

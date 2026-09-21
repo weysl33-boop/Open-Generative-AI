@@ -1,0 +1,55 @@
+{
+  "uploader": {
+    "clear": "Limpiar",
+    "uploadPrompt": "Subir pista de audio",
+    "uploadHint": "MP3, WAV, M4A hasta 20MB",
+    "uploading": "Subiendo...",
+    "ready": "Listo para generar",
+    "maxSuffix": "(Máx {max})",
+    "trackLabel": "Pista #{index}",
+    "sizeLimitError": "El archivo de audio supera el límite de 20MB.",
+    "uploadFailedError": "Error al subir: {message}"
+  },
+  "player": {
+    "nowPlaying": "Reproduciendo Ahora",
+    "defaultTitle": "Pista Generada",
+    "muteUnmute": "Silenciar/Activar sonido",
+    "pause": "Pausar",
+    "play": "Reproducir",
+    "download": "Descargar Audio",
+    "save": "Guardar",
+    "seek": "Buscar posición",
+    "volume": "Volumen"
+  },
+  "sidebar": {
+    "modelLabel": "Modelo de Audio",
+    "selectModel": "Seleccionar Modelo",
+    "descriptionLabel": "Descripción",
+    "selectOption": "Seleccionar opción",
+    "promptPlaceholder": "Introduce lo que deseas generar...",
+    "lyricsPromptLabel": "Letra / Prompt",
+    "fieldPlaceholder": "Introduce {field}...",
+    "requiredFieldError": "Por favor completa el campo requerido: {field}"
+  },
+  "generate": {
+    "generating": "Generando Audio...",
+    "cta": "Generar Pista",
+    "noUrlError": "La API no devolvió ninguna URL de audio.",
+    "genericError": "Error al generar audio",
+    "droppedFileUploadError": "Error al subir el archivo soltado: {message}"
+  },
+  "result": {
+    "errorHeading": "Error de Generación",
+    "loadingHeading": "Generando Banda Sonora",
+    "loadingSubtext": "Renderizando ondas de audio y voces...",
+    "emptyHeading": "Estudio de Audio",
+    "emptyBody": "Elige un modelo de música IA, clonador de voz o generador de sonido. Modifica las variables a la izquierda y crea tu próxima pista de alta fidelidad.",
+    "newGeneration": "Nueva Generación",
+    "success": "Éxito"
+  },
+  "history": {
+    "heading": "Historial de Generación ({count})",
+    "untitled": "Audio sin título",
+    "fallbackModel": "Modelo de audio"
+  }
+}

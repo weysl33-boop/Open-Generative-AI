@@ -1,0 +1,59 @@
+{
+  "loading": {
+    "remixing": "正在混剪動態圖形…",
+    "generating": "正在生成動態圖形…",
+    "backend": "基於 Modal 的 React/Remotion 渲染"
+  },
+  "card": {
+    "modeEdit": "✏ 編輯",
+    "modeGenerated": "✦ 已生成",
+    "download": "下載",
+    "remixThis": "混剪此生成結果",
+    "legacyRemixUnavailable": "舊版生成結果 — 暫不支援混剪。請先生成一個新的動態圖形以启用編輯功能。",
+    "delete": "刪除",
+    "confirmDelete": "確定要刪除此生成項吗？",
+    "noPrompt": "無提示詞",
+    "tag": "動感鏡頭運鏡"
+  },
+  "mobileActions": {
+    "download": "下載",
+    "remix": "混剪",
+    "delete": "刪除"
+  },
+  "empty": {
+    "titleLine1": "開始使用",
+    "titleLine2": "動感鏡頭運鏡工作室",
+    "description": "根據文本提示生成動態圖形動畫 — 動態排版、資料圖表、Logo 展示等。"
+  },
+  "modeToggle": {
+    "generate": "生成",
+    "edit": "編輯"
+  },
+  "editBanner": {
+    "editingPrefix": "正在編輯：",
+    "selectSource": "從圖库中選取一個源生成結果",
+    "cancelEdit": "取消編輯模式"
+  },
+  "placeholder": {
+    "edit": "描述要更改的內容 — “將背景改為深藏青色，柱狀圖改為金色，添加粒子效果……”",
+    "generate": "描述该動態圖形 — “帶有發光柱狀圖和上升數字的動態銷售儀表盤”"
+  },
+  "controls": {
+    "aspectRatio": "長寬比",
+    "duration": "時長",
+    "sourcePrefix": "來源：",
+    "pickSource": "選取來源…",
+    "sourceGeneration": "源生成結果",
+    "shortcutHint": "Ctrl+Enter 運行"
+  },
+  "errors": {
+    "staleEditUnavailable": "此生成結果無法混剪 — 服務器未儲存動畫代碼。請先生成一個新的動態圖形，然後再對该結果進行混剪。",
+    "generationFailed": "動感鏡頭運鏡生成失敗"
+  },
+  "generateButton": {
+    "remixing": "混剪中...",
+    "generating": "生成中...",
+    "remix": "混剪",
+    "generate": "生成"
+  }
+}

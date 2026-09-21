@@ -61,7 +61,7 @@
     "uploadFailed": "视频上传失败，请重试。",
     "generationFailed": "AI 剪辑处理失败。"
   },
-  "sourceVideoFallback": "source_video.mp4",
+  "sourceVideoFallback": "源视频.mp4",
   "aspectRatioLabels": {
     "9:16": "9:16（TikTok / Reels / Shorts）",
     "16:9": "16:9（YouTube / 电视）",

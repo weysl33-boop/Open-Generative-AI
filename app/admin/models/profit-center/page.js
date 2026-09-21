@@ -2,7 +2,7 @@ import { PageHeader } from '@/components/admin/AdminUi';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
 import { getProfitCenterAnalytics } from '@/lib/services/analyticsFinancial';
-import { listCanonicalModels } from '@/lib/repositories/aiCatalog';
+import { listCanonicalModels } from '@/lib/services/modelCatalog';
 import ProfitCenterClient from './ProfitCenterClient';
 
 export const dynamic = 'force-dynamic';

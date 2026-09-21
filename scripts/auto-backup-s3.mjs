@@ -15,7 +15,8 @@ try {
   console.log('[backup] PostgreSQL backup ready: ' + result.target);
   if (process.env.S3_BACKUP_BUCKET) console.log('[backup] S3 upload is configured for ' + process.env.S3_BACKUP_BUCKET + '; attach the approved uploader in deployment.');
 } catch (error) {
-  console.error('[backup] automatic PostgreSQL backup failed:', error.message);
-  await sendOpsAlert({ title: '数据库自动备份失败', level: 'critical', message: error.message }).catch(() => {});
+  const errorCode = error.code || 'POSTGRES_BACKUP_FAILED';
+  console.error('[backup] automatic PostgreSQL backup failed:', { code: errorCode });
+  await sendOpsAlert({ title: '数据库自动备份失败', level: 'critical', message: errorCode }).catch(() => {});
   process.exitCode = 1;
 }

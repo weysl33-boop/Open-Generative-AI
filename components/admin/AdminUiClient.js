@@ -1,6 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export function CopyableId({ id, label }) {
   const [copied, setCopied] = useState(false);
@@ -19,16 +21,15 @@ export function CopyableId({ id, label }) {
       type="button"
       onClick={copy}
       title="点击复制完整 ID"
-      className="group inline-flex items-center gap-1 font-mono text-xs text-white/70 transition hover:text-cyan-200"
+      className="group inline-flex items-center gap-1 font-mono text-xs text-ink-muted transition hover:text-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring rounded"
     >
       <span>{display}</span>
-      <span className="text-[10px] text-white/30 group-hover:text-cyan-300">
+      <span className="text-micro text-ink-subtle group-hover:text-brand">
         {copied ? '✓' : '⧉'}
       </span>
     </button>
   );
 }
-
 export function ConfirmActionDialog({
   isOpen,
   onClose,
@@ -58,55 +59,57 @@ export function ConfirmActionDialog({
     }
   };
 
-  const btnTone =
-    tone === 'danger'
-      ? 'border-red-400/40 bg-red-500/20 text-red-200 hover:bg-red-500/30'
-      : 'border-cyan-300/40 bg-cyan-300/20 text-cyan-100 hover:bg-cyan-300/30';
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0c0c0e] p-6 shadow-2xl shadow-black/80">
-        <h3 className="text-lg font-bold text-white">{title}</h3>
-        <p className="mt-2 text-xs leading-relaxed text-white/60">{description}</p>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="w-full max-w-md rounded-2xl border border-line bg-raised p-6 shadow-elevation-4">
+        <h3 className="text-lg font-semibold text-ink">{title}</h3>
+        <p className="mt-2 text-xs leading-relaxed text-ink-muted">{description}</p>
 
         {requirePassword && (
           <div className="mt-4">
-            <label className="block text-xs font-semibold text-white/70">
+            <label className="block text-xs font-medium text-ink mb-1.5">
               管理员二次验证密码
             </label>
-            <input
+            <Input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="请输入当前管理员密码"
-              className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-cyan-300/50 focus:outline-none focus:ring-1 focus:ring-cyan-300/50"
+              size="md"
             />
           </div>
         )}
 
         {error && (
-          <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 p-2.5 text-xs text-red-200">
+          <div className="mt-3 rounded-lg border border-danger-line bg-danger-soft p-2.5 text-xs text-danger">
             {error}
           </div>
         )}
 
         <div className="mt-6 flex justify-end gap-3">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="md"
             disabled={loading}
             onClick={onClose}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/70 transition hover:bg-white/10"
           >
             取消
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant={tone === 'danger' ? 'danger' : 'primary'}
+            size="md"
             disabled={loading || (requirePassword && !password)}
+            loading={loading}
             onClick={handleConfirm}
-            className={`rounded-xl border px-4 py-2 text-xs font-semibold transition ${btnTone} disabled:opacity-50`}
           >
-            {loading ? '执行中...' : confirmLabel}
-          </button>
+            {confirmLabel}
+          </Button>
         </div>
       </div>
     </div>

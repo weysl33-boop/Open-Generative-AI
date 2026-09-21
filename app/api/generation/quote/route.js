@@ -1,5 +1,5 @@
 import { getUserFromRequest, json } from '@/lib/services/auth';
-import { createGenerationQuote } from '@/lib/services/pricingEngine';
+import { createGenerationQuote } from '@/lib/services/generationQuote';
 import { getSubscription } from '@/lib/services/billing';
 import { guardMutation } from '@/lib/security/requestGuard';
 import { publicErrorMessage } from '@/lib/security/publicError';
@@ -36,6 +36,7 @@ export async function POST(request) {
     return json({
       quote_id: quote.quoteId,
       credits: quote.credits,
+      pricing_source: quote.source,
       pricing_breakdown: quote.pricingBreakdown,
       expires_at: quote.expiresAt,
     }, { status: 201 });

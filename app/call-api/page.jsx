@@ -12,12 +12,12 @@ export const metadata = {
 
 export default function CallApiPage() {
   return (
-    <div className="min-h-screen bg-[#07080b] text-[#f3f4f6] selection:bg-cyan-500/30 selection:text-cyan-200 relative overflow-x-hidden font-sans">
+    <div className="min-h-screen bg-canvas text-ink selection:bg-brand-line selection:text-brand-hover relative overflow-x-hidden font-sans">
       
       {/* 顶部科技光斑背景与微粒网格 */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1100px] h-[580px] bg-gradient-to-b from-cyan-500/15 via-violet-600/10 to-transparent blur-[120px] rounded-full" />
-        <div className="absolute top-[900px] -left-60 w-[600px] h-[600px] bg-cyan-600/10 blur-[140px] rounded-full" />
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1100px] h-[580px] bg-gradient-to-b from-brand-soft via-violet-600/10 to-transparent blur-[120px] rounded-full" />
+        <div className="absolute top-[900px] -left-60 w-[600px] h-[600px] bg-brand-soft blur-[140px] rounded-full" />
         <div className="absolute top-[1800px] -right-60 w-[700px] h-[700px] bg-violet-600/10 blur-[160px] rounded-full" />
         <div 
           className="absolute inset-0 opacity-40" 
@@ -31,15 +31,15 @@ export default function CallApiPage() {
       <div className="relative z-10 flex flex-col min-h-screen">
         
         {/* 1. 顶部全局导航栏：直达首页各功能模块 */}
-        <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-[#07080b]/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-50 w-full border-b border-line-subtle bg-canvas/80 backdrop-blur-xl">
           <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             
             {/* 左侧 Brand Logo */}
             <div className="flex items-center gap-8">
               <a href="/studio" className="flex items-center gap-3 group">
-                <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 p-[1px] shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-all">
-                  <div className="w-full h-full bg-[#07080b] rounded-[11px] flex items-center justify-center">
-                    <svg className="w-5 h-5 text-cyan-400 group-hover:rotate-12 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-brand-active to-violet-600 p-[1px] shadow-elevation-2 shadow-brand-soft group-hover:shadow-brand-line transition-all">
+                  <div className="w-full h-full bg-canvas rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-brand group-hover:rotate-12 transition-transform duration-page" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                       <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="2" />
                       <circle cx="8.5" cy="8.5" r="1.5" strokeWidth="2" />
                       <polyline points="21 15 16 10 5 21" strokeWidth="2" />
@@ -47,24 +47,24 @@ export default function CallApiPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-lg text-white tracking-tight">KoyoSIM</span>
-                  <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">AI STUDIO</span>
+                  <span className="font-bold text-lg text-ink tracking-tight">KoyoSIM</span>
+                  <span className="px-1.5 py-0.5 text-micro font-semibold tracking-wider uppercase rounded bg-brand-soft text-brand border border-brand-line">AI STUDIO</span>
                 </div>
               </a>
 
               {/* 核心导航链接：与首页 Studio 深度对接 */}
-              <nav className="hidden md:flex items-center gap-1 text-sm text-neutral-300">
-                <a href="/studio" className="px-3.5 py-1.5 rounded-lg hover:text-white hover:bg-white/[0.04] transition-colors flex items-center gap-1.5">
+              <nav className="hidden md:flex items-center gap-1 text-sm text-ink">
+                <a href="/studio" className="px-3.5 py-1.5 rounded-lg hover:text-ink hover:bg-wash transition-colors flex items-center gap-1.5">
                   <span>创作工作台</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
                 </a>
-                <a href="/community" className="px-3.5 py-1.5 rounded-lg hover:text-white hover:bg-white/[0.04] transition-colors">
+                <a href="/community" className="px-3.5 py-1.5 rounded-lg hover:text-ink hover:bg-wash transition-colors">
                   灵感社区
                 </a>
-                <a href="/studio/workflows" className="px-3.5 py-1.5 rounded-lg hover:text-white hover:bg-white/[0.04] transition-colors">
+                <a href="/studio/workflows" className="px-3.5 py-1.5 rounded-lg hover:text-ink hover:bg-wash transition-colors">
                   节点工作流
                 </a>
-                <a href="/pricing" className="px-3.5 py-1.5 rounded-lg hover:text-white hover:bg-white/[0.04] transition-colors">
+                <a href="/pricing" className="px-3.5 py-1.5 rounded-lg hover:text-ink hover:bg-wash transition-colors">
                   会员与算力
                 </a>
               </nav>
@@ -72,22 +72,22 @@ export default function CallApiPage() {
 
             {/* 导航右侧：渲染集群状态、免费算力点与直达创作按钮 */}
             <div className="flex items-center gap-3">
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+              <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-success-soft border border-success-soft text-success text-xs font-mono">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
                 </span>
                 <span>GPU 集群在线</span>
               </div>
 
-              <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs">
-                <span className="text-amber-400 font-semibold">⚡ 1,000</span>
-                <span className="text-neutral-400">新人点数</span>
+              <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-wash border border-line text-xs">
+                <span className="text-warning font-semibold">⚡ 1,000</span>
+                <span className="text-ink-muted">新人点数</span>
               </div>
 
               <a
                 href="/studio"
-                className="relative group inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition-all shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:-translate-y-0.5"
+                className="relative group inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-ink bg-gradient-to-r from-brand-active to-blue-600 hover:from-brand hover:to-blue-500 transition-all shadow-elevation-2 shadow-brand-line hover:shadow-brand-line hover:-translate-y-0.5"
               >
                 <span>立即开启创作</span>
                 <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,12 +104,12 @@ export default function CallApiPage() {
             
             {/* 顶部动态亮点标签 */}
             <div className="flex justify-center mb-6">
-              <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-cyan-500/30 text-xs text-neutral-300 backdrop-blur-md shadow-inner shadow-cyan-500/10">
-                <span className="flex h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
-                <span className="text-cyan-300 font-semibold">全新上线</span>
-                <span className="text-neutral-500">|</span>
+              <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-wash border border-brand-line text-xs text-ink backdrop-blur-md shadow-inner shadow-brand-soft">
+                <span className="flex h-2 w-2 rounded-full bg-brand animate-ping" />
+                <span className="text-brand-hover font-semibold">全新上线</span>
+                <span className="text-ink-subtle">|</span>
                 <span>FLUX.1 [pro] 1.1 Ultra 与 Midjourney v6.1 已入驻 Studio 工作台</span>
-                <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-3.5 h-3.5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                 </svg>
               </div>
@@ -119,11 +119,11 @@ export default function CallApiPage() {
             <div className="text-center max-w-4xl mx-auto mb-10">
               <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6">
                 一个工作台 · 释放<br />
-                <span className="bg-gradient-to-r from-white via-cyan-300 to-cyan-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-surface-inverse via-brand to-brand-active bg-clip-text text-transparent">
                   全模态 AI 创意生产力
                 </span>
               </h1>
-              <p className="text-lg sm:text-xl text-neutral-400 font-normal leading-relaxed max-w-2xl mx-auto">
+              <p className="text-lg sm:text-xl text-ink-muted font-normal leading-relaxed max-w-2xl mx-auto">
                 聚合全球顶尖生图与视频模型。无需在多个平台间频繁切换，在统一专业画布中自由创作超写实人像、电影级分镜、商业海报与动态视觉。
               </p>
             </div>
@@ -132,7 +132,7 @@ export default function CallApiPage() {
             <div className="flex flex-wrap items-center justify-center gap-4 mb-16">
               <a
                 href="/studio"
-                className="px-8 py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm tracking-wide shadow-xl shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                className="px-8 py-4 rounded-xl bg-gradient-to-r from-brand-active to-blue-600 hover:from-brand hover:to-blue-500 text-ink font-bold text-sm tracking-wide shadow-elevation-3 shadow-brand-line hover:shadow-brand-line hover:-translate-y-0.5 transition-all flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -142,9 +142,9 @@ export default function CallApiPage() {
 
               <a
                 href="/community"
-                className="px-7 py-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] text-white font-semibold text-sm border border-white/[0.12] hover:border-white/[0.25] backdrop-blur-md hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                className="px-7 py-4 rounded-xl bg-wash hover:bg-wash-strong text-ink font-semibold text-sm border border-line hover:border-line-strong backdrop-blur-md hover:-translate-y-0.5 transition-all flex items-center gap-2"
               >
-                <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <svg className="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <span>探索社区精选大作 (10万+)</span>
@@ -152,7 +152,7 @@ export default function CallApiPage() {
 
               <a
                 href="/pricing"
-                className="px-6 py-4 rounded-xl text-neutral-300 hover:text-white font-medium text-sm transition-colors flex items-center gap-1.5"
+                className="px-6 py-4 rounded-xl text-ink hover:text-ink font-medium text-sm transition-colors flex items-center gap-1.5"
               >
                 <span>查看会员与算力方案</span>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

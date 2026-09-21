@@ -47,8 +47,6 @@ export function McpCliStudio() {
         title: 'muapi-cli',
         body: 'Generate images, videos, and audio from the terminal across 14+ AI models. Dual interface — colored human output plus JSON for agents (--output-json, --jq filtering). Async workflows, file uploads, credit tracking.',
         code: 'npm install -g muapi-cli\nmuapi image generate "a cyberpunk city" \\\n  --model flux-dev',
-        link: 'https://github.com/SamurAIGPT/muapi-cli',
-        linkLabel: 'View muapi-cli on GitHub',
         icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>`,
     }));
 
@@ -57,8 +55,6 @@ export function McpCliStudio() {
         title: 'muapi-mcp-server',
         body: 'Connect Claude, Cursor, Windsurf, and any MCP-compatible assistant to 100+ generative models. Hosted endpoint — no install. 19 structured tools with input/output schemas, async polling, and account management.',
         code: 'claude mcp add --transport http muapi \\\n  https://api.muapi.ai/mcp \\\n  --header "Authorization: Bearer YOUR_KEY"',
-        link: 'https://github.com/SamurAIGPT/muapi-mcp-server',
-        linkLabel: 'View muapi-mcp-server on GitHub',
         icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>`,
     }));
 
@@ -66,9 +62,7 @@ export function McpCliStudio() {
         tag: 'Skills',
         title: 'Generative Media Skills',
         body: 'Multimodal toolkit for Claude Code, Cursor, and Gemini CLI. Cinema Director, Nano-Banana, UI Designer, Logo Creator, Seedance 2, AI Clipping, and YouTube Shorts presets. Agent-native with JSON outputs and semantic exit codes.',
-        code: 'npx skills add SamurAIGPT/Generative-Media-Skills --all',
-        link: 'https://github.com/SamurAIGPT/Generative-Media-Skills',
-        linkLabel: 'View Generative-Media-Skills on GitHub',
+        code: 'npx skills add @koyosim/media-skills --all',
         icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.39 4.84L20 8l-4 3.9.94 5.5L12 14.77 7.06 17.4 8 11.9 4 8l5.61-1.16L12 2z"/></svg>`,
     }));
 

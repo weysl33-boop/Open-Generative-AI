@@ -1,0 +1,22 @@
+[Unit]
+Description=koyosim Export Worker (www.koyosim.com)
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www
+Group=www
+WorkingDirectory=/home/wwwroot/AI/domain/koyosim.com/web
+EnvironmentFile=/etc/koyosim.env
+ExecStart=/usr/local/bin/node --experimental-loader ./scripts/server-only-loader.mjs scripts/export-worker.mjs
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+StandardOutput=append:/home/wwwroot/AI/logs/koyosim-export-worker.log
+StandardError=append:/home/wwwroot/AI/logs/koyosim-export-worker.log
+
+[Install]
+WantedBy=multi-user.target

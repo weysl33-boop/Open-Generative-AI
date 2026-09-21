@@ -17,7 +17,9 @@
     "pause": "Pause",
     "play": "Play",
     "download": "Download Audio",
-    "save": "Save"
+    "save": "Save",
+    "seek": "Seek",
+    "volume": "Volume"
   },
   "sidebar": {
     "modelLabel": "Audio Model",

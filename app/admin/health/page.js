@@ -1,10 +1,16 @@
 import { getSystemHealth } from '@/lib/services/systemHealth';
 import { Card, MetricCard, PageHeader, StatusBadge } from '@/components/admin/AdminUi';
 import LiveLogViewer from './LiveLogViewer';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 
 export default async function SystemHealthPage() {
+  await requireAdminPagePermission(PERMISSIONS.healthRead);
   const { database, migrations, providers } = await getSystemHealth();
   const mem = process.memoryUsage();
+  const databaseLatency = database.latencyMs == null ? '—' : `${database.latencyMs} ms`;
+  const poolIdle = database.pool?.idle ?? 0;
+  const poolMax = database.pool?.max ?? 0;
 
   return (
     <>
@@ -23,8 +29,8 @@ export default async function SystemHealthPage() {
         />
         <MetricCard
           label="数据库查询延时"
-          value={`${database.latencyMs} ms`}
-          hint={`PostgreSQL 16 · 连接池 ${database.pool.idle}/${database.pool.max} 空闲`}
+          value={databaseLatency}
+          hint={`PostgreSQL 16 · 连接池 ${poolIdle}/${poolMax} 空闲`}
           tone="info"
         />
         <MetricCard
@@ -41,13 +47,13 @@ export default async function SystemHealthPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <h2 className="text-sm font-bold text-white mb-4">外部依赖与网关健康摘要</h2>
+          <h2 className="text-sm font-bold text-ink mb-4">外部依赖与网关健康摘要</h2>
           <div className="space-y-3">
             {providers.map((p) => (
-              <div key={p.id} className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-black/20 p-3.5">
+              <div key={p.id} className="flex items-center justify-between rounded-xl border border-line bg-black/20 p-3.5">
                 <div>
-                  <p className="text-xs font-semibold text-white">{p.name}</p>
-                  <p className="text-[11px] text-white/40">{p.description}</p>
+                  <p className="text-xs font-semibold text-ink">{p.name}</p>
+                  <p className="text-[11px] text-ink-subtle">{p.description}</p>
                 </div>
                 <StatusBadge tone={p.configured ? 'good' : 'warn'}>
                   {p.configured ? '已就绪' : '待配置'}
@@ -58,22 +64,22 @@ export default async function SystemHealthPage() {
         </Card>
 
         <Card>
-          <h2 className="text-sm font-bold text-white mb-4">运行环境与安全规则</h2>
-          <div className="space-y-2.5 text-xs text-white/70">
-            <div className="flex justify-between border-b border-white/[0.05] pb-2">
-              <span className="text-white/40">应用协议模式</span>
+          <h2 className="text-sm font-bold text-ink mb-4">运行环境与安全规则</h2>
+          <div className="space-y-2.5 text-xs text-ink-muted">
+            <div className="flex justify-between border-b border-line-subtle pb-2">
+              <span className="text-ink-subtle">应用协议模式</span>
               <span>Next.js 15 全栈 App Router</span>
             </div>
-            <div className="flex justify-between border-b border-white/[0.05] pb-2">
-              <span className="text-white/40">监听地址</span>
+            <div className="flex justify-between border-b border-line-subtle pb-2">
+              <span className="text-ink-subtle">监听地址</span>
               <span className="font-mono">127.0.0.1:3100 (Nginx 反向代理)</span>
             </div>
-            <div className="flex justify-between border-b border-white/[0.05] pb-2">
-              <span className="text-white/40">数据库事务隔离</span>
+            <div className="flex justify-between border-b border-line-subtle pb-2">
+              <span className="text-ink-subtle">数据库事务隔离</span>
               <span>PostgreSQL 事务 + 连接池超时</span>
             </div>
             <div className="flex justify-between pb-1">
-              <span className="text-white/40">代理策略</span>
+              <span className="text-ink-subtle">代理策略</span>
               <span>服务器内网直连 (NO_PROXY 保障)</span>
             </div>
           </div>

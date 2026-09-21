@@ -1,5 +1,7 @@
-﻿import { getUserFromRequest, json } from '@/lib/billing';
-import { addCommunityComment, listCommunityComments } from '@/lib/repositories/community';
+import { getUserFromRequest, json } from '@/lib/services/auth';
+import { addCommunityComment, listCommunityComments } from '@/lib/services/community';
+import { guardMutation } from '@/lib/security/requestGuard';
+import { publicErrorMessage } from '@/lib/security/publicError';
 
 export const runtime = 'nodejs';
 
@@ -19,6 +21,9 @@ export async function POST(request, { params }) {
   const user = await getUserFromRequest(request);
   if (!user) return json({ error: '请先登录后再发表评论' }, { status: 401 });
 
+  const guarded = guardMutation(request, { maxBytes: 32 * 1024 });
+  if (guarded) return guarded;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -37,6 +42,6 @@ export async function POST(request, { params }) {
     return json({ comment }, { status: 201 });
   } catch (error) {
     console.error('[community add comment error]', error);
-    return json({ error: '发表评论失败', details: error.message }, { status: 500 });
+    return json({ error: publicErrorMessage(error, '发表评论失败') }, { status: 500 });
   }
 }

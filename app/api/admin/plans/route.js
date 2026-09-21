@@ -1,14 +1,16 @@
-import { requirePermission, okResponse } from '@/lib/admin/authz';
+import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { getAllPlansConfig } from '@/lib/repositories/settings';
+import { getAllPlansConfig } from '@/lib/services/adminRead';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(request) {
+async function handleGET(request) {
   const guard = await requirePermission(request, PERMISSIONS.plansRead);
   if (!guard.ok) return guard.response;
 
-  const plans = getAllPlansConfig();
+  const plans = await getAllPlansConfig();
   return okResponse(plans, guard.requestId);
 }
+
+export const GET = withAdminErrorBoundary(handleGET);

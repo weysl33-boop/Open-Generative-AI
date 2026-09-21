@@ -1,0 +1,99 @@
+{
+  "uploadButton": {
+    "faceLabel": "Rostro",
+    "referenceImageLabel": "Imagen de referencia",
+    "addUpToImages": "Añade hasta {max} imágenes",
+    "singleSelectedTitle": "1 imagen seleccionada — haz clic para añadir más (hasta {max})",
+    "multiSelectedTitle": "{count} de {max} imágenes seleccionadas — haz clic para gestionar",
+    "tooLargeAlert": "Las siguientes imágenes son demasiado grandes (máx 10MB): {names}",
+    "uploadFailedAlert": "Error al subir la imagen: {message}",
+    "headerTitle": "Imágenes de Referencia",
+    "selectUpTo": "Selecciona hasta {max} imágenes",
+    "doneButton": "✓ Hecho ({count})",
+    "uploadFilesButton": "Subir archivos",
+    "uploadNewButton": "Subir nuevo",
+    "emptyState": "Aún no hay subidas",
+    "removeFromHistory": "Eliminar del historial",
+    "selectedCount": "{count} de {max} seleccionadas",
+    "useSelected": "Usar Seleccionadas"
+  },
+  "mediaMenu": {
+    "image": "Imagen",
+    "imageDesc": "Formatos jpeg, jpg, png",
+    "video": "Vídeo",
+    "videoDesc": "mp4, mov, hasta 60s",
+    "script": "Guion",
+    "scriptDesc": "txt, doc, pdf, md, máx 50000 palabras",
+    "audio": "Audio / Sonido",
+    "audioDesc": "mp3, wav, hasta 15s"
+  },
+  "paramsPanel": {
+    "titleRatio": "Relación de Aspecto",
+    "titleResolution": "Resolución",
+    "titleQuantity": "Cantidad de Generación",
+    "titleDimensions": "Dimensiones",
+    "smartRatio": "Inteligente",
+    "standard15k": "Estándar 1.5K",
+    "hd2k": "Alta Definición 2K ✦",
+    "ultra4k": "Ultra Definición 4K ✦",
+    "smartReference": "Referencia Inteligente",
+    "addReference": "Añadir Referencia",
+    "referenceCount": "Imágenes de Referencia ({count}/{max})",
+    "autoSwitchedToI2I": "Cambiado a modelo compatible con referencias: {model}",
+    "autoSwitchedToT2I": "Revertido a modelo de texto a imagen",
+    "modeImageGen": "Generación de Imagen",
+    "modeImageToImage": "Imagen a Imagen",
+    "creditPerImage": "✦ {cost}/imagen",
+    "creditPerImageOriginal": "11/imagen",
+    "batchCountUnit": "{count} img"
+  },
+  "modelDropdown": {
+    "categoryAll": "Todos",
+    "categoryT2I": "Texto a Imagen",
+    "categoryI2I": "Imagen a Imagen",
+    "allProviders": "Todos los Proveedores",
+    "searchPlaceholder": "Buscar modelos...",
+    "modelsSuffix": "modelos",
+    "noModelsFound": "No se encontraron modelos",
+    "selectModelHeader": "Seleccionar Modelo"
+  },
+  "gallery": {
+    "generatedImageAlt": "Imagen generada",
+    "download": "Descargar",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar este elemento generado?",
+    "deleteFailed": "Error al eliminar el elemento",
+    "noPrompt": "No se proporcionó ningún prompt",
+    "modelFallback": "Estudio de Imagen"
+  },
+  "emptyState": {
+    "heading": "COMIENZA A CREAR CON",
+    "subtitle": "Describe una escena, personaje, ambiente o estilo — y mira cómo cobra vida"
+  },
+  "promptBar": {
+    "placeholderMultiImage": "{count} imágenes seleccionadas — describe la transformación (opcional)",
+    "placeholderI2I": "Describe cómo transformar esta imagen (opcional)",
+    "placeholderT2I": "Describe la imagen que deseas crear",
+    "swapFaceLabel": "Cambiar Rostro",
+    "effectFallback": "Efecto",
+    "drawButton": "Dibujar",
+    "generating": "Generando...",
+    "generateButton": "Generar"
+  },
+  "popovers": {
+    "model": "Modelo",
+    "aspectRatio": "Relación de Aspecto",
+    "resolution": "Resolución",
+    "effectType": "Tipo de Efecto"
+  },
+  "errors": {
+    "noImageReferenceSupport": "{name} no admite referencias de imagen.",
+    "uploadReferenceFirst": "Por favor, sube primero una imagen de referencia.",
+    "uploadSwapFaceFirst": "Por favor, sube una imagen para el cambio de rostro.",
+    "enterPromptFirst": "Por favor, introduce un prompt para generar una imagen.",
+    "generationFailed": "Error al generar la imagen"
+  },
+  "fullscreen": {
+    "previewAlt": "Vista previa a pantalla completa"
+  }
+}

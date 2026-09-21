@@ -1,11 +1,11 @@
-import { requirePermission, okResponse } from '@/lib/admin/authz';
+import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { listCreations, listFailedCreations, getFailureClusters } from '@/lib/repositories/creations';
+import { getAdminGenerationFailureClusters, listAdminGenerations, listFailedAdminGenerations } from '@/lib/services/generations';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(request) {
+async function handleGET(request) {
   const guard = await requirePermission(request, PERMISSIONS.generationsRead);
   if (!guard.ok) return guard.response;
 
@@ -13,11 +13,13 @@ export async function GET(request) {
   const isFailures = url.searchParams.get('failures') === '1';
 
   if (isFailures) {
-    const clusters = getFailureClusters();
-    const result = listFailedCreations(url.searchParams);
+    const clusters = await getAdminGenerationFailureClusters();
+    const result = await listFailedAdminGenerations(url.searchParams);
     return okResponse({ clusters, ...result }, guard.requestId, result.meta);
   }
 
-  const result = listCreations(url.searchParams);
+  const result = await listAdminGenerations(url.searchParams);
   return okResponse(result.rows, guard.requestId, result.meta);
 }
+
+export const GET = withAdminErrorBoundary(handleGET);

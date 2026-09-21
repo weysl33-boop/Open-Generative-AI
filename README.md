@@ -445,6 +445,7 @@ Every image you upload is saved locally (URL + thumbnail) so you never upload th
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18+)
+- PostgreSQL 16 for the hosted web version. Set `DATABASE_URL` explicitly; the web service does not fall back to SQLite or a local database file.
 - A [Muapi.ai access key](https://muapi.ai/access-keys?utm_source=github&utm_medium=readme&utm_campaign=open-generative-ai). Copy the generated key value into the app; do not enter the key name or label.
 
 ### Setup
@@ -484,6 +485,20 @@ You'll be prompted to enter your Muapi API key on first use (skip the key if you
 npm run build
 npm run start
 ```
+
+For a hosted deployment, run the PostgreSQL migrations before starting the web
+process and run the durable generation worker as a separate supervised process:
+
+```bash
+DATABASE_URL='postgresql://...' npm run db:migrate
+DATABASE_URL='postgresql://...' GENERATION_ASYNC=true npm run start
+DATABASE_URL='postgresql://...' GENERATION_ASYNC=true npm run worker:generation
+```
+
+`TEST_DATABASE_URL` must point to a separate PostgreSQL test database. Never set
+it to the production URL. The worker owns queued generation execution,
+provider settlement, timeout handling, and expired-credit cleanup; if it is not
+running, asynchronous tasks remain queued by design.
 
 ### Desktop App Build
 

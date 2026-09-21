@@ -1,7 +1,9 @@
 import Link from 'next/link';
-import { listFailedCreations, getFailureClusters } from '@/lib/repositories/creations';
+import { getFailureClusters, listFailedCreations } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 import AdminActionForm from '@/components/admin/AdminActionForm';
 
 function formatDate(value) {
@@ -11,6 +13,7 @@ function formatDate(value) {
 }
 
 export default async function FailedGenerationsPage({ searchParams }) {
+  await requireAdminPagePermission(PERMISSIONS.generationsRead);
   const params = toSearchParams(await searchParams);
   const clusters = await getFailureClusters();
   const result = await listFailedCreations(params);
@@ -23,7 +26,7 @@ export default async function FailedGenerationsPage({ searchParams }) {
         <div>
           <CopyableId id={row.id} />
           <div className="mt-1">
-            <Link href={`/admin/users/${row.user_id}`} className="text-xs text-white/50 hover:text-cyan-200">
+            <Link href={`/admin/users/${row.user_id}`} className="text-xs text-ink-subtle hover:text-brand-hover">
               {row.email}
             </Link>
           </div>
@@ -35,7 +38,7 @@ export default async function FailedGenerationsPage({ searchParams }) {
       key: 'error_code',
       label: '错误代码 / 聚类',
       render: (row) => (
-        <span className="rounded-md border border-red-400/30 bg-red-400/10 px-2 py-0.5 font-mono text-xs text-red-200">
+        <span className="rounded-md border border-danger-line bg-danger-soft px-2 py-0.5 font-mono text-xs text-danger">
           {row.error_code || 'UNKNOWN_ERROR'}
         </span>
       ),
@@ -71,7 +74,7 @@ export default async function FailedGenerationsPage({ searchParams }) {
       >
         <Link
           href="/admin/generations"
-          className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white/70 hover:bg-white/10"
+          className="rounded-xl border border-line-strong bg-wash px-4 py-2 text-xs font-semibold text-ink-muted hover:bg-wash-press"
         >
           ← 返回全部生成任务
         </Link>
@@ -79,18 +82,18 @@ export default async function FailedGenerationsPage({ searchParams }) {
 
       {/* 错误代码聚类卡片 */}
       <Card className="mb-6">
-        <h2 className="text-sm font-bold text-white mb-3">当前失败错误分类聚类 (Top 10)</h2>
+        <h2 className="text-sm font-bold text-ink mb-3">当前失败错误分类聚类 (Top 10)</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {clusters.length ? (
             clusters.map((c) => (
-              <div key={c.code} className="rounded-xl border border-white/[0.08] bg-black/30 p-3.5">
-                <p className="font-mono text-xs font-bold text-red-300 truncate">{c.code}</p>
-                <p className="mt-2 text-2xl font-extrabold text-white">{c.count} 次</p>
-                <p className="mt-1 text-[10px] text-white/35">最近发生：{formatDate(c.last_occurred_at)}</p>
+              <div key={c.code} className="rounded-xl border border-line bg-scrim p-3.5">
+                <p className="font-mono text-xs font-bold text-danger truncate">{c.code}</p>
+                <p className="mt-2 text-2xl font-extrabold text-ink">{c.count} 次</p>
+                <p className="mt-1 text-micro text-ink-subtle">最近发生：{formatDate(c.last_occurred_at)}</p>
               </div>
             ))
           ) : (
-            <p className="text-xs text-white/40 col-span-full py-4 text-center">当前暂无失败错误聚类记录</p>
+            <p className="text-xs text-ink-subtle col-span-full py-4 text-center">当前暂无失败错误聚类记录</p>
           )}
         </div>
       </Card>

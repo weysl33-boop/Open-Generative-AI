@@ -2,10 +2,10 @@ import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } 
 import { PERMISSIONS } from '@/lib/admin/permissions';
 import {
   listCanonicalModels,
+  listCanonicalPricingRows,
   getModelPricing,
   upsertModelPricing,
-} from '@/lib/repositories/aiCatalog';
-import { queryMany } from '@/lib/db/index';
+} from '@/lib/services/modelCatalog';
 import { logAudit } from '@/lib/admin/audit';
 
 export const runtime = 'nodejs';
@@ -15,15 +15,7 @@ async function handleGET(request) {
   const guard = await requirePermission(request, PERMISSIONS.modelsRead);
   if (!guard.ok) return guard.response;
 
-  const [models, pricingList] = await Promise.all([
-    listCanonicalModels(),
-    queryMany(`
-      SELECT mp.*, m.name, m.display_name, m.category, m.status AS model_status
-      FROM ai_studio.model_pricing mp
-      JOIN ai_studio.ai_models m ON m.id = mp.model_id
-      ORDER BY m.sort ASC, m.id ASC
-    `),
-  ]);
+  const [models, pricingList] = await Promise.all([listCanonicalModels(), listCanonicalPricingRows()]);
 
   const pricingMap = new Map(pricingList.map((p) => [p.model_id, p]));
   const fullList = models.map((m) => {

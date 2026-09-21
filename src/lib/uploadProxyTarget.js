@@ -88,20 +88,6 @@ function isAllowedS3Host(hostname) {
     return false;
 }
 
-export function getApiKeyFromRequest(request) {
-    if (!request || !request.headers) return null;
-    const authHeader = request.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        const token = authHeader.substring(7).trim();
-        if (token) return token;
-    }
-    const headerKey = request.headers.get('x-api-key');
-    if (headerKey && headerKey.trim()) {
-        return headerKey.trim();
-    }
-    return null;
-}
-
 const BLOCKED_EXTENSIONS = new Set([
     'html', 'htm', 'xhtml', 'svg', 'php', 'phtml', 'php3', 'php4', 'php5', 'phps',
     'exe', 'bat', 'cmd', 'sh', 'bash', 'js', 'cgi', 'pl', 'py', 'jar', 'vbs', 'scr', 'msi'

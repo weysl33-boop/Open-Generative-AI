@@ -1,7 +1,9 @@
 import Link from 'next/link';
-import { listCreations } from '@/lib/repositories/creations';
+import { listCreations } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 
 function formatDate(value) {
   return value
@@ -10,6 +12,7 @@ function formatDate(value) {
 }
 
 export default async function GenerationsPage({ searchParams }) {
+  await requireAdminPagePermission(PERMISSIONS.generationsRead);
   const params = toSearchParams(await searchParams);
   const result = await listCreations(params);
 
@@ -21,7 +24,7 @@ export default async function GenerationsPage({ searchParams }) {
         <div>
           <CopyableId id={row.id} />
           <div className="mt-1">
-            <Link href={`/admin/users/${row.user_id}`} className="text-xs text-white/50 hover:text-cyan-200">
+            <Link href={`/admin/users/${row.user_id}`} className="text-xs text-ink-subtle hover:text-brand-hover">
               {row.email}
             </Link>
           </div>
@@ -34,8 +37,8 @@ export default async function GenerationsPage({ searchParams }) {
       label: '提示词 / 模型',
       render: (row) => (
         <div className="max-w-[280px]">
-          <p className="truncate text-xs font-semibold text-white/90">{row.label || '无描述'}</p>
-          <p className="mt-0.5 text-[11px] text-cyan-200/70 font-mono">{row.model || row.provider || '默认引擎'}</p>
+          <p className="truncate text-xs font-semibold text-ink">{row.label || '无描述'}</p>
+          <p className="mt-0.5 text-[11px] text-brand-hover font-mono">{row.model || row.provider || '默认引擎'}</p>
         </div>
       ),
     },
@@ -43,19 +46,19 @@ export default async function GenerationsPage({ searchParams }) {
       key: 'status',
       label: '状态 / 诊断',
       render: (row) => {
-        const isSuccess = row.status === 'completed' || row.status === 'success';
+        const isSuccess = row.status === 'succeeded' || row.status === 'completed' || row.status === 'success';
         return (
           <div>
             <StatusBadge tone={isSuccess ? 'good' : 'danger'}>
               {row.status}
             </StatusBadge>
             {!isSuccess && (row.error_reason || row.error_code) && (
-              <p className="mt-1 max-w-[200px] truncate text-[11px] text-red-300 font-mono" title={row.error_reason || row.error_code}>
+              <p className="mt-1 max-w-[200px] truncate text-[11px] text-danger font-mono" title={row.error_reason || row.error_code}>
                 {row.error_reason || row.error_code}
               </p>
             )}
             {row.duration_ms ? (
-              <p className="mt-0.5 text-[10px] text-white/30 font-mono">
+              <p className="mt-0.5 text-micro text-ink-subtle font-mono">
                 耗时: {(row.duration_ms / 1000).toFixed(1)}s
               </p>
             ) : null}
@@ -68,8 +71,8 @@ export default async function GenerationsPage({ searchParams }) {
       label: '额度 / 成本(USD)',
       render: (row) => (
         <div>
-          <span className="font-mono font-bold text-cyan-200">{row.credit_cost} Credits</span>
-          <p className="text-[11px] font-mono text-amber-300/80">
+          <span className="font-mono font-bold text-brand-hover">{row.credit_cost} Credits</span>
+          <p className="text-[11px] font-mono text-warning">
             ${Number(row.actual_cost_usd || 0).toFixed(3)}
           </p>
         </div>
@@ -84,12 +87,12 @@ export default async function GenerationsPage({ searchParams }) {
             href={row.result_url}
             target="_blank"
             rel="noreferrer"
-            className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-cyan-200 hover:bg-cyan-300/10"
+            className="rounded-lg border border-line bg-wash px-2.5 py-1 text-xs text-brand-hover hover:bg-brand-soft"
           >
             打开查看 ↗
           </a>
         ) : (
-          <span className="text-xs text-white/30">—</span>
+          <span className="text-xs text-ink-subtle">—</span>
         ),
     },
     {
@@ -108,7 +111,7 @@ export default async function GenerationsPage({ searchParams }) {
       >
         <Link
           href="/admin/generations/failures"
-          className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-xs font-bold text-amber-200 hover:bg-amber-400/20"
+          className="rounded-xl border border-warning-line bg-warning-soft px-4 py-2 text-xs font-bold text-warning hover:bg-warning-soft"
         >
           查看失败任务聚类排查 →
         </Link>
@@ -120,23 +123,24 @@ export default async function GenerationsPage({ searchParams }) {
             name="q"
             defaultValue={params.get('q') || ''}
             placeholder="搜索任务 ID、用户邮箱、提示词或模型…"
-            className="min-w-[240px] flex-1 rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-xs text-white outline-none focus:border-cyan-300/50"
+            className="min-w-[240px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
           />
 
           <select
             name="status"
             defaultValue={params.get('status') || ''}
-            className="rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-xs text-white/70 outline-none focus:border-cyan-300/50"
+            className="rounded-xl border border-line bg-canvas px-3 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
           >
             <option value="">全部状态</option>
-            <option value="completed">Completed (成功)</option>
-            <option value="pending">Pending (生成中)</option>
+            <option value="succeeded">Succeeded (成功)</option>
+            <option value="processing">Processing (生成中)</option>
+            <option value="queued">Queued (排队中)</option>
             <option value="failed">Failed (失败)</option>
           </select>
 
           <button
             type="submit"
-            className="rounded-xl bg-cyan-300 px-5 py-2.5 text-xs font-bold text-black hover:bg-cyan-200"
+            className="rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-ink-on-accent hover:bg-brand"
           >
             筛选任务
           </button>

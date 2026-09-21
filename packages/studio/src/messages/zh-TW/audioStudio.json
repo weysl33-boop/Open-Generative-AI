@@ -1,0 +1,55 @@
+{
+  "uploader": {
+    "clear": "清除",
+    "uploadPrompt": "上傳音訊文件",
+    "uploadHint": "支援 MP3、WAV、M4A，最大 20MB",
+    "uploading": "上傳中...",
+    "ready": "已準備好生成",
+    "maxSuffix": "（最多 {max} 個）",
+    "trackLabel": "音轨 #{index}",
+    "sizeLimitError": "音訊文件超過 20MB 限製。",
+    "uploadFailedError": "上傳失敗：{message}"
+  },
+  "player": {
+    "nowPlaying": "正在播放",
+    "defaultTitle": "生成的音轨",
+    "muteUnmute": "靜音/取消靜音",
+    "pause": "暫停",
+    "play": "播放",
+    "download": "下載音訊",
+    "save": "儲存",
+    "seek": "播放進度",
+    "volume": "音量"
+  },
+  "sidebar": {
+    "modelLabel": "音訊模型",
+    "selectModel": "選取模型",
+    "descriptionLabel": "描述",
+    "selectOption": "選取選項",
+    "promptPlaceholder": "輸入您想要生成的內容...",
+    "lyricsPromptLabel": "歌詞 / 提示詞",
+    "fieldPlaceholder": "輸入{field}...",
+    "requiredFieldError": "請填寫必填字段：{field}"
+  },
+  "generate": {
+    "generating": "正在生成音訊...",
+    "cta": "生成音轨",
+    "noUrlError": "API 未返回音訊地址。",
+    "genericError": "音訊生成失敗",
+    "droppedFileUploadError": "上傳拖放的文件失敗：{message}"
+  },
+  "result": {
+    "errorHeading": "生成錯誤",
+    "loadingHeading": "正在生成配樂",
+    "loadingSubtext": "正在渲染音訊波形和人聲...",
+    "emptyHeading": "音訊工作室",
+    "emptyBody": "選取一個 AI 音樂模型、音效複製或音效生成器。在左侧修改參數，創作您的下一段高保真音轨。",
+    "newGeneration": "新建生成",
+    "success": "成功"
+  },
+  "history": {
+    "heading": "生成歷史（{count}）",
+    "untitled": "未命名音訊",
+    "fallbackModel": "音訊"
+  }
+}

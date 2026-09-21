@@ -69,12 +69,12 @@ export default function CreateFolderModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-scrim backdrop-blur-md animate-in fade-in duration-base">
       <div 
-        className="w-full max-w-md overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0d10] p-6 shadow-2xl shadow-black/80"
+        className="w-full max-w-md overflow-hidden rounded-2xl border border-line bg-canvas p-6 shadow-elevation-4 shadow-black/80"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+        <div className="flex items-center justify-between pb-4 border-b border-line-subtle">
           <div className="flex items-center gap-3">
             <div 
               className="flex h-10 w-10 items-center justify-center rounded-xl"
@@ -83,12 +83,12 @@ export default function CreateFolderModal({
               {isSubfolder ? <FolderPlus className="w-5 h-5" /> : <Folder className="w-5 h-5" />}
             </div>
             <div>
-              <h3 className="text-base font-semibold text-white">
+              <h3 className="text-base font-semibold text-ink">
                 {isEditing ? '重命名文件夹' : isSubfolder ? `新建二级子文件夹` : '新建分类文件夹'}
               </h3>
               {isSubfolder && !isEditing && (
-                <p className="text-xs text-white/50">
-                  归属于：<span className="text-white/80 font-medium">{parentFolder?.name}</span>
+                <p className="text-xs text-ink-subtle">
+                  归属于：<span className="text-ink font-medium">{parentFolder?.name}</span>
                 </p>
               )}
             </div>
@@ -96,16 +96,16 @@ export default function CreateFolderModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-white/40 hover:bg-white/[0.06] hover:text-white transition-colors"
-          >
+            className="rounded-lg p-1.5 text-ink-subtle hover:bg-wash-strong hover:text-ink transition-colors"
+            aria-label="关闭">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-white/70 mb-1.5">
-              文件夹名称 <span className="text-rose-400">*</span>
+            <label className="block text-xs font-medium text-ink-muted mb-1.5">
+              文件夹名称 <span className="text-danger">*</span>
             </label>
             <input
               type="text"
@@ -117,13 +117,13 @@ export default function CreateFolderModal({
               }}
               placeholder="如：电商主图、二次元立绘、影视分镜..."
               maxLength={64}
-              className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:border-[#22d3ee] focus:bg-white/[0.06] focus:outline-none transition-all"
+              className="w-full rounded-xl border border-line bg-wash px-3.5 py-2.5 text-sm text-ink placeholder-ink-subtle focus:border-line-accent focus:bg-wash-strong transition-all"
             />
           </div>
 
           <div>
-            <label className="flex items-center gap-1.5 text-xs font-medium text-white/70 mb-2">
-              <Palette className="w-3.5 h-3.5 text-white/50" />
+            <label className="flex items-center gap-1.5 text-xs font-medium text-ink-muted mb-2">
+              <Palette className="w-3.5 h-3.5 text-ink-subtle" />
               标记色彩
             </label>
             <div className="flex items-center gap-3">
@@ -147,24 +147,24 @@ export default function CreateFolderModal({
           </div>
 
           {error && (
-            <div className="rounded-lg bg-rose-500/10 border border-rose-500/20 px-3 py-2 text-xs text-rose-300">
+            <div className="rounded-lg bg-danger-soft border border-danger-soft px-3 py-2 text-xs text-danger">
               {error}
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.06]">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-line-subtle">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="rounded-xl px-4 py-2 text-xs font-medium text-white/70 hover:bg-white/[0.06] hover:text-white transition-colors"
+              className="rounded-xl px-4 py-2 text-xs font-medium text-ink-muted hover:bg-wash-strong hover:text-ink transition-colors"
             >
               取消
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#22d3ee] to-[#a855f7] px-5 py-2 text-xs font-medium text-black shadow-lg shadow-[#22d3ee]/20 hover:opacity-95 transition-all disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand to-info px-5 py-2 text-xs font-medium text-ink-inverse shadow-elevation-2 shadow-[#22d3ee]/20 hover:opacity-95 transition-all disabled:opacity-50"
             >
               {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {isEditing ? '保存修改' : '确认创建'}

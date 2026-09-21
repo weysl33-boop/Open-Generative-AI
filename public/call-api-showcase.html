@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KoyoSIM AI Studio | 新一代旗舰级生成式 AI 视觉创作平台</title>
+  <!-- Google Fonts & Tailwind CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          animation: {
+            'marquee-left': 'marqueeLeft 40s linear infinite',
+            'marquee-right': 'marqueeRight 46s linear infinite',
+            'glow-cyan': 'glowCyan 6s ease-in-out infinite alternate',
+          },
+          keyframes: {
+            marqueeLeft: {
+              '0%': { transform: 'translateX(0%)' },
+              '100%': { transform: 'translateX(-50%)' },
+            },
+            marqueeRight: {
+              '0%': { transform: 'translateX(-50%)' },
+              '100%': { transform: 'translateX(0%)' },
+            },
+            glowCyan: {
+              '0%': { opacity: '0.35', transform: 'scale(0.95)' },
+              '100%': { opacity: '0.65', transform: 'scale(1.05)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #07080b;
+      color: #f3f4f6;
+      overflow-x: hidden;
+    }
+    
+    .cyber-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+
+    .noise-bg {
+      background-image: radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.12) 0%, rgba(139, 92, 246, 0.06) 40%, transparent 75%);
+    }
+
+    .marquee-mask {
+      mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+      -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+    }
+
+    .marquee-container:hover .marquee-track {
+      animation-play-state: paused;
+    }
+
+    .glass-card {
+      background: rgba(18, 22, 34, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .glass-card:hover {
+      border-color: rgba(6, 182, 212, 0.4);
+      box-shadow: 0 10px 30px -10px rgba(6, 182, 212, 0.18);
+      transform: translateY(-2px);
+    }
+
+    .gradient-text-cyan {
+      background: linear-gradient(135deg, #ffffff 30%, #38bdf8 70%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body class="selection:bg-cyan-500/30 selection:text-cyan-200">
+
+  <!-- 顶部科技光斑背景 -->
+  <div class="fixed inset-0 pointer-events-none z-0">
+    <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[1100px] h-[580px] bg-gradient-to-b from-cyan-500/15 via-violet-600/10 to-transparent blur-[120px] rounded-full animate-glow-cyan"></div>
+    <div class="absolute top-[800px] -left-60 w-[600px] h-[600px] bg-cyan-600/8 blur-[140px] rounded-full"></div>
+    <div class="absolute top-[1600px] -right-60 w-[700px] h-[700px] bg-violet-600/8 blur-[160px] rounded-full"></div>
+    <div class="absolute inset-0 cyber-grid opacity-60"></div>
+  </div>
+
+  <div class="relative z-10 flex flex-col min-h-screen">
+
+    <!-- 1. 顶部全局导航栏 -->
+    <header class="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-[#07080b]/80 backdrop-blur-xl">
+      <div class="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        
+        <!-- 左侧 Brand Logo -->
+        <div class="flex items-center gap-8">
+          <a href="/studio" class="flex items-center gap-3 group">
+            <div class="relative w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 p-[1px] shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-all">
+              <div class="w-full h-full bg-[#07080b] rounded-[11px] flex items-center justify-center">
+                <svg class="w-5 h-5 text-cyan-400 group-hover:rotate-12 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
+                  <polyline points="21 15 16 10 5 21" stroke-width="2"/>
+                </svg>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-display font-bold text-lg text-white tracking-tight">KoyoSIM</span>
+              <span class="px-1.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">AI STUDIO</span>
+            </div>
+          </a>
+
+          <!-- 主导航链接 -->
+          <nav class="hidden md:flex items-center gap-1 text-sm text-neutral-300">
+            <a href="/studio" class="px-3.5 py-1.5 rounded-lg hover:text-white hover:bg-white/[0.04] transition-colors flex items-center gap-1.5">
+              <span>创作工作台</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+            </a>
+            <a href="/community" class="px-3.5 py-1.5 rounded-lg hover:text-white hover:bg-white/[0.04] transition-colors">灵感社区</a>
+            <a href="/workflow" class="px-3.5 py-1.5 rounded-lg hover:text-white hover:bg-white/[0.04] transition-colors">节点工作流</a>
+            <a href="/pricing" class="px-3.5 py-1.5 rounded-lg hover:text-white hover:bg-white/[0.04] transition-colors">会员与算力</a>
+          </nav>
+        </div>
+
+        <!-- 导航右侧 -->
+        <div class="flex items-center gap-3">
+          <div class="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span>GPU 集群在线</span>
+          </div>
+
+          <div class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs">
+            <span class="text-amber-400 font-semibold">⚡ 1,000</span>
+            <span class="text-neutral-400">新人点数</span>
+          </div>
+
+          <a href="/studio" class="relative group inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition-all shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:-translate-y-0.5">
+            <span>立即开启创作</span>
+            <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. Hero 极具视觉冲击力核心区 -->
+    <section id="hero" class="relative pt-16 pb-20 md:pt-24 md:pb-28 overflow-hidden noise-bg">
+      <div class="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="flex justify-center mb-6">
+          <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-cyan-500/30 text-xs text-neutral-300 backdrop-blur-md shadow-inner shadow-cyan-500/10">
+            <span class="flex h-2 w-2 rounded-full bg-cyan-400 animate-ping"></span>
+            <span class="text-cyan-300 font-semibold">全新上线</span>
+            <span class="text-neutral-500">|</span>
+            <span>FLUX.1 [pro] 1.1 Ultra 与 Midjourney v6.1 已入驻 Studio 工作台</span>
+            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="text-center max-w-4xl mx-auto mb-10">
+          <h1 class="text-4xl sm:text-6xl lg:text-7xl font-display font-extrabold tracking-tight leading-[1.1] mb-6">
+            一个工作台 · 释放<br />
+            <span class="gradient-text-cyan">全模态 AI 创意生产力</span>
+          </h1>
+          <p class="text-lg sm:text-xl text-neutral-400 font-normal leading-relaxed max-w-2xl mx-auto">
+            聚合全球顶尖生图与视频模型。无需在多个平台间频繁切换，在统一专业画布中自由创作超写实人像、电影级分镜、商业海报与动态视觉。
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-4 mb-16">
+          <a href="/studio" class="px-8 py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm tracking-wide shadow-xl shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span>立即进入 Studio 免费创作</span>
+          </a>
+
+          <a href="/community" class="px-7 py-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] text-white font-semibold text-sm border border-white/[0.12] hover:border-white/[0.25] backdrop-blur-md hover:-translate-y-0.5 transition-all flex items-center gap-2">
+            <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span>探索社区精选大作 (10万+)</span>
+          </a>
+
+          <a href="/pricing" class="px-6 py-4 rounded-xl text-neutral-300 hover:text-white font-medium text-sm transition-colors flex items-center gap-1.5">
+            <span>查看会员与算力方案</span>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+            </svg>
+          </a>
+        </div>
+
+        <!-- 交互式生图预览与 Remix 画布 -->
+        <div class="max-w-6xl mx-auto rounded-3xl overflow-hidden border border-white/[0.1] bg-[#0c0f17]/90 backdrop-blur-2xl shadow-2xl shadow-cyan-500/10">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-white/[0.08] bg-white/[0.02] gap-4">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+                <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
+                <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+              </div>
+              <span class="text-xs font-mono text-neutral-400 pl-2">KoyoSIM Studio · 灵感画布与生成预览</span>
+            </div>
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              <button onclick="setPreset('cyberpunk')" id="btn-cyberpunk" class="px-3 py-1.5 rounded-lg text-xs bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold shadow-sm">赛博朋克雨夜</button>
+              <button onclick="setPreset('portrait')" id="btn-portrait" class="px-3 py-1.5 rounded-lg text-xs text-neutral-400 hover:text-white hover:bg-white/[0.04]">大师超写实肖像</button>
+              <button onclick="setPreset('oriental')" id="btn-oriental" class="px-3 py-1.5 rounded-lg text-xs text-neutral-400 hover:text-white hover:bg-white/[0.04]">东方新国风幻想</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12">
+            <div class="lg:col-span-7 relative bg-black min-h-[380px] lg:min-h-[460px] overflow-hidden group">
+              <img id="preview-img" src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=1200&auto=format&fit=crop" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none"></div>
+              <div class="absolute bottom-5 left-5 right-5 flex items-center justify-between pointer-events-none">
+                <span id="preview-model" class="px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-mono">FLUX.1 [pro] 1.1</span>
+                <span class="px-2.5 py-1 rounded-md bg-cyan-500/30 backdrop-blur-md border border-cyan-400/30 text-cyan-200 text-xs font-mono">16:9 · 4K UHD</span>
+              </div>
+            </div>
+
+            <div class="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between bg-[#0e121d] border-t lg:border-t-0 lg:border-l border-white/[0.08]">
+              <div class="space-y-5">
+                <div>
+                  <span class="text-[10px] font-mono tracking-widest uppercase text-cyan-400 font-bold">FLUX 旗舰画质</span>
+                  <h3 id="preview-title" class="text-xl font-bold text-white mt-0.5">赛博朋克雨夜</h3>
+                </div>
+
+                <div class="rounded-xl bg-[#080a10] border border-white/[0.08] p-4 text-xs font-mono text-neutral-300">
+                  <div class="text-[11px] text-neutral-500 mb-2 pb-1.5 border-b border-white/[0.06] flex justify-between">
+                    <span class="text-cyan-300 font-semibold">生成提示词 (Prompt)</span>
+                    <button onclick="copyPrompt()" class="hover:text-white">复制提示词</button>
+                  </div>
+                  <p id="preview-prompt" class="leading-relaxed select-all text-neutral-200">
+                    未来高科技赛博朋克雨夜街道，半透明全息招牌，水洼反光倒影，精致的人体机械细节，极高动态范围摄影，8k分辨率，电影级色调。
+                  </p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-center text-xs font-mono">
+                  <div class="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <span class="text-[10px] text-neutral-500 block">采样步数</span>
+                    <span class="text-white font-bold">28 steps</span>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <span class="text-[10px] text-neutral-500 block">CFG Scale</span>
+                    <span class="text-cyan-400 font-bold">3.5</span>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <span class="text-[10px] text-neutral-500 block">画幅比</span>
+                    <span class="text-amber-400 font-bold">16:9</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-6 border-t border-white/[0.08] mt-6 space-y-2.5">
+                <a href="/studio" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  <span>在 Studio 中一键 Remix 同款创作</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3. 【重点吸收】：顶尖生图与视觉模型无缝无限滑动跑马灯 -->
+    <section class="relative py-16 border-y border-white/[0.06] bg-[#090c13]/70 overflow-hidden select-none">
+      <div class="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center">
+        <p class="text-xs font-mono uppercase tracking-[0.25em] text-neutral-400">
+          POWERED BY WORLD-CLASS GENERATIVE ENGINES
+        </p>
+        <h2 class="text-2xl sm:text-3xl font-display font-bold text-white mt-1.5">
+          聚合全球顶尖生图与视觉引擎 · 在同一画布中自由调度
+        </h2>
+      </div>
+
+      <!-- 第一排跑马灯 (向左) -->
+      <div class="marquee-container marquee-mask relative w-full overflow-hidden mb-5">
+        <div class="marquee-track flex gap-5 w-max animate-marquee-left">
+          
+          <div class="flex items-center gap-3.5 px-6 py-4 rounded-xl glass-card border border-white/[0.08] hover:border-cyan-400/50 transition-all cursor-pointer">
+            <div class="w-9 h-9 rounded-lg bg-neutral-900 border border-white/[0.1] flex items-center justify-center p-1.5 shadow-inner">
+              <svg viewBox="0 0 24 24" class="w-5 h-5 text-cyan-400 fill-current">
+                <path d="M12 2L2 19.5h20L12 2zm0 4.2L18.6 17H5.4L12 6.2z"/>
+              </svg>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-white tracking-tight">Midjourney</span>
+                <span class="px-1.5 py-0.2 text-[9px] rounded bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/30">v6.1 Omni</span>
+              </div>
+              <span class="text-xs text-neutral-400">艺术质感与大师级光影构图</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3.5 px-6 py-4 rounded-xl glass-card border border-white/[0.08] hover:border-amber-400/50 transition-all cursor-pointer">
+            <div class="w-9 h-9 rounded-lg bg-neutral-900 border border-white/[0.1] flex items-center justify-center p-1.5 shadow-inner">
+              <span class="font-black text-amber-400 font-display text-xs">FLUX</span>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-white tracking-tight">FLUX.1 [pro]</span>
+                <span class="px-1.5 py-0.2 text-[9px] rounded bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">1.1 Ultra</span>
+              </div>
+              <span class="text-xs text-neutral-400">超写实人像与文字精准排版</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3.5 px-6 py-4 rounded-xl glass-card border border-white/[0.08] hover:border-emerald-400/50 transition-all cursor-pointer">
+            <div class="w-9 h-9 rounded-lg bg-neutral-900 border border-white/[0.1] flex items-center justify-center p-1.5 shadow-inner">
+              <span class="font-black text-emerald-400 font-display text-xs">SD3.5</span>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-white tracking-tight">Stable Diffusion</span>
+                <span class="px-1.5 py-0.2 text-[9px] rounded bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">SD 3.5 Large</span>
+              </div>
+              <span class="text-xs text-neutral-400">高度可控与丰富 LoRA 风格融合</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3.5 px-6 py-4 rounded-xl glass-card border border-white/[0.08] hover:border-blue-400/50 transition-all cursor-pointer">
+            <div class="w-9 h-9 rounded-lg bg-neutral-900 border border-white/[0.1] flex items-center justify-center p-1.5 shadow-inner">
+              <svg viewBox="0 0 24 24" class="w-5 h-5 text-blue-400 fill-current">
+                <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1683a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4947z"/>
+              </svg>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-white tracking-tight">OpenAI DALL·E</span>
+                <span class="px-1.5 py-0.2 text-[9px] rounded bg-blue-500/20 text-blue-300 font-mono border border-blue-500/30">DALL·E 3</span>
+              </div>
+              <span class="text-xs text-neutral-400">极致自然语言语义与创意构图理解</span>
+            </div>
+          </div>
+
+          <!-- 重复以实现绝对无缝滚动 -->
+          <div class="flex items-center gap-3.5 px-6 py-4 rounded-xl glass-card border border-white/[0.08] hover:border-cyan-400/50 transition-all cursor-pointer">
+            <div class="w-9 h-9 rounded-lg bg-neutral-900 border border-white/[0.1] flex items-center justify-center p-1.5 shadow-inner">
+              <svg viewBox="0 0 24 24" class="w-5 h-5 text-cyan-400 fill-current">
+                <path d="M12 2L2 19.5h20L12 2zm0 4.2L18.6 17H5.4L12 6.2z"/>
+              </svg>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-white tracking-tight">Midjourney</span>
+                <span class="px-1.5 py-0.2 text-[9px] rounded bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/30">v6.1 Omni</span>
+              </div>
+              <span class="text-xs text-neutral-400">艺术质感与大师级光影构图</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3.5 px-6 py-4 rounded-xl glass-card border border-white/[0.08] hover:border-amber-400/50 transition-all cursor-pointer">
+            <div class="w-9 h-9 rounded-lg bg-neutral-900 border border-white/[0.1] flex items-center justify-center p-1.5 shadow-inner">
+              <span class="font-black text-amber-400 font-display text-xs">FLUX</span>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-white tracking-tight">FLUX.1 [pro]</span>
+                <span class="px-1.5 py-0.2 text-[9px] rounded bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">1.1 Ultra</span>
+              </div>
+              <span class="text-xs text-neutral-400">超写实人像与文字精准排版</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 第二排跑马灯 (向右) -->
+      <div class="marquee-container marquee-mask relative w-full overflow-hidden">
+        <div class="marquee-track flex gap-5 w-max animate-marquee-right">
+          
+          <div class="flex items-center gap-3.5 px-6 py-4 rounded-xl glass-card border border-white/[0.08] hover:border-blue-400/50 transition-all cursor-pointer">
+            <div class="w-9 h-9 rounded-lg bg-neutral-900 border border-white/[0.1] flex items-center justify-center p-1.5 shadow-inner">
+              <span class="font-black text-blue-400 font-display text-xs">VEO</span>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-white tracking-tight">Google Veo</span>
+                <span class="px-1.5 py-0.2 text-[9px] rounded bg-blue-500/20 text-blue-300 font-mono border border-blue-500/30">Veo 3.1 4K</span>
+              </div>
+              <span class="text-xs text-neutral-400">电影级动态与多镜头摄影连贯性</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3.5 px-6 py-4 rounded-xl glass-card border border-white/[0.08] hover:border-violet-400/50 transition-all cursor-pointer">
+            <div class="w-9 h-9 rounded-lg bg-neutral-900 border border-white/[0.1] flex items-center justify-center p-1.5 shadow-inner">
+              <span class="font-black text-violet-400 font-display text-xs">KLING</span>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-white tracking-tight">快手可灵 Kling</span>
+                <span class="px-1.5 py-0.2 text-[9px] rounded bg-violet-500/20 text-violet-300 font-mono border border-violet-500/30">v1.5 HD</span>
+              </div>
+              <span class="text-xs text-neutral-400">高拟真物理运动与图生视频运镜</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3.5 px-6 py-4 rounded-xl glass-card border border-white/[0.08] hover:border-cyan-400/50 transition-all cursor-pointer">
+            <div class="w-9 h-9 rounded-lg bg-neutral-900 border border-white/[0.1] flex items-center justify-center p-1.5 shadow-inner">
+              <svg viewBox="0 0 24 24" class="w-5 h-5 text-cyan-400 fill-current">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-4h2v4zm0-6H9V8h2v2zm4 6h-2V8h2v8z"/>
+              </svg>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-white tracking-tight">字节跳动 Seedance</span>
+                <span class="px-1.5 py-0.2 text-[9px] rounded bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/30">v2.5 Global</span>
+              </div>
+              <span class="text-xs text-neutral-400">角色面部动作一致性与多镜头衔接</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3.5 px-6 py-4 rounded-xl glass-card border border-white/[0.08] hover:border-emerald-400/50 transition-all cursor-pointer">
+            <div class="w-9 h-9 rounded-lg bg-neutral-900 border border-white/[0.1] flex items-center justify-center p-1.5 shadow-inner">
+              <span class="font-black text-emerald-300 font-display text-xs">HAILUO</span>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-white tracking-tight">MiniMax 海螺</span>
+                <span class="px-1.5 py-0.2 text-[9px] rounded bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">Video 01</span>
+              </div>
+              <span class="text-xs text-neutral-400">长镜头连贯叙事与自然肢体动态</span>
+            </div>
+          </div>
+
+          <!-- 重复以实现绝对无缝滚动 -->
+          <div class="flex items-center gap-3.5 px-6 py-4 rounded-xl glass-card border border-white/[0.08] hover:border-blue-400/50 transition-all cursor-pointer">
+            <div class="w-9 h-9 rounded-lg bg-neutral-900 border border-white/[0.1] flex items-center justify-center p-1.5 shadow-inner">
+              <span class="font-black text-blue-400 font-display text-xs">VEO</span>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-white tracking-tight">Google Veo</span>
+                <span class="px-1.5 py-0.2 text-[9px] rounded bg-blue-500/20 text-blue-300 font-mono border border-blue-500/30">Veo 3.1 4K</span>
+              </div>
+              <span class="text-xs text-neutral-400">电影级动态与多镜头摄影连贯性</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 深度结合首页 4 大工坊功能网格 -->
+    <section class="py-20 max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+        <div>
+          <span class="text-cyan-400 font-mono text-xs font-semibold tracking-wider uppercase">
+            STUDIO CREATIVE SUITE
+          </span>
+          <h2 class="text-3xl sm:text-4xl font-display font-extrabold text-white mt-1.5 tracking-tight">
+            全模态生图工作台 · 为极致灵感而生
+          </h2>
+        </div>
+        <p class="text-sm text-neutral-400 max-w-md mt-3 md:mt-0">
+          深度整合首页核心工坊，从灵感迸发、超清成图到分层精修与动画化，一站式无缝流转。
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Image Studio -->
+        <div class="rounded-2xl p-6 bg-[#0e121d]/80 border border-white/[0.08] hover:border-cyan-400/40 transition-all group flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-xl hover:shadow-cyan-500/10">
+          <div>
+            <div class="flex items-center justify-between mb-5">
+              <div class="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-cyan-400 group-hover:scale-110 group-hover:text-cyan-300 transition-all">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
+                  <polyline points="21 15 16 10 5 21" stroke-width="2"/>
+                </svg>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono border bg-cyan-500/15 text-cyan-400 border-cyan-500/30">旗舰生图</span>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-1 group-hover:text-cyan-300 transition-colors">Image Studio · 图像工坊</h3>
+            <p class="text-xs text-neutral-400 font-mono mb-3">文生图 / 图生图 / 超写真渲染</p>
+            <p class="text-xs text-neutral-400 leading-relaxed">
+              聚合 Midjourney v6.1、FLUX.1 Pro 与 Stable Diffusion 3.5。支持超高精度手部与面部毛孔细节、智能提示词补全与多风格自由切换。
+            </p>
+          </div>
+          <div class="pt-6 mt-6 border-t border-white/[0.06] flex items-center justify-between">
+            <span class="text-[11px] font-mono text-neutral-500">200+ 顶尖模型支持</span>
+            <a href="/studio" class="inline-flex items-center gap-1 text-xs font-semibold text-cyan-400 hover:text-cyan-300">
+              <span>进入生图工坊 &rarr;</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Video Studio -->
+        <div class="rounded-2xl p-6 bg-[#0e121d]/80 border border-white/[0.08] hover:border-blue-400/40 transition-all group flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-xl hover:shadow-blue-500/10">
+          <div>
+            <div class="flex items-center justify-between mb-5">
+              <div class="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-blue-400 group-hover:scale-110 group-hover:text-blue-300 transition-all">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <polygon points="23 7 16 12 23 17 23 7" stroke-width="2"/>
+                  <rect x="1" y="5" width="15" height="14" rx="2" stroke-width="2"/>
+                </svg>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono border bg-blue-500/15 text-blue-400 border-blue-500/30">电影级动态</span>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-1 group-hover:text-blue-300 transition-colors">Video Studio · 视界工坊</h3>
+            <p class="text-xs text-neutral-400 font-mono mb-3">图生视频 / 运镜控制 / 4K 动态</p>
+            <p class="text-xs text-neutral-400 leading-relaxed">
+              让静态大作一键化身电影级分镜。搭载 Google Veo 3.1、快手可灵 1.5 HD 与字节 Seedance 2.5，精准掌控推拉摇移、首尾帧与角色一致性。
+            </p>
+          </div>
+          <div class="pt-6 mt-6 border-t border-white/[0.06] flex items-center justify-between">
+            <span class="text-[11px] font-mono text-neutral-500">支持 4K 极清运镜</span>
+            <a href="/studio" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300">
+              <span>进入视频工坊 &rarr;</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Layers Studio -->
+        <div class="rounded-2xl p-6 bg-[#0e121d]/80 border border-white/[0.08] hover:border-amber-400/40 transition-all group flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-xl hover:shadow-amber-500/10">
+          <div>
+            <div class="flex items-center justify-between mb-5">
+              <div class="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:text-amber-300 transition-all">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2" stroke-width="2"/>
+                  <polyline points="2 17 12 22 22 17" stroke-width="2"/>
+                  <polyline points="2 12 12 17 22 12" stroke-width="2"/>
+                </svg>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono border bg-amber-500/15 text-amber-400 border-amber-500/30">精准精修</span>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-1 group-hover:text-amber-300 transition-colors">Layers Studio · 图层工坊</h3>
+            <p class="text-xs text-neutral-400 font-mono mb-3">局部重绘 / 画幅拓展 / 消除笔</p>
+            <p class="text-xs text-neutral-400 leading-relaxed">
+              无损分层编辑画布。支持指定区域精准 Inpaint 局部重绘、Outpaint 无限扩展画幅边界、一键扣图去除杂物与智能高清放大。
+            </p>
+          </div>
+          <div class="pt-6 mt-6 border-t border-white/[0.06] flex items-center justify-between">
+            <span class="text-[11px] font-mono text-neutral-500">毫秒级无损重绘</span>
+            <a href="/studio" class="inline-flex items-center gap-1 text-xs font-semibold text-amber-400 hover:text-amber-300">
+              <span>进入图层工坊 &rarr;</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Vibe Workflow -->
+        <div class="rounded-2xl p-6 bg-[#0e121d]/80 border border-white/[0.08] hover:border-purple-400/40 transition-all group flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-xl hover:shadow-purple-500/10">
+          <div>
+            <div class="flex items-center justify-between mb-5">
+              <div class="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-purple-400 group-hover:scale-110 group-hover:text-purple-300 transition-all">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/>
+                </svg>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono border bg-purple-500/15 text-purple-400 border-purple-500/30">自动化管线</span>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-1 group-hover:text-purple-300 transition-colors">Vibe Workflow · 节点工坊</h3>
+            <p class="text-xs text-neutral-400 font-mono mb-3">ComfyUI 架构 / 可视化连线</p>
+            <p class="text-xs text-neutral-400 leading-relaxed">
+              专为高级创作者打造的无限连线工作台。拖拽节点串联文生图、脸部修复、画质增强与批量导出，生产力倍增。
+            </p>
+          </div>
+          <div class="pt-6 mt-6 border-t border-white/[0.06] flex items-center justify-between">
+            <span class="text-[11px] font-mono text-neutral-500">ComfyUI 完全兼容</span>
+            <a href="/workflow" class="inline-flex items-center gap-1 text-xs font-semibold text-purple-400 hover:text-purple-300">
+              <span>开启工作流 &rarr;</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 5. 创作者社区精选作品流与一键同款 Remix -->
+    <section class="py-20 max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+        <div>
+          <span class="text-cyan-400 font-mono text-xs font-semibold tracking-wider uppercase">
+            COMMUNITY SHOWCASE & REMIX
+          </span>
+          <h2 class="text-3xl sm:text-4xl font-display font-extrabold text-white mt-1.5 tracking-tight">
+            全球创作者灵感广场 · 一键同款创作
+          </h2>
+        </div>
+        <a href="/community" class="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 mt-3 md:mt-0">
+          <span>进入社区探索 100,000+ 热门作品 &rarr;</span>
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- 作品 1 -->
+        <div class="group relative rounded-2xl overflow-hidden bg-[#0e121d] border border-white/[0.08] hover:border-cyan-400/50 transition-all flex flex-col">
+          <div class="relative w-full aspect-[4/5] overflow-hidden bg-black">
+            <img src="https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#07080b] via-transparent to-black/30 opacity-80 group-hover:opacity-90"></div>
+            <div class="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded bg-black/60 backdrop-blur-md text-[10px] font-mono text-cyan-300 border border-white/10">FLUX.1 [pro]</span>
+              <span class="px-2 py-0.5 rounded bg-black/60 backdrop-blur-md text-[10px] font-mono text-neutral-300 border border-white/10">❤️ 2.4k</span>
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-xs">
+              <a href="/studio" class="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-[#07080b] font-bold text-xs shadow-xl shadow-cyan-500/30">
+                Remix 同款提示词
+              </a>
+            </div>
+          </div>
+          <div class="p-4 bg-[#0c0f17] flex items-center justify-between border-t border-white/[0.06]">
+            <div>
+              <h4 class="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">赛博霓虹少女 · 8K光影</h4>
+              <p class="text-[11px] text-neutral-500 font-mono mt-0.5">by @CyberArtist_99</p>
+            </div>
+            <a href="/studio" class="text-xs text-neutral-400 group-hover:text-cyan-400">创作 &rarr;</a>
+          </div>
+        </div>
+
+        <!-- 作品 2 -->
+        <div class="group relative rounded-2xl overflow-hidden bg-[#0e121d] border border-white/[0.08] hover:border-cyan-400/50 transition-all flex flex-col">
+          <div class="relative w-full aspect-[4/5] overflow-hidden bg-black">
+            <img src="https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#07080b] via-transparent to-black/30 opacity-80 group-hover:opacity-90"></div>
+            <div class="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded bg-black/60 backdrop-blur-md text-[10px] font-mono text-cyan-300 border border-white/10">Midjourney v6.1</span>
+              <span class="px-2 py-0.5 rounded bg-black/60 backdrop-blur-md text-[10px] font-mono text-neutral-300 border border-white/10">❤️ 1.8k</span>
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-xs">
+              <a href="/studio" class="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-[#07080b] font-bold text-xs shadow-xl shadow-cyan-500/30">
+                Remix 同款提示词
+              </a>
+            </div>
+          </div>
+          <div class="p-4 bg-[#0c0f17] flex items-center justify-between border-t border-white/[0.06]">
+            <div>
+              <h4 class="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">未来星际航行者</h4>
+              <p class="text-[11px] text-neutral-500 font-mono mt-0.5">by @AeroCosmos</p>
+            </div>
+            <a href="/studio" class="text-xs text-neutral-400 group-hover:text-cyan-400">创作 &rarr;</a>
+          </div>
+        </div>
+
+        <!-- 作品 3 -->
+        <div class="group relative rounded-2xl overflow-hidden bg-[#0e121d] border border-white/[0.08] hover:border-cyan-400/50 transition-all flex flex-col">
+          <div class="relative w-full aspect-[4/5] overflow-hidden bg-black">
+            <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#07080b] via-transparent to-black/30 opacity-80 group-hover:opacity-90"></div>
+            <div class="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded bg-black/60 backdrop-blur-md text-[10px] font-mono text-cyan-300 border border-white/10">通义万相 2.1</span>
+              <span class="px-2 py-0.5 rounded bg-black/60 backdrop-blur-md text-[10px] font-mono text-neutral-300 border border-white/10">❤️ 3.1k</span>
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-xs">
+              <a href="/studio" class="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-[#07080b] font-bold text-xs shadow-xl shadow-cyan-500/30">
+                Remix 同款提示词
+              </a>
+            </div>
+          </div>
+          <div class="p-4 bg-[#0c0f17] flex items-center justify-between border-t border-white/[0.06]">
+            <div>
+              <h4 class="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">水墨山海神兽</h4>
+              <p class="text-[11px] text-neutral-500 font-mono mt-0.5">by @OrientalInk</p>
+            </div>
+            <a href="/studio" class="text-xs text-neutral-400 group-hover:text-cyan-400">创作 &rarr;</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 6. 【高端奢华生图平台专属页脚】 -->
+    <footer class="relative mt-auto border-t border-white/[0.08] bg-[#050609] pt-20 pb-12 overflow-hidden select-none">
+      <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[320px] bg-gradient-to-t from-cyan-500/10 via-violet-600/5 to-transparent blur-[140px] pointer-events-none"></div>
+
+      <div class="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        
+        <!-- 顶层 CTA 预热发光横幅 -->
+        <div class="relative rounded-3xl p-8 sm:p-12 mb-16 overflow-hidden border border-white/[0.1] bg-gradient-to-r from-cyan-950/40 via-neutral-900/60 to-violet-950/40 backdrop-blur-2xl">
+          <div class="absolute -right-16 -top-16 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div class="max-w-xl text-center md:text-left">
+              <h3 class="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight">
+                开启你的 AI 艺术创作之旅
+              </h3>
+              <p class="text-sm text-neutral-400 mt-2">
+                加入全球 80,000+ 概念设计师、插画师与视觉创作者。新用户注册即赠 1,000 算力点数，立即在 Studio 中挥洒无限创意。
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <a href="/studio" class="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs tracking-wide shadow-lg shadow-cyan-500/25 transition-all hover:-translate-y-0.5">
+                立即进入 Studio 创作
+              </a>
+              <a href="/pricing" class="px-6 py-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-white font-semibold text-xs border border-white/[0.1] transition-all hover:-translate-y-0.5">
+                升级创作者会员
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5 列矩阵布局 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-16 border-b border-white/[0.08]">
+          
+          <!-- 第 1 列：品牌与渲染集群状态 -->
+          <div class="lg:col-span-4 space-y-5">
+            <a href="/studio" class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 p-[1px] shadow-lg shadow-cyan-500/20">
+                <div class="w-full h-full bg-[#07080b] rounded-[11px] flex items-center justify-center">
+                  <svg class="w-5 h-5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
+                    <polyline points="21 15 16 10 5 21" stroke-width="2"/>
+                  </svg>
+                </div>
+              </div>
+              <span class="font-display font-bold text-xl text-white tracking-tight">KoyoSIM AI Studio</span>
+            </a>
+            
+            <p class="text-xs text-neutral-400 leading-relaxed pr-6">
+              下一代旗舰级生成式 AI 视觉创作平台。聚合全球顶尖文生图与视频模型，以统一的高精度画布与分层编辑能力，赋能数字艺术与商业设计全流程。
+            </p>
+
+            <div class="inline-flex flex-col gap-2 p-3 rounded-xl bg-white/[0.02] border border-white/[0.08]">
+              <div class="flex items-center gap-2">
+                <span class="relative flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span class="text-xs font-semibold text-emerald-400">GPU 渲染集群运转正常 (All Clusters Operational)</span>
+              </div>
+              <div class="flex items-center gap-4 text-[10px] font-mono text-neutral-500 pl-4.5">
+                <span>平均成图耗时: <strong class="text-neutral-300">3.2s</strong></span>
+                <span>今日已渲染: <strong class="text-neutral-300">1,480,200+ 张</strong></span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2 text-[10px] text-neutral-500 font-mono">
+              <span class="px-2 py-0.5 rounded border border-white/[0.06] bg-white/[0.02]">4K Ultra-HD</span>
+              <span class="px-2 py-0.5 rounded border border-white/[0.06] bg-white/[0.02]">Commercial License</span>
+              <span class="px-2 py-0.5 rounded border border-white/[0.06] bg-white/[0.02]">LoRA Supported</span>
+            </div>
+          </div>
+
+          <!-- 第 2 列：核心创作工坊 -->
+          <div class="lg:col-span-2 space-y-3">
+            <h4 class="text-xs font-mono uppercase tracking-wider text-neutral-300 font-semibold">创作工坊</h4>
+            <ul class="space-y-2.5 text-xs text-neutral-400">
+              <li><a href="/studio" class="hover:text-cyan-400 transition-colors">图像生成工坊 (Image)</a></li>
+              <li><a href="/studio" class="hover:text-cyan-400 transition-colors">视频生成工坊 (Video)</a></li>
+              <li><a href="/studio" class="hover:text-cyan-400 transition-colors">图层精修工坊 (Layers)</a></li>
+              <li><a href="/studio" class="hover:text-cyan-400 transition-colors">AI 肖像写真 (Headshot)</a></li>
+              <li><a href="/workflow" class="hover:text-cyan-400 transition-colors">节点工作流 (Workflow)</a></li>
+              <li><a href="/studio" class="hover:text-cyan-400 transition-colors">营销海报设计 (Design)</a></li>
+            </ul>
+          </div>
+
+          <!-- 第 3 列：生图模型引擎 -->
+          <div class="lg:col-span-2 space-y-3">
+            <h4 class="text-xs font-mono uppercase tracking-wider text-neutral-300 font-semibold">顶尖模型支持</h4>
+            <ul class="space-y-2.5 text-xs text-neutral-400">
+              <li><a href="/studio" class="hover:text-cyan-400 transition-colors">FLUX.1 [pro] 1.1 Ultra</a></li>
+              <li><a href="/studio" class="hover:text-cyan-400 transition-colors">Midjourney v6.1 Omni</a></li>
+              <li><a href="/studio" class="hover:text-cyan-400 transition-colors">Stable Diffusion 3.5 Large</a></li>
+              <li><a href="/studio" class="hover:text-cyan-400 transition-colors">Google Veo 3.1 & Imagen 3</a></li>
+              <li><a href="/studio" class="hover:text-cyan-400 transition-colors">快手可灵 Kling 1.5 HD</a></li>
+              <li><a href="/studio" class="hover:text-cyan-400 transition-colors">字节跳动 Seedance 2.5</a></li>
+            </ul>
+          </div>
+
+          <!-- 第 4 列：社区与创作者 -->
+          <div class="lg:col-span-2 space-y-3">
+            <h4 class="text-xs font-mono uppercase tracking-wider text-neutral-300 font-semibold">社区与灵感</h4>
+            <ul class="space-y-2.5 text-xs text-neutral-400">
+              <li><a href="/community" class="hover:text-cyan-400 transition-colors">灵感作品广场 (Gallery)</a></li>
+              <li><a href="/community" class="hover:text-cyan-400 transition-colors">每日热门排行 (Trending)</a></li>
+              <li><a href="/community" class="hover:text-cyan-400 transition-colors">提示词精选 (Prompt Book)</a></li>
+              <li><a href="/community" class="hover:text-cyan-400 transition-colors">一键同款 Remix 创作</a></li>
+              <li><a href="/community" class="hover:text-cyan-400 transition-colors">创作者激励计划</a></li>
+              <li><a href="/community" class="hover:text-cyan-400 transition-colors">官方设计挑战赛</a></li>
+            </ul>
+          </div>
+
+          <!-- 第 5 列：会员与方案 -->
+          <div class="lg:col-span-2 space-y-3">
+            <h4 class="text-xs font-mono uppercase tracking-wider text-neutral-300 font-semibold">会员与方案</h4>
+            <ul class="space-y-2.5 text-xs text-neutral-400">
+              <li><a href="/pricing" class="hover:text-cyan-400 transition-colors">会员方案与定价 (Pricing)</a></li>
+              <li><a href="/credits" class="hover:text-cyan-400 transition-colors">算力中心与明细 (Credits)</a></li>
+              <li><a href="/terms" class="hover:text-cyan-400 transition-colors">商用授权协议说明</a></li>
+              <li><a href="/privacy" class="hover:text-cyan-400 transition-colors">隐私保护政策</a></li>
+              <li><a href="/terms" class="hover:text-cyan-400 transition-colors">服务条款与规则</a></li>
+              <li><a href="/refund" class="hover:text-cyan-400 transition-colors">退款与保障政策</a></li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- 页脚底栏 -->
+        <div class="pt-8 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-neutral-500">
+          <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+            <span>© 2026 KoyoSIM AI Studio. 保留所有权利。</span>
+            <span class="hidden sm:inline text-neutral-700">|</span>
+            <span class="hover:text-neutral-400 transition-colors">京ICP备202508899号-1</span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/[0.08] text-neutral-400">
+              <svg class="w-3.5 h-3.5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+              </svg>
+              <select class="bg-transparent text-xs text-neutral-300 focus:outline-none cursor-pointer">
+                <option value="zh-CN" class="bg-[#07080b]">简体中文 (Chinese)</option>
+                <option value="en" class="bg-[#07080b]">English (US)</option>
+                <option value="ja" class="bg-[#07080b]">日本語 (Japanese)</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/[0.08] text-neutral-400">
+              <span class="text-[11px] font-mono font-bold text-neutral-300">¥ CNY</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-4 text-neutral-400">
+            <a href="https://discord.com" target="_blank" class="hover:text-white transition-colors" title="Discord">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+              </svg>
+            </a>
+            <a href="https://x.com" target="_blank" class="hover:text-white transition-colors" title="X">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </a>
+            <a href="https://github.com" target="_blank" class="hover:text-white transition-colors" title="GitHub">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    const presets = {
+      cyberpunk: {
+        title: '赛博朋克雨夜',
+        tag: 'FLUX 旗舰画质',
+        model: 'FLUX.1 [pro] 1.1',
+        prompt: '未来高科技赛博朋克雨夜街道，半透明全息招牌，水洼反光倒影，精致的人体机械细节，极高动态范围摄影，8k分辨率，电影级色调。',
+        img: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=1200&auto=format&fit=crop'
+      },
+      portrait: {
+        title: '大师超写实肖像',
+        tag: 'MJ v6.1 质感',
+        model: 'Midjourney v6.1',
+        prompt: '电影级特写肖像，真实自然的人物皮肤微观纹理，柔和侧光打亮发丝，哈苏中画幅相机拍摄，浅景深虚化背景，85mm镜头。',
+        img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1200&auto=format&fit=crop'
+      },
+      oriental: {
+        title: '东方新国风幻想',
+        tag: '东方审美',
+        model: '通义万相 Qwen 2.1',
+        prompt: '东方神话浮空仙岛，云雾缭绕的水墨山川与青金石点缀，金色晨曦穿透云层，古风仙侠飞鹤掠过苍穹，恢弘磅礴构图。',
+        img: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop'
+      }
+    };
+
+    function setPreset(key) {
+      const p = presets[key];
+      if (!p) return;
+      document.getElementById('preview-title').innerText = p.title;
+      document.getElementById('preview-model').innerText = p.model;
+      document.getElementById('preview-prompt').innerText = p.prompt;
+      document.getElementById('preview-img').src = p.img;
+      ['cyberpunk', 'portrait', 'oriental'].forEach(k => {
+        const btn = document.getElementById('btn-' + k);
+        if (k === key) {
+          btn.className = 'px-3 py-1.5 rounded-lg text-xs bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold shadow-sm';
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-lg text-xs text-neutral-400 hover:text-white hover:bg-white/[0.04]';
+        }
+      });
+    }
+
+    function copyPrompt() {
+      const text = document.getElementById('preview-prompt').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('提示词已复制到剪贴板！');
+      });
+    }
+  </script>
+</body>
+</html>

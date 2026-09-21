@@ -3,12 +3,17 @@
 import { useState, useCallback } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { generateImage } from "../muapi.js";
+import { isModelActive } from "../models.js";
 import { formatErrorMessage } from "../utils/formatError.js";
 import MobileGenerationActions, {
   GenerationCopyButtons,
 } from "./MobileGenerationActions.jsx";
 import en from "../messages/en/aiInfluencerStudio.json";
 import zh from "../messages/zh/aiInfluencerStudio.json";
+import ja from "../messages/ja-JP/aiInfluencerStudio.json";
+import ko from "../messages/ko-KR/aiInfluencerStudio.json";
+import zhTw from "../messages/zh-TW/aiInfluencerStudio.json";
+import es from "../messages/es/aiInfluencerStudio.json";
 import { resolveCopy } from "../i18nUtils";
 
 const CDN = "https://cdn.muapi.ai/influencer";
@@ -319,7 +324,7 @@ function HoverPill({ label, img, onClick }) {
           className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none"
           style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.6))" }}
         >
-          <div className="w-[72px] h-[72px] rounded-xl overflow-hidden border border-white/20 bg-[#1a1a1a]"
+          <div className="w-[72px] h-[72px] rounded-xl overflow-hidden border border-line-strong bg-raised"
             style={{ transform: "rotate(-3deg)" }}>
             <img src={img} alt={label} className="w-full h-full object-cover" />
           </div>
@@ -329,7 +334,7 @@ function HoverPill({ label, img, onClick }) {
       <button
         type="button"
         onClick={onClick}
-        className="h-[22px] px-2 rounded-md bg-white/[0.07] hover:bg-white/[0.13] border border-white/[0.10] text-[11px] font-medium text-gray-200 whitespace-nowrap transition-all cursor-pointer"
+        className="h-[22px] px-2 rounded-md bg-wash-strong hover:bg-wash-press border border-line text-[11px] font-medium text-ink whitespace-nowrap transition-all cursor-pointer"
       >
         {label}
       </button>
@@ -348,7 +353,7 @@ export default function AiInfluencerStudio({
   isGenerating: externalIsGenerating,
   locale = "en",
 }) {
-  const copy = resolveCopy(en, zh, locale);
+  const copy = resolveCopy(en, { 'zh-CN': zh, 'ja-JP': ja, 'ko-KR': ko, 'zh-TW': zhTw, es }, locale);
   const [activeTab, setActiveTab] = useState("face");
 
   const [selectedOptions, setSelectedOptions] = useState(() => {
@@ -405,6 +410,10 @@ export default function AiInfluencerStudio({
   // ── Generate ──────────────────────────────────────────────────────────────
   const handleGenerate = async () => {
     if (isGenerating) return;
+    if (!isModelActive(INFLUENCER_MODEL)) {
+      setErrorMsg("This model is currently unavailable.");
+      return;
+    }
     onGenerationStart?.();
     setIsGeneratingInternal(true);
     setErrorMsg("");
@@ -479,16 +488,16 @@ export default function AiInfluencerStudio({
   const TAGS_VISIBLE = 7; // how many pills to show before "show more"
 
   return (
-    <div className="flex h-full bg-[#0a0a0a] text-white overflow-hidden select-none font-sans">
+    <div className="flex h-full bg-canvas text-ink overflow-hidden select-none font-sans">
 
       {/* ════════════════════════════════════════════════════════════
           LEFT — Builder / Options Panel
       ════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col w-[320px] shrink-0 border-r border-white/[0.07] bg-[#111111] overflow-hidden">
+      <div className="flex flex-col w-[320px] shrink-0 border-r border-line-subtle bg-base overflow-hidden">
 
         {/* Builder header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.07] shrink-0">
-          <span className="text-[13px] font-bold text-white tracking-tight">{copy.builder.title}</span>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-line-subtle shrink-0">
+          <span className="text-[13px] font-bold text-ink tracking-tight">{copy.builder.title}</span>
           <button
             onClick={() => setSelectedOptions((() => {
               const init = {};
@@ -499,14 +508,14 @@ export default function AiInfluencerStudio({
               );
               return init;
             })())}
-            className="text-[11px] text-gray-500 hover:text-white transition-colors font-medium"
+            className="text-[11px] text-ink-subtle hover:text-ink transition-colors font-medium"
           >
             {copy.builder.reset}
           </button>
         </div>
 
         {/* Tab pills */}
-        <div className="flex gap-1 px-3 py-2 border-b border-white/[0.07] shrink-0">
+        <div className="flex gap-1 px-3 py-2 border-b border-line-subtle shrink-0">
           {Object.keys(TABS_CONFIG).map((key) => (
             <button
               key={key}
@@ -514,7 +523,7 @@ export default function AiInfluencerStudio({
               className={`flex-1 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
                 activeTab === key
                   ? "bg-white text-black shadow"
-                  : "text-gray-500 hover:text-white hover:bg-white/[0.06]"
+                  : "text-ink-subtle hover:text-ink hover:bg-white/[0.06]"
               }`}
             >
               {copy.categoryTabs[key] || TABS_CONFIG[key].label}
@@ -526,7 +535,7 @@ export default function AiInfluencerStudio({
         <div className="flex-1 overflow-y-auto p-3 space-y-5">
           {TABS_CONFIG[activeTab]?.subcategories?.map((subcat) => (
             <div key={subcat.id}>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-0.5">
+              <p className="text-micro font-bold text-ink-subtle uppercase tracking-widest mb-2 px-0.5">
                 {copy.subcategories[subcat.id] || subcat.label}
               </p>
               <div className="grid grid-cols-3 gap-1.5">
@@ -538,7 +547,7 @@ export default function AiInfluencerStudio({
                       onClick={() => handleOptionSelect(subcat.id, opt.id)}
                       className={`group relative aspect-square rounded-xl overflow-hidden border transition-all ${
                         sel
-                          ? "border-white/80 ring-1 ring-white/30 shadow-lg"
+                          ? "border-white/80 ring-1 ring-white/30 shadow-elevation-2"
                           : "border-white/[0.08] hover:border-white/25"
                       }`}
                     >
@@ -551,11 +560,11 @@ export default function AiInfluencerStudio({
                       />
                       {/* Label overlay */}
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-4 pb-1 px-1">
-                        <span className="text-[9px] font-semibold text-white leading-none">{opt.label}</span>
+                        <span className="text-micro font-semibold text-ink leading-none">{opt.label}</span>
                       </div>
                       {/* Selected check badge */}
                       {sel && (
-                        <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white text-black flex items-center justify-center">
+                        <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-surface-inverse text-ink-on-accent flex items-center justify-center">
                           <CheckIcon />
                         </div>
                       )}
@@ -571,20 +580,20 @@ export default function AiInfluencerStudio({
       {/* ════════════════════════════════════════════════════════════
           CENTER — Current Character Preview
       ════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-[#0a0a0a]">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-canvas">
 
         {/* Center top bar: aspect ratio + generate */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.07] shrink-0">
+        <div className="flex items-center justify-between px-6 py-3 border-b border-line-subtle shrink-0">
           {/* Aspect ratio */}
-          <div className="flex gap-0.5 bg-white/[0.05] border border-white/[0.08] rounded-xl p-1">
+          <div className="flex gap-0.5 bg-wash border border-line rounded-xl p-1">
             {["3:4", "1:1", "9:16", "16:9"].map((r) => (
               <button
                 key={r}
                 onClick={() => setAspectRatio(r)}
                 className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
                   aspectRatio === r
-                    ? "bg-violet-600 text-white shadow-md shadow-violet-600/40"
-                    : "text-gray-500 hover:text-white"
+                    ? "bg-violet-600 text-ink shadow-elevation-2 shadow-violet-600/40"
+                    : "text-ink-subtle hover:text-ink"
                 }`}
               >
                 {r}
@@ -596,7 +605,7 @@ export default function AiInfluencerStudio({
             {/* Shuffle */}
             <button
               onClick={handleShuffle}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/[0.05] border border-white/[0.08] text-gray-400 hover:text-white hover:bg-white/10 text-[12px] font-semibold transition-all"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-wash border border-line text-ink-muted hover:text-ink hover:bg-wash-press text-[12px] font-semibold transition-all"
             >
               <ShuffleIcon />
               {copy.toolbar.shuffle}
@@ -606,10 +615,10 @@ export default function AiInfluencerStudio({
             <button
               onClick={handleGenerate}
               disabled={isGenerating}
-              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-[13px] font-bold transition-all shadow-lg ${
+              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-[13px] font-bold transition-all shadow-elevation-2 ${
                 isGenerating
-                  ? "bg-violet-600/40 text-white/60 cursor-not-allowed"
-                  : "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-600/30 hover:shadow-violet-500/40"
+                  ? "bg-violet-600/40 text-ink-muted cursor-not-allowed"
+                  : "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-ink shadow-violet-600/30 hover:shadow-violet-500/40"
               }`}
             >
               {isGenerating ? (
@@ -630,13 +639,13 @@ export default function AiInfluencerStudio({
         {/* Preview area */}
         <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
           <div
-            className="relative rounded-2xl overflow-hidden bg-[#141414] border border-white/[0.07] shadow-2xl flex items-center justify-center"
+            className="relative rounded-2xl overflow-hidden bg-well border border-line-subtle shadow-elevation-4 flex items-center justify-center"
             style={{ aspectRatio: arMap[aspectRatio] ?? "3/4", maxHeight: "100%", maxWidth: "100%" }}
           >
             {isGenerating ? (
               <div className="flex flex-col items-center gap-4 text-center px-8 py-12">
                 <div className="w-12 h-12 border-[3px] border-violet-500/20 border-t-violet-500 rounded-full animate-spin" />
-                <p className="text-sm text-gray-400 font-medium">{copy.preview.generating}</p>
+                <p className="text-sm text-ink-muted font-medium">{copy.preview.generating}</p>
               </div>
             ) : previewUrl ? (
               <>
@@ -644,7 +653,7 @@ export default function AiInfluencerStudio({
                 {/* Download overlay button */}
                 <button
                   onClick={() => downloadImg(previewUrl)}
-                  className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10 text-white text-[11px] font-semibold hover:bg-black/80 transition-all"
+                  className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-scrim backdrop-blur-sm border border-line text-ink text-[11px] font-semibold hover:bg-scrim transition-all"
                 >
                   <DownloadIcon />
                   {copy.preview.save}
@@ -652,11 +661,11 @@ export default function AiInfluencerStudio({
               </>
             ) : (
               <div className="flex flex-col items-center gap-3 text-center px-8 py-12">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8" className="text-gray-700">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8" className="text-ink-subtle">
                   <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
                 </svg>
-                <p className="text-sm text-gray-600 font-medium">{copy.preview.emptyTitle}</p>
-                <p className="text-xs text-gray-700">{copy.preview.emptySubtitleLine1}<br />{copy.preview.emptySubtitleLine2}</p>
+                <p className="text-sm text-ink-subtle font-medium">{copy.preview.emptyTitle}</p>
+                <p className="text-xs text-ink-subtle">{copy.preview.emptySubtitleLine1}<br />{copy.preview.emptySubtitleLine2}</p>
               </div>
             )}
           </div>
@@ -684,7 +693,7 @@ export default function AiInfluencerStudio({
                 <button
                   type="button"
                   onClick={() => setShowAllTags((v) => !v)}
-                  className="h-[22px] px-2 rounded-md bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.08] text-[11px] text-gray-500 hover:text-gray-300 whitespace-nowrap transition-all"
+                  className="h-[22px] px-2 rounded-md bg-wash hover:bg-wash-strong border border-line text-[11px] text-ink-subtle hover:text-ink whitespace-nowrap transition-all"
                 >
                   {showAllTags ? copy.tags.hide : copy.tags.showMore}
                 </button>
@@ -695,7 +704,7 @@ export default function AiInfluencerStudio({
 
         {/* Error */}
         {errorMsg && (
-          <div className="mx-6 mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[12px] shrink-0">
+          <div className="mx-6 mb-4 px-4 py-3 rounded-xl bg-danger-soft border border-danger-soft text-danger text-[12px] shrink-0">
             {errorMsg}
           </div>
         )}
@@ -707,7 +716,7 @@ export default function AiInfluencerStudio({
             value={customPrompt}
             onChange={(e) => setCustomPrompt(e.target.value)}
             placeholder={copy.customPrompt.placeholder}
-            className="w-full h-9 bg-[#161616] border border-white/[0.07] rounded-xl px-3 text-[12px] text-gray-200 placeholder-gray-600 outline-none focus:border-violet-500/40 transition-colors"
+            className="w-full h-9 bg-surface border border-line-subtle rounded-xl px-3 text-[12px] text-ink placeholder-ink-subtle outline-none focus:border-violet-500/40 transition-colors"
           />
         </div>
       </div>
@@ -715,22 +724,22 @@ export default function AiInfluencerStudio({
       {/* ════════════════════════════════════════════════════════════
           RIGHT — Generated Characters History Gallery
       ════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col w-[160px] shrink-0 border-l border-white/[0.07] bg-[#111111] overflow-hidden">
+      <div className="flex flex-col w-[160px] shrink-0 border-l border-line-subtle bg-base overflow-hidden">
 
         {/* Gallery header */}
-        <div className="px-3 py-3 border-b border-white/[0.07] shrink-0">
-          <p className="text-[11px] font-bold text-white tracking-tight">{copy.gallery.title}</p>
-          <p className="text-[9px] text-gray-600 mt-0.5">{history.length} {copy.gallery.countSuffix}</p>
+        <div className="px-3 py-3 border-b border-line-subtle shrink-0">
+          <p className="text-[11px] font-bold text-ink tracking-tight">{copy.gallery.title}</p>
+          <p className="text-micro text-ink-subtle mt-0.5">{history.length} {copy.gallery.countSuffix}</p>
         </div>
 
         {/* Gallery scroll */}
         <div className="flex-1 overflow-y-auto p-2 space-y-2">
           {history.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-center px-2">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-700 mb-2">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-ink-subtle mb-2">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
               </svg>
-              <p className="text-[9px] text-gray-700 leading-relaxed">{copy.gallery.emptyText.split('\n')[0]}<br />{copy.gallery.emptyText.split('\n')[1]}</p>
+              <p className="text-micro text-ink-subtle leading-relaxed">{copy.gallery.emptyText.split('\n')[0]}<br />{copy.gallery.emptyText.split('\n')[1]}</p>
             </div>
           ) : (
             history.map((item, idx) => (
@@ -748,7 +757,7 @@ export default function AiInfluencerStudio({
               >
                 <img src={item.url} alt={`${copy.gallery.altPrefix} ${idx + 1}`} className="w-full h-full object-cover" />
                 {/* Download on hover */}
-                <div className="absolute inset-0 hidden md:flex bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity items-end justify-center pb-2">
+                <div className="absolute inset-0 hidden md:flex bg-scrim opacity-0 group-hover:opacity-100 transition-opacity items-end justify-center pb-2">
                   <div className="absolute right-2 top-2 flex flex-col gap-2">
                     <GenerationCopyButtons
                       prompt={item.prompt}
@@ -761,7 +770,7 @@ export default function AiInfluencerStudio({
                     tabIndex={0}
                     onClick={(e) => { e.stopPropagation(); downloadImg(item.url); }}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); downloadImg(item.url); } }}
-                    className="p-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-all cursor-pointer"
+                    className="p-1.5 rounded-lg bg-wash-press backdrop-blur-sm border border-line-strong text-ink hover:bg-wash-press transition-all cursor-pointer"
                   >
                     <DownloadIcon />
                   </div>
@@ -779,7 +788,7 @@ export default function AiInfluencerStudio({
                   ]}
                 />
                 {/* Index badge */}
-                <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-sm text-[8px] text-gray-300 font-bold">
+                <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-scrim backdrop-blur-sm text-micro text-ink font-bold">
                   #{history.length - idx}
                 </div>
               </div>
@@ -787,7 +796,7 @@ export default function AiInfluencerStudio({
           )}
         </div>
       </div>
-      <Toaster position="top-right" containerStyle={{ zIndex: 99999 }} toastOptions={{ duration: 5000, style: { background: '#18181b', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)', fontSize: '13px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', maxWidth: '440px', wordBreak: 'break-word', whiteSpace: 'pre-wrap', padding: '12px 16px' } }} />
+      <Toaster position="top-right" containerStyle={{ zIndex: 'var(--z-toast)' }} toastOptions={{ duration: 5000, style: { background: 'var(--bg-overlay)', color: 'var(--text-primary)', border: '1px solid var(--border-strong)', fontSize: 'var(--text-body-sm)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--elevation-3)', maxWidth: '440px', wordBreak: 'break-word', whiteSpace: 'pre-wrap', padding: '12px 16px' } }} />
     </div>
   );
 }

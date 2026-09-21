@@ -1,0 +1,12 @@
+import { createRequire } from 'node:module';
+import fs from 'node:fs';
+const require = createRequire(import.meta.url);
+const p = require.resolve('server-only'); require.cache[p] = { id: p, filename: p, loaded: true, exports: {} };
+if (typeof process.loadEnvFile === 'function' && fs.existsSync('.env.local')) process.loadEnvFile('.env.local');
+const { Client } = await import('pg');
+const db = new Client({ connectionString: process.env.DATABASE_URL }); await db.connect();
+const r = await db.query(`SELECT id, provider, model, status, credit_cost, error_code, left(error_reason,90) AS reason, provider_request_id, created_at FROM ai_studio.creations ORDER BY created_at`);
+for (const x of r.rows) console.log(JSON.stringify(x));
+const u = await db.query(`SELECT count(*)::int users, max(created_at) AS last_user FROM auth_usr.users`);
+console.log('users', JSON.stringify(u.rows[0]));
+await db.end();

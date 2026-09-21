@@ -1,0 +1,63 @@
+{
+  "builder": {
+    "title": "構建器",
+    "reset": "重設"
+  },
+  "categoryTabs": {
+    "face": "面部",
+    "body": "身體",
+    "style": "風格"
+  },
+  "subcategories": {
+    "character_type": "角色類型",
+    "gender": "性別",
+    "ethnicity_origin_base": "種族 / 出身",
+    "eye_color": "眼睛颜色",
+    "eyes_type": "眼睛類型",
+    "eyes_details": "眼部特徵",
+    "mouth": "嘴巴与牙齒",
+    "ears": "耳朵",
+    "horns": "角",
+    "skin_conditions": "皮肤狀況",
+    "face_skin_material": "面部皮肤材質",
+    "face_surface_pattern": "皮肤圖案",
+    "body_type": "體型",
+    "left_arm": "左臂",
+    "right_arm": "右臂",
+    "left_leg": "左腿",
+    "right_leg": "右腿",
+    "hair": "毛發 / 頭部生長物",
+    "accessories": "配飾与印記",
+    "rendering_style": "渲染風格"
+  },
+  "toolbar": {
+    "shuffle": "隨機",
+    "generate": "生成角色",
+    "generating": "生成中…"
+  },
+  "preview": {
+    "generating": "正在生成您的 AI 網紅角色…",
+    "emptyTitle": "您的 AI 網紅將在此呈現。",
+    "emptySubtitleLine1": "從零開始設計并構建",
+    "emptySubtitleLine2": "您的 AI 網紅",
+    "save": "儲存",
+    "altGenerated": "生成的 AI 角色"
+  },
+  "tags": {
+    "showMore": "顯示更多",
+    "hide": "收起"
+  },
+  "customPrompt": {
+    "placeholder": "添加更多細節…例如霓虹赛博朋克燈光、戲劇性陰影"
+  },
+  "gallery": {
+    "title": "已生成",
+    "countSuffix": "個角色",
+    "emptyText": "生成的角色\n將顯示在此處",
+    "altPrefix": "角色",
+    "download": "下載"
+  },
+  "errors": {
+    "generationFailed": "生成失敗，請重試。"
+  }
+}

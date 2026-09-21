@@ -1,19 +1,18 @@
-import { PLANS, json } from '@/lib/billing';
+import { json } from '@/lib/services/auth';
+import { listPublicPlans } from '@/lib/services/billing';
+import { paymentChannelStatus } from '@/lib/payments/providerCredentials';
 
 export const runtime = 'nodejs';
 
-function stripeMode() {
-  if (process.env.STRIPE_MODE) return process.env.STRIPE_MODE;
-  return process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_') ? 'test' : 'live';
+// 未登录可读，所以只暴露"这个渠道能不能选"：缺失密钥项、test/live 模式属于内部诊断信息。
+function publicChannels(channels) {
+  return Object.fromEntries(
+    Object.entries(channels).map(([id, channel]) => [id, { enabled: channel.enabled }])
+  );
 }
 
 export async function GET() {
-  return json({
-    plans: PLANS,
-    providers: {
-      stripe: { enabled: Boolean(process.env.STRIPE_SECRET_KEY), mode: stripeMode(), currencies: ['USD'] },
-      wechat: { enabled: Boolean(process.env.WECHAT_MCH_ID && process.env.WECHAT_PRIVATE_KEY_PATH), currencies: ['CNY'] },
-      alipay: { enabled: Boolean(process.env.ALIPAY_APP_ID && process.env.ALIPAY_PRIVATE_KEY_PATH), currencies: ['CNY'] },
-    },
-  });
+  const [plans, channels] = await Promise.all([listPublicPlans(), paymentChannelStatus()]);
+  const providers = publicChannels(channels);
+  return json({ plans, providers });
 }

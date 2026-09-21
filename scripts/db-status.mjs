@@ -1,5 +1,25 @@
-import { healthCheck } from '../lib/db/connection.js';
-import { getMigrationStatus } from '../lib/db/migrations.js';
+import { createRequire } from 'node:module';
+import fs from 'node:fs';
+
+const require = createRequire(import.meta.url);
+try {
+  const serverOnlyPath = require.resolve('server-only');
+  require.cache[serverOnlyPath] = {
+    id: serverOnlyPath,
+    filename: serverOnlyPath,
+    loaded: true,
+    exports: {},
+  };
+} catch {}
+
+try {
+  if (typeof process.loadEnvFile === 'function' && fs.existsSync('.env.local')) {
+    process.loadEnvFile('.env.local');
+  }
+} catch {}
+
+const { healthCheck } = await import('../lib/db/connection.js');
+const { getMigrationStatus } = await import('../lib/db/migrations.js');
 
 try {
   const [database, migrations] = await Promise.all([healthCheck(), getMigrationStatus()]);

@@ -314,11 +314,11 @@ export default function AssetLibraryClient({ locale = 'zh', onTabChange = null }
   };
 
   return (
-    <div className="flex h-full w-full bg-[#050608] text-white overflow-hidden select-none">
+    <div className="flex h-full w-full bg-canvas text-ink overflow-hidden select-none">
       {/* 资产库左侧两级文件夹树面板 */}
       <aside
         className={`
-          flex-shrink-0 border-r border-white/[0.08] bg-[#090a0d] p-3 transition-all duration-300 flex flex-col z-20
+          flex-shrink-0 border-r border-line bg-canvas p-3 transition-all duration-page flex flex-col z-raised
           ${isFolderPanelOpen ? 'w-64' : 'w-0 p-0 overflow-hidden border-none'}
         `}
       >
@@ -341,34 +341,34 @@ export default function AssetLibraryClient({ locale = 'zh', onTabChange = null }
       </aside>
 
       {/* 资产库主工作区 */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#050608]">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-canvas">
         {/* 顶部控制栏 */}
-        <header className="flex-shrink-0 border-b border-white/[0.08] bg-[#0c0d11]/80 backdrop-blur-md px-5 py-3 flex flex-col gap-3">
+        <header className="flex-shrink-0 border-b border-line bg-base/80 backdrop-blur-md px-5 py-3 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             {/* 面包屑导航与展开侧栏按钮 */}
             <div className="flex items-center gap-2 min-w-0">
               <button
                 type="button"
                 onClick={() => setIsFolderPanelOpen(!isFolderPanelOpen)}
-                className="p-1.5 rounded-lg text-white/50 hover:bg-white/[0.06] hover:text-white transition-colors"
+                className="p-1.5 rounded-lg text-ink-subtle hover:bg-wash-strong hover:text-ink transition-colors"
                 title={isFolderPanelOpen ? '收起分类面板' : '展开分类面板'}
               >
                 {isFolderPanelOpen ? (
                   <PanelLeftClose className="w-4 h-4" />
                 ) : (
-                  <PanelLeftOpen className="w-4 h-4 text-[#22d3ee]" />
+                  <PanelLeftOpen className="w-4 h-4 text-brand" />
                 )}
               </button>
 
-              <div className="flex items-center gap-1.5 text-xs text-white/40">
+              <div className="flex items-center gap-1.5 text-xs text-ink-subtle">
                 <span
                   onClick={() => setSelectedFolderId('all')}
-                  className="hover:text-white cursor-pointer transition-colors"
+                  className="hover:text-ink cursor-pointer transition-colors"
                 >
                   我的资产库
                 </span>
-                <ChevronRight className="w-3 h-3 text-white/20" />
-                <span className="text-white font-medium truncate">
+                <ChevronRight className="w-3 h-3 text-ink-subtle" />
+                <span className="text-ink font-medium truncate">
                   {selectedFolderId === 'all' && '全部素材'}
                   {selectedFolderId === 'unorganized' && '未分类素材'}
                   {selectedFolderId === 'favorites' && '我的收藏'}
@@ -379,7 +379,7 @@ export default function AssetLibraryClient({ locale = 'zh', onTabChange = null }
                     </span>
                   )}
                 </span>
-                <span className="ml-1 text-[11px] text-white/40 font-mono">
+                <span className="ml-1 text-[11px] text-ink-subtle font-mono">
                   ({totalCount})
                 </span>
               </div>
@@ -389,7 +389,7 @@ export default function AssetLibraryClient({ locale = 'zh', onTabChange = null }
             <div className="flex items-center gap-3">
               {/* 实时搜索 */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-subtle" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -398,7 +398,7 @@ export default function AssetLibraryClient({ locale = 'zh', onTabChange = null }
                     setPage(1);
                   }}
                   placeholder="搜索提示词、模型..."
-                  className="w-44 md:w-56 rounded-xl border border-white/[0.08] bg-white/[0.04] pl-8 pr-3 py-1.5 text-xs text-white placeholder-white/30 focus:border-[#22d3ee] focus:outline-none transition-all"
+                  className="w-44 md:w-56 rounded-xl border border-line bg-wash pl-8 pr-3 py-1.5 text-xs text-ink placeholder-ink-subtle focus:border-line-accent transition-all"
                 />
               </div>
 
@@ -407,13 +407,13 @@ export default function AssetLibraryClient({ locale = 'zh', onTabChange = null }
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
-                  className="rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs text-white/80 focus:border-[#22d3ee] focus:outline-none appearance-none pr-7 cursor-pointer"
+                  className="rounded-xl border border-line bg-wash px-3 py-1.5 text-xs text-ink focus:border-line-accent appearance-none pr-7 cursor-pointer"
                 >
-                  <option value="newest" className="bg-[#0c0d10]">最新生成</option>
-                  <option value="oldest" className="bg-[#0c0d10]">最早生成</option>
-                  <option value="model" className="bg-[#0c0d10]">按模型排序</option>
+                  <option value="newest" className="bg-canvas">最新生成</option>
+                  <option value="oldest" className="bg-canvas">最早生成</option>
+                  <option value="model" className="bg-canvas">按模型排序</option>
                 </select>
-                <ArrowUpDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40" />
+                <ArrowUpDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-ink-subtle" />
               </div>
             </div>
           </div>
@@ -436,14 +436,14 @@ export default function AssetLibraryClient({ locale = 'zh', onTabChange = null }
                   className={`
                     flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex-shrink-0
                     ${isActive
-                      ? 'bg-gradient-to-r from-[#22d3ee]/20 to-purple-500/15 text-[#22d3ee] border border-[#22d3ee]/30 shadow-[0_0_10px_rgba(34,211,238,0.1)]'
-                      : 'text-white/60 hover:bg-white/[0.04] hover:text-white border border-transparent'}
+                      ? 'bg-brand-soft text-brand border border-brand-line'
+                      : 'text-ink-muted hover:bg-wash hover:text-ink border border-transparent'}
                   `}
                 >
                   <Icon className="w-3.5 h-3.5" />
                   <span>{cat.label}</span>
                   {countNum !== undefined && (
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded ${isActive ? 'bg-[#22d3ee]/20 text-[#22d3ee]' : 'bg-white/[0.06] text-white/40'}`}>
+                    <span className={`text-micro px-1.5 py-0.2 rounded ${isActive ? 'bg-brand/20 text-brand' : 'bg-wash-strong text-ink-subtle'}`}>
                       {countNum}
                     </span>
                   )}
@@ -460,18 +460,18 @@ export default function AssetLibraryClient({ locale = 'zh', onTabChange = null }
               {Array.from({ length: 14 }).map((_, i) => (
                 <div
                   key={i}
-                  className="aspect-square rounded-2xl border border-white/[0.06] bg-white/[0.02] animate-pulse"
+                  className="aspect-square rounded-2xl border border-line-subtle bg-wash animate-pulse"
                 />
               ))}
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <AlertCircle className="w-12 h-12 text-rose-400 mb-3 opacity-80" />
-              <p className="text-sm text-white/80 mb-2">{error}</p>
+              <AlertCircle className="w-12 h-12 text-danger mb-3 opacity-80" />
+              <p className="text-sm text-ink mb-2">{error}</p>
               <button
                 type="button"
                 onClick={fetchAssets}
-                className="flex items-center gap-1.5 rounded-xl bg-white/10 px-4 py-2 text-xs font-medium text-white hover:bg-white/20 transition-colors"
+                className="flex items-center gap-1.5 rounded-xl bg-wash-press px-4 py-2 text-xs font-medium text-ink hover:bg-wash-press transition-colors"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>重新加载</span>
@@ -479,17 +479,17 @@ export default function AssetLibraryClient({ locale = 'zh', onTabChange = null }
             </div>
           ) : assets.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-28 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/[0.03] border border-white/[0.08] text-[#22d3ee] mb-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-wash border border-line text-brand mb-4">
                 <Sparkles className="w-8 h-8 opacity-70" />
               </div>
-              <h4 className="text-base font-semibold text-white mb-1.5">暂无生成素材</h4>
-              <p className="text-xs text-white/40 max-w-sm mb-5 leading-relaxed">
+              <h4 className="text-base font-semibold text-ink mb-1.5">暂无生成素材</h4>
+              <p className="text-xs text-ink-subtle max-w-sm mb-5 leading-relaxed">
                 在左侧各大工作室生成图片、视频或音频后，系统将自动把每一张作品归档保存在此，随时管理与分类。
               </p>
               <button
                 type="button"
                 onClick={() => router.push('/studio')}
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#22d3ee] to-[#a855f7] px-6 py-2.5 text-xs font-semibold text-black shadow-lg shadow-[#22d3ee]/20 hover:opacity-95 transition-all"
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand to-info px-6 py-2.5 text-xs font-semibold text-ink-inverse shadow-elevation-2 shadow-[#22d3ee]/20 hover:opacity-95 transition-all"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>前往工作室生图</span>
@@ -520,18 +520,18 @@ export default function AssetLibraryClient({ locale = 'zh', onTabChange = null }
                     type="button"
                     disabled={page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-1.5 text-xs text-white/70 hover:bg-white/[0.06] hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                    className="rounded-xl border border-line bg-wash px-4 py-1.5 text-xs text-ink-muted hover:bg-wash-strong hover:text-ink disabled:opacity-30 disabled:pointer-events-none transition-colors"
                   >
                     上一页
                   </button>
-                  <span className="text-xs text-white/50">
-                    第 <span className="text-white font-medium">{page}</span> / {totalPages} 页
+                  <span className="text-xs text-ink-subtle">
+                    第 <span className="text-ink font-medium">{page}</span> / {totalPages} 页
                   </span>
                   <button
                     type="button"
                     disabled={page >= totalPages}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-1.5 text-xs text-white/70 hover:bg-white/[0.06] hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                    className="rounded-xl border border-line bg-wash px-4 py-1.5 text-xs text-ink-muted hover:bg-wash-strong hover:text-ink disabled:opacity-30 disabled:pointer-events-none transition-colors"
                   >
                     下一页
                   </button>
@@ -583,7 +583,7 @@ export default function AssetLibraryClient({ locale = 'zh', onTabChange = null }
 
       {/* 浮动 Toast */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 rounded-xl border border-[#22d3ee]/30 bg-[#0c0d10]/95 px-4 py-2.5 text-xs font-medium text-white shadow-2xl shadow-black backdrop-blur-md animate-in slide-in-from-bottom-3 duration-200">
+        <div className="fixed bottom-6 right-6 z-50 rounded-xl border border-line-accent/30 bg-canvas/95 px-4 py-2.5 text-xs font-medium text-ink shadow-elevation-4 shadow-black backdrop-blur-md animate-in slide-in-from-bottom-3 duration-base">
           ✨ {toastMessage}
         </div>
       )}

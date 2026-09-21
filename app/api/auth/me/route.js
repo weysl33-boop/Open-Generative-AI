@@ -1,4 +1,5 @@
-import { getEntitlements, getUserFromRequest, json } from '@/lib/billing';
+import { getUserFromRequest, json } from '@/lib/services/auth';
+import { getEntitlements } from '@/lib/services/billing';
 
 export const runtime = 'nodejs';
 

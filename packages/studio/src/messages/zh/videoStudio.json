@@ -195,11 +195,11 @@
         "description": ""
       },
       "legacy": {
-        "label": "Seedance 2.0 API",
+        "label": "Seedance 2.0 经典 API",
         "description": ""
       },
       "legacy_new": {
-        "label": "Seedance 2.0 New API",
+        "label": "Seedance 2.0 最新 API",
         "description": ""
       }
     },
@@ -211,8 +211,8 @@
     },
     "toolVariants": {
       "standard": "标准版",
-      "vip": "VIP",
-      "pro": "Pro"
+      "vip": "VIP 会员版",
+      "pro": "Pro 专业版"
     },
     "editAudio": {
       "title": "新音频",
@@ -280,11 +280,11 @@
         "description": ""
       },
       "lora": {
-        "label": "LoRA",
+        "label": "LoRA 微调模型",
         "description": "应用自定义风格或角色。"
       },
       "spicy": {
-        "label": "Spicy",
+        "label": "Spicy 增强版",
         "description": "用于图片动画的另一种模型。"
       }
     },
@@ -316,15 +316,15 @@
     "providerHelp": "为同一 Wan 版本选择其他生成服务。",
     "profiles": {
       "standard": {
-        "label": "Standard",
+        "label": "标准版",
         "description": ""
       },
       "prime": {
-        "label": "Prime",
+        "label": "Prime 旗舰版",
         "description": ""
       },
       "spicy": {
-        "label": "Spicy",
+        "label": "Spicy 增强版",
         "description": ""
       }
     },
@@ -392,11 +392,11 @@
         "description": ""
       },
       "master": {
-        "label": "Master",
+        "label": "大师版",
         "description": "改善运动效果和提示词理解。"
       },
       "pro": {
-        "label": "Pro",
+        "label": "Pro 专业版",
         "description": "更多细节。"
       },
       "fast": {
@@ -470,7 +470,7 @@
         "optionLabels": {
           "normal": "标准",
           "fun": "创意",
-          "spicy": "Spicy"
+          "spicy": "Spicy 增强模式"
         }
       }
     }
@@ -484,7 +484,7 @@
         "description": "适合日常视频。"
       },
       "pro": {
-        "label": "Pro",
+        "label": "Pro 专业版",
         "description": "细节更丰富，最高 1080p。"
       }
     },
@@ -501,7 +501,7 @@
         "description": "480p–1080p，5–20 秒。"
       },
       "pro": {
-        "label": "Pro",
+        "label": "Pro 专业版",
         "description": "6、8 或 10 秒。"
       },
       "fast": {

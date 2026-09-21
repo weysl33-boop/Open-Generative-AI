@@ -1,4 +1,3 @@
-import { SettingsModal } from './SettingsModal.js';
 import { t, getLang, setLang } from '../lib/i18n.js';
 
 export function Header(navigate) {
@@ -74,7 +73,8 @@ export function Header(navigate) {
         </svg>
         <span>${t('nav.settings')}</span>
     `;
-    settingsBtn.onclick = () => {
+    settingsBtn.onclick = async () => {
+        const { SettingsModal } = await import('./SettingsModal.js');
         document.body.appendChild(SettingsModal());
     };
 

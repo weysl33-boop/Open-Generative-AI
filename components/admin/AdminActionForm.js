@@ -63,24 +63,24 @@ export default function AdminActionForm({
             type={field.type || 'text'}
             defaultValue={field.defaultValue || ''}
             placeholder={field.placeholder}
-            className="min-w-[140px] flex-1 rounded-xl border border-white/10 bg-black/40 px-3.5 py-2 text-xs text-white outline-none focus:border-cyan-300/50"
+            className="min-w-[140px] flex-1 rounded-xl border border-line bg-scrim px-3.5 py-2 text-xs text-ink outline-none focus:border-brand-ring"
           />
         ))}
         <button
           disabled={busy}
           className={`rounded-xl px-4 py-2 text-xs font-semibold transition-colors ${
             tone === 'primary'
-              ? 'bg-cyan-300 text-black hover:bg-cyan-200'
+              ? 'bg-brand text-ink-on-accent hover:bg-brand'
               : tone === 'danger'
-              ? 'border border-red-400/40 bg-red-400/10 text-red-200 hover:bg-red-400/20'
-              : 'border border-white/15 bg-white/5 text-white/80 hover:bg-white/10'
+              ? 'border border-danger-ring bg-danger-soft text-danger hover:bg-danger-hover'
+              : 'border border-line-strong bg-wash text-ink hover:bg-wash-press'
           } disabled:opacity-50`}
         >
           {busy ? '处理中…' : label}
         </button>
       </div>
       {message && (
-        <p className={`text-xs ${isError ? 'text-red-300' : 'text-cyan-200'}`}>
+        <p className={`text-xs ${isError ? 'text-danger' : 'text-brand-hover'}`}>
           {message}
         </p>
       )}

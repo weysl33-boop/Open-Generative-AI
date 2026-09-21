@@ -71,16 +71,16 @@ export default function CreativeGallery() {
       {/* 标题 */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
         <div>
-          <span className="text-cyan-400 font-mono text-xs font-semibold tracking-wider uppercase">
+          <span className="text-brand font-mono text-xs font-semibold tracking-wider uppercase">
             COMMUNITY SHOWCASE & REMIX
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-1.5 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-ink mt-1.5 tracking-tight">
             全球创作者灵感广场 · 一键同款创作
           </h2>
         </div>
         <a
           href="/community"
-          className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 mt-3 md:mt-0"
+          className="text-xs font-semibold text-brand hover:text-brand-hover flex items-center gap-1 mt-3 md:mt-0"
         >
           <span>进入社区探索 100,000+ 热门作品</span>
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -94,32 +94,32 @@ export default function CreativeGallery() {
         {COMMUNITY_ARTWORKS.map((art) => (
           <div
             key={art.id}
-            className="group relative rounded-2xl overflow-hidden bg-[#0e121d] border border-white/[0.08] hover:border-cyan-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-500/10 flex flex-col"
+            className="group relative rounded-2xl overflow-hidden bg-surface border border-line hover:border-brand-ring transition-all duration-page hover:shadow-elevation-4 hover:shadow-brand-soft flex flex-col"
           >
             {/* 画面容器 */}
-            <div className={`relative w-full ${art.ratio} overflow-hidden bg-black`}>
+            <div className={`relative w-full ${art.ratio} overflow-hidden bg-canvas`}>
               <img
                 src={art.imageUrl}
                 alt={art.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-page group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#07080b] via-transparent to-black/30 opacity-80 group-hover:opacity-90 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-t from-canvas via-transparent to-black/30 opacity-80 group-hover:opacity-90 transition-opacity" />
 
               {/* 顶部标签 */}
               <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
-                <span className="px-2 py-0.5 rounded bg-black/60 backdrop-blur-md text-[10px] font-mono text-cyan-300 border border-white/10">
+                <span className="px-2 py-0.5 rounded bg-scrim backdrop-blur-md text-micro font-mono text-brand-hover border border-line">
                   {art.model}
                 </span>
-                <span className="px-2 py-0.5 rounded bg-black/60 backdrop-blur-md text-[10px] font-mono text-neutral-300 flex items-center gap-1 border border-white/10">
+                <span className="px-2 py-0.5 rounded bg-scrim backdrop-blur-md text-micro font-mono text-ink flex items-center gap-1 border border-line">
                   ❤️ {art.likes}
                 </span>
               </div>
 
               {/* 悬浮一键 Remix 按钮 */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40 backdrop-blur-xs">
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-page bg-scrim backdrop-blur-xs">
                 <a
                   href="/studio"
-                  className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-[#07080b] font-bold text-xs shadow-xl shadow-cyan-500/30 transition-all hover:scale-105 flex items-center gap-1.5"
+                  className="px-5 py-2.5 rounded-xl bg-brand-active hover:bg-brand text-ink-inverse font-bold text-xs shadow-elevation-3 shadow-brand-line transition-all hover:scale-105 flex items-center gap-1.5"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -130,16 +130,16 @@ export default function CreativeGallery() {
             </div>
 
             {/* 底部信息 */}
-            <div className="p-4 bg-[#0c0f17] flex items-center justify-between border-t border-white/[0.06]">
+            <div className="p-4 bg-base flex items-center justify-between border-t border-line-subtle">
               <div>
-                <h4 className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">
+                <h4 className="text-sm font-bold text-ink group-hover:text-brand-hover transition-colors">
                   {art.title}
                 </h4>
-                <p className="text-[11px] text-neutral-500 font-mono mt-0.5">by @{art.author}</p>
+                <p className="text-[11px] text-ink-subtle font-mono mt-0.5">by @{art.author}</p>
               </div>
               <a
                 href="/studio"
-                className="text-xs text-neutral-400 group-hover:text-cyan-400 transition-colors flex items-center gap-0.5 font-medium"
+                className="text-xs text-ink-muted group-hover:text-brand transition-colors flex items-center gap-0.5 font-medium"
               >
                 <span>创作</span>
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">

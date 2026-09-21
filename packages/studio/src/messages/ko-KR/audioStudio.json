@@ -1,0 +1,55 @@
+{
+  "uploader": {
+    "clear": "비우기",
+    "uploadPrompt": "오디오 트랙 업로드",
+    "uploadHint": "MP3, WAV, M4A 형식 (최대 20MB)",
+    "uploading": "업로드 중...",
+    "ready": "생성 준비 완료",
+    "maxSuffix": "(최대 {max})",
+    "trackLabel": "트랙 #{index}",
+    "sizeLimitError": "오디오 파일이 20MB 제한을 초과했습니다.",
+    "uploadFailedError": "업로드 실패: {message}"
+  },
+  "player": {
+    "nowPlaying": "현재 재생 중",
+    "defaultTitle": "생성된 트랙",
+    "muteUnmute": "음소거 켜기/끄기",
+    "pause": "일시정지",
+    "play": "재생",
+    "download": "오디오 다운로드",
+    "save": "저장",
+    "seek": "재생 위치",
+    "volume": "볼륨"
+  },
+  "sidebar": {
+    "modelLabel": "오디오 모델",
+    "selectModel": "모델 선택",
+    "descriptionLabel": "설명",
+    "selectOption": "옵션 선택",
+    "promptPlaceholder": "생성하고 싶은 사운드 또는 음악을 설명하세요...",
+    "lyricsPromptLabel": "가사 / 프롬프트",
+    "fieldPlaceholder": "{field} 입력...",
+    "requiredFieldError": "필수 항목을 입력해 주세요: {field}"
+  },
+  "generate": {
+    "generating": "오디오 생성 중...",
+    "cta": "트랙 생성",
+    "noUrlError": "API에서 오디오 URL을 반환하지 않았습니다.",
+    "genericError": "오디오 생성에 실패했습니다",
+    "droppedFileUploadError": "드롭된 파일 업로드 실패: {message}"
+  },
+  "result": {
+    "errorHeading": "생성 오류",
+    "loadingHeading": "사운드트랙 생성 중",
+    "loadingSubtext": "오디오 파형과 보컬을 렌더링하는 중입니다...",
+    "emptyHeading": "오디오 스튜디오",
+    "emptyBody": "AI 음악 모델, 음성 복제기 또는 사운드 생성기를 선택하세요. 왼쪽 옵션을 조정하여 고음질 트랙을 제작해 보세요.",
+    "newGeneration": "새로 생성",
+    "success": "생성 성공"
+  },
+  "history": {
+    "heading": "생성 기록 ({count})",
+    "untitled": "제목 없는 오디오",
+    "fallbackModel": "오디오"
+  }
+}

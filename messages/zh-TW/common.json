@@ -44,7 +44,9 @@
     "settingsTitle": "設定與 API Key",
     "dropHere": "將媒體檔案拖放到這裡",
     "dropHereHint": "圖片、影片或音訊檔案",
-    "dismiss": "關閉"
+    "dismiss": "關閉",
+    "modelDirectoryUnavailable": "模型清單暫時無法使用，部分功能可能受到限制。",
+    "retry": "重試"
   },
   "settingsModal": {
     "title": "設定",

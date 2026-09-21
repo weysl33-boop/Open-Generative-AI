@@ -2,6 +2,8 @@
 
 import { Children, useRef } from "react";
 
+import { cn } from "../ui/cn";
+import { FOCUS_RING, FIELD_BASE, controlClasses } from "../ui/tokens";
 import {
   PROMPT_CONTROL_LABEL_CLASS,
   PromptChevronIcon,
@@ -10,8 +12,7 @@ import {
   promptControlClassName,
 } from "./prompt/PromptComposer.jsx";
 
-const FIELD_CLASS =
-  "w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none transition-colors focus:border-[#22d3ee]/50";
+const FIELD_CLASS = cn(FIELD_BASE, controlClasses("sm", { pad: "px-2.5" }));
 
 function createEmptyValue(schema = {}) {
   if (schema.default !== undefined) return schema.default;
@@ -32,11 +33,11 @@ function createEmptyValue(schema = {}) {
 function FieldLabel({ schema, inputKey }) {
   return (
     <div className="min-w-0">
-      <div className="text-xs font-semibold text-white/75">
+      <div className="text-label text-ink-muted">
         {schema.title || inputKey.replaceAll("_", " ")}
       </div>
       {schema.description && (
-        <div className="mt-0.5 text-[10px] leading-relaxed text-white/35">
+        <div className="mt-0.5 text-caption text-ink-subtle">
           {schema.description}
         </div>
       )}
@@ -78,16 +79,17 @@ function ScalarInput({ schema, value, onChange, label }) {
         aria-label={label}
         aria-checked={!!value}
         onClick={() => onChange(!value)}
-        className={`relative h-6 w-11 shrink-0 rounded-full border transition-colors ${
-          value
-            ? "border-[#22d3ee]/50 bg-[#22d3ee]/30"
-            : "border-white/10 bg-white/[0.06]"
-        }`}
+        className={cn(
+          "relative h-6 w-11 shrink-0 rounded-full border transition-colors",
+          FOCUS_RING,
+          value ? "border-brand-line bg-brand-soft" : "border-line bg-well",
+        )}
       >
         <span
-          className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-            value ? "translate-x-5" : "translate-x-0"
-          }`}
+          className={cn(
+            "absolute left-0.5 top-0.5 h-4 w-4 rounded-full transition-transform",
+            value ? "translate-x-5 bg-brand" : "translate-x-0 bg-ink-subtle",
+          )}
         />
       </button>
     );
@@ -129,13 +131,13 @@ function ArrayInput({ schema, value, onChange, label }) {
       {items.map((item, index) => (
         <div
           key={index}
-          className="rounded-lg border border-white/[0.07] bg-black/20 p-2.5"
+          className="rounded-lg border border-line-subtle bg-surface p-2.5"
         >
           {itemSchema.type === "object" ? (
             <div className="flex flex-col gap-2">
               {Object.entries(itemSchema.properties || {}).map(([key, property]) => (
                 <label key={key} className="flex flex-col gap-1">
-                  <span className="text-[10px] font-semibold text-white/45">
+                  <span className="text-caption text-ink-subtle">
                     {property.title || key.replaceAll("_", " ")}
                   </span>
                   <ScalarInput
@@ -161,7 +163,7 @@ function ArrayInput({ schema, value, onChange, label }) {
             type="button"
             onClick={() => removeItem(index)}
             aria-label={`Remove ${label} ${index + 1}`}
-            className="mt-2 text-[10px] font-semibold text-red-300/70 hover:text-red-300"
+            className="mt-2 text-caption text-danger opacity-70 hover:opacity-100"
           >
             Remove
           </button>
@@ -172,7 +174,11 @@ function ArrayInput({ schema, value, onChange, label }) {
           type="button"
           onClick={() => onChange([...items, createEmptyValue(itemSchema)])}
           aria-label={`Add ${label}`}
-          className="rounded-lg border border-dashed border-white/10 px-3 py-2 text-xs font-semibold text-white/45 hover:border-[#22d3ee]/30 hover:text-[#22d3ee]"
+          className={cn(
+            "rounded-lg border border-dashed border-line px-3 py-2 text-label text-ink-subtle",
+            "hover:border-brand-line hover:text-brand",
+            FOCUS_RING,
+          )}
         >
           + Add
         </button>
@@ -188,7 +194,7 @@ export default function ModelParameterControls({
   open,
   onToggle,
   children,
-  label = <span className="text-[10px] font-black text-primary/80">PARAMS</span>,
+  label = <span className="text-caption font-black text-ink-muted">PARAMS</span>,
   title = "Model parameters",
   summary = inputs.length,
   fitViewport = false,
@@ -257,15 +263,20 @@ export default function ModelParameterControls({
           fitViewport={fitViewport}
           solid={solid}
           onClick={(event) => event.stopPropagation()}
-          className="w-[min(420px,calc(100vw-2rem))] max-h-[60vh]"
+          className="w-[min(420px,calc(100vw-2rem))] max-h-popover"
         >
           <PromptPopoverHeader>{title}</PromptPopoverHeader>
           <div className="flex flex-col gap-4">
             {extraControls}
             {primaryInputs.map(renderInput)}
             {(advancedInputs.length > 0 || extraAdvancedControls.length > 0) && (
-              <details className="border-t border-white/[0.07] pt-2">
-                <summary className="cursor-pointer py-2 text-xs font-semibold text-white/60 focus-visible:outline focus-visible:outline-1 focus-visible:outline-primary">
+              <details className="border-t border-line-subtle pt-2">
+                <summary
+                  className={cn(
+                    "cursor-pointer py-2 text-label text-ink-muted",
+                    FOCUS_RING,
+                  )}
+                >
                   {advancedLabel}
                 </summary>
                 <div className="flex flex-col gap-4 pt-2">

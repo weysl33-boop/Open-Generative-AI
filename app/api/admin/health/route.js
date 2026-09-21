@@ -1,11 +1,11 @@
-import { requirePermission, okResponse } from '@/lib/admin/authz';
+import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';
 import { PERMISSIONS } from '@/lib/admin/permissions';
 import { getSystemHealth } from '@/lib/services/systemHealth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(request) {
+async function handleGET(request) {
   const guard = await requirePermission(request, PERMISSIONS.healthRead);
   if (!guard.ok) return guard.response;
   try {
@@ -22,3 +22,5 @@ export async function GET(request) {
     return okResponse({ status: 'unhealthy', database: { engine: 'PostgreSQL 16', ok: false, error: error.code || 'DATABASE_UNAVAILABLE' } }, guard.requestId);
   }
 }
+
+export const GET = withAdminErrorBoundary(handleGET);

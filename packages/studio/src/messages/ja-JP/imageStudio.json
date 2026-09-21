@@ -1,0 +1,99 @@
+{
+  "uploadButton": {
+    "faceLabel": "フェイス",
+    "referenceImageLabel": "参照画像",
+    "addUpToImages": "最大 {max} 枚の画像を追加",
+    "singleSelectedTitle": "1枚の画像を選択中 — クリックして追加（最大 {max} 枚）",
+    "multiSelectedTitle": "{count}/{max} 枚の画像を選択中 — クリックして管理",
+    "tooLargeAlert": "次の画像はファイルサイズが大きすぎます（最大10MB）：{names}",
+    "uploadFailedAlert": "画像のアップロードに失敗しました：{message}",
+    "headerTitle": "参照画像一覧",
+    "selectUpTo": "最大 {max} 枚の画像を選択",
+    "doneButton": "✓ 完了（{count}）",
+    "uploadFilesButton": "ファイルをアップロード",
+    "uploadNewButton": "新規画像をアップロード",
+    "emptyState": "アップロードされた画像はありません",
+    "removeFromHistory": "履歴から削除",
+    "selectedCount": "{count}/{max} 枚選択済み",
+    "useSelected": "選択した画像を使用"
+  },
+  "modelDropdown": {
+    "categoryAll": "すべて",
+    "categoryT2I": "テキストから画像",
+    "categoryI2I": "画像から画像",
+    "allProviders": "すべてのプロバイダー",
+    "searchPlaceholder": "モデルを検索...",
+    "modelsSuffix": "個のモデル",
+    "noModelsFound": "一致するモデルが見つかりません",
+    "selectModelHeader": "モデルを選択"
+  },
+  "gallery": {
+    "generatedImageAlt": "生成された画像",
+    "download": "ダウンロード",
+    "delete": "削除",
+    "deleteConfirm": "この生成画像を削除してもよろしいですか？",
+    "deleteFailed": "アイテムの削除に失敗しました",
+    "noPrompt": "プロンプトが指定されていません",
+    "modelFallback": "イメージスタジオ"
+  },
+  "emptyState": {
+    "heading": "クリエイティブを始める",
+    "subtitle": "シーン、キャラクター、雰囲気、スタイルを言葉で表現 — 鮮やかに具現化されます"
+  },
+  "promptBar": {
+    "placeholderMultiImage": "{count} 枚の画像を選択中 — 変換スタイルを記述（任意）",
+    "placeholderI2I": "この画像をどのように変換するか記述（任意）",
+    "placeholderT2I": "生成したい画像を詳しく説明してください",
+    "swapFaceLabel": "フェイススワップ",
+    "effectFallback": "エフェクト",
+    "drawButton": "ドロー描画",
+    "generating": "画像を生成中...",
+    "generateButton": "画像を生成"
+  },
+  "popovers": {
+    "model": "モデル",
+    "aspectRatio": "アスペクト比",
+    "resolution": "解像度",
+    "effectType": "エフェクトタイプ"
+  },
+  "errors": {
+    "noImageReferenceSupport": "{name} は画像参照に対応していません。",
+    "uploadReferenceFirst": "先に参照画像をアップロードしてください。",
+    "uploadSwapFaceFirst": "先にフェイススワップ用の顔画像をアップロードしてください。",
+    "enterPromptFirst": "画像を生成するためのプロンプトを入力してください。",
+    "generationFailed": "画像の生成に失敗しました"
+  },
+  "fullscreen": {
+    "previewAlt": "全画面プレビュー"
+  },
+  "mediaMenu": {
+    "image": "画像",
+    "imageDesc": "jpeg, jpg, png",
+    "video": "動画",
+    "videoDesc": "mp4, mov, 最長 60 秒",
+    "script": "台本",
+    "scriptDesc": "txt, doc, pdf, md, 最大 50000 文字",
+    "audio": "音声",
+    "audioDesc": "mp3, wav, 最長 15 秒"
+  },
+  "paramsPanel": {
+    "titleRatio": "アスペクト比",
+    "titleResolution": "解像度を選択",
+    "titleQuantity": "生成枚数を選択",
+    "titleDimensions": "寸法",
+    "smartRatio": "スマート",
+    "standard15k": "標準 1.5K",
+    "hd2k": "高解像度 2K ✦",
+    "ultra4k": "超高解像度 4K ✦",
+    "smartReference": "スマート参照",
+    "addReference": "参照画像を追加",
+    "referenceCount": "参照画像 ({count}/{max})",
+    "autoSwitchedToI2I": "参照画像対応モデルに自動切り替え：{model}",
+    "autoSwitchedToT2I": "テキスト生成画像モデルに戻しました",
+    "modeImageGen": "画像生成",
+    "modeImageToImage": "画像から画像",
+    "creditPerImage": "✦ {cost}/枚",
+    "creditPerImageOriginal": "11/枚",
+    "batchCountUnit": "{count}枚"
+  }
+}

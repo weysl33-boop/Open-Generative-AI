@@ -18,10 +18,11 @@ const WorkflowUI = ({
 }) => {
   useEffect(() => {
     sessionStorage.setItem("fromWorkflowBuilder", "true");
+    return () => sessionStorage.removeItem("fromWorkflowBuilder");
   }, []);
 
   return (
-    <div className="w-full h-full bg-black">
+    <div className="w-full h-full bg-canvas">
       <WorkflowBuilder
         apiKey={apiKey}
         workflowId={workflowId}

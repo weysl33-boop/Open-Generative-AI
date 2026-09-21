@@ -44,7 +44,9 @@
     "settingsTitle": "設定とAPIキー",
     "dropHere": "メディアをここにドロップ",
     "dropHereHint": "画像、ビデオ、オーディオファイル",
-    "dismiss": "閉じる"
+    "dismiss": "閉じる",
+    "modelDirectoryUnavailable": "モデル一覧を一時的に取得できないため、一部の機能が制限される場合があります。",
+    "retry": "再試行"
   },
   "settingsModal": {
     "title": "設定",

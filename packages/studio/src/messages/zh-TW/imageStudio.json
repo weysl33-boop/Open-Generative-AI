@@ -1,0 +1,99 @@
+{
+  "uploadButton": {
+    "faceLabel": "人脸",
+    "referenceImageLabel": "參考圖片",
+    "addUpToImages": "最多添加 {max} 張圖片",
+    "singleSelectedTitle": "已選取 1 張圖片 — 點擊可繼續添加（最多 {max} 張）",
+    "multiSelectedTitle": "已選取 {count}/{max} 張圖片 — 點擊管理",
+    "tooLargeAlert": "以下圖片過大（最大 10MB）：{names}",
+    "uploadFailedAlert": "圖片上傳失敗：{message}",
+    "headerTitle": "參考圖片",
+    "selectUpTo": "最多選取 {max} 張圖片",
+    "doneButton": "✓ 完成（{count}）",
+    "uploadFilesButton": "上傳文件",
+    "uploadNewButton": "上傳新圖片",
+    "emptyState": "暫無上傳記錄",
+    "removeFromHistory": "從歷史記錄中移除",
+    "selectedCount": "已選取 {count}/{max}",
+    "useSelected": "使用所選圖片"
+  },
+  "modelDropdown": {
+    "categoryAll": "全部",
+    "categoryT2I": "文本生成圖像",
+    "categoryI2I": "圖像生成圖像",
+    "allProviders": "所有提供商",
+    "searchPlaceholder": "搜尋模型...",
+    "modelsSuffix": "個模型",
+    "noModelsFound": "未找到相關模型",
+    "selectModelHeader": "選擇模型"
+  },
+  "gallery": {
+    "generatedImageAlt": "生成的圖像",
+    "download": "下載",
+    "delete": "刪除",
+    "deleteConfirm": "確定要刪除這個生成的專案吗？",
+    "deleteFailed": "刪除專案失敗",
+    "noPrompt": "未提供提示詞",
+    "modelFallback": "圖像工作室"
+  },
+  "emptyState": {
+    "heading": "開始使用",
+    "subtitle": "描述一個场景、角色、情绪或風格 — 讓它躍然眼前"
+  },
+  "promptBar": {
+    "placeholderMultiImage": "已選取 {count} 張圖片 — 描述轉換效果（可選）",
+    "placeholderI2I": "描述如何轉換這張圖片（可選）",
+    "placeholderT2I": "描述你想要建立的圖像",
+    "swapFaceLabel": "換脸",
+    "effectFallback": "效果",
+    "drawButton": "繪製",
+    "generating": "生成中...",
+    "generateButton": "生成"
+  },
+  "popovers": {
+    "model": "模型",
+    "aspectRatio": "長寬比",
+    "resolution": "解析度",
+    "effectType": "效果類型"
+  },
+  "errors": {
+    "noImageReferenceSupport": "{name} 不支援圖像參考。",
+    "uploadReferenceFirst": "請先上傳一張參考圖片。",
+    "uploadSwapFaceFirst": "請上傳一張換脸圖片。",
+    "enterPromptFirst": "請輸入提示詞以生成圖像。",
+    "generationFailed": "圖像生成失敗"
+  },
+  "fullscreen": {
+    "previewAlt": "全屏預覽"
+  },
+  "mediaMenu": {
+    "image": "圖片",
+    "imageDesc": "jpeg, jpg, png",
+    "video": "影片",
+    "videoDesc": "mp4, mov, 最長 60 秒",
+    "script": "劇本",
+    "scriptDesc": "txt, doc, pdf, md, 最多 50000 字",
+    "audio": "音訊",
+    "audioDesc": "mp3, wav, 最長 15 秒"
+  },
+  "paramsPanel": {
+    "titleRatio": "選擇比例",
+    "titleResolution": "選擇解析度",
+    "titleQuantity": "選擇生成數量",
+    "titleDimensions": "尺寸",
+    "smartRatio": "智慧",
+    "standard15k": "標準 1.5K",
+    "hd2k": "高畫質 2K ✦",
+    "ultra4k": "超高畫質 4K ✦",
+    "smartReference": "智慧參考",
+    "addReference": "新增參考圖",
+    "referenceCount": "參考圖像 ({count}/{max})",
+    "autoSwitchedToI2I": "已自動切換至支援參考圖的模型：{model}",
+    "autoSwitchedToT2I": "已自動切回純文生圖模型",
+    "modeImageGen": "圖片生成",
+    "modeImageToImage": "圖生圖",
+    "creditPerImage": "✦ {cost}/張",
+    "creditPerImageOriginal": "11/張",
+    "batchCountUnit": "{count}張"
+  }
+}

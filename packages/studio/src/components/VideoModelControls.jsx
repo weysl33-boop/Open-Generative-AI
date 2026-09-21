@@ -13,7 +13,7 @@ import {
   promptControlClassName,
 } from "./prompt/PromptComposer.jsx";
 
-const SELECT_CLASS = "w-full rounded-lg border border-white/10 bg-[#17191c] px-3 py-2 text-xs text-white outline-none focus:border-[#22d3ee]/50";
+const SELECT_CLASS = "w-full rounded-lg border border-line bg-raised px-3 py-2 text-xs text-ink outline-none focus:border-line-accent/50";
 const ADVANCED_KEYS = ["seed"];
 
 export function VideoOptionControl({ label, field, icon, open, onToggle, onSelect, copy }) {
@@ -80,7 +80,7 @@ export function VideoOptionControl({ label, field, icon, open, onToggle, onSelec
                   <span className="block">
                     {option.description}
                     {option.adjustmentDescription && (
-                      <span className="block text-[#22d3ee]/75">{option.adjustmentDescription}</span>
+                      <span className="block text-brand/75">{option.adjustmentDescription}</span>
                     )}
                     {option.disabled && <span className="block">{copy.incompatibleShort}</span>}
                   </span>
@@ -113,9 +113,9 @@ export function VideoSettingsControl({
     return (
       <label
         key={option.value}
-        className={`flex items-start gap-3 rounded-lg px-3 py-2 text-xs transition-colors focus-within:ring-1 focus-within:ring-[#22d3ee]/50 ${
+        className={`flex items-start gap-3 rounded-lg px-3 py-2 text-xs transition-colors focus-within:ring-1 focus-within:ring-line-accent/50 ${
           option.disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer hover:bg-white/[0.04]"
-        } ${profile.value === option.value ? "bg-[#22d3ee]/[0.07]" : ""}`}
+        } ${profile.value === option.value ? "bg-brand/[0.07]" : ""}`}
       >
         <input
           type="radio"
@@ -129,17 +129,17 @@ export function VideoSettingsControl({
           className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#22d3ee]"
         />
         <span className="min-w-0">
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold text-white/80">
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold text-ink">
             {text.label}
             {option.value === "standard" && (
-              <span className="text-[10px] font-medium text-white/45">{copy.defaultVariant}</span>
+              <span className="text-micro font-medium text-ink-subtle">{copy.defaultVariant}</span>
             )}
           </span>
           {hasDescription && (
-            <span id={descriptionId} className="mt-1 block text-[11px] leading-relaxed text-white/45">
+            <span id={descriptionId} className="mt-1 block text-[11px] leading-relaxed text-ink-subtle">
               {text.description}
               {option.adjustmentDescription && (
-                <span className="block text-[#22d3ee]/75">{option.adjustmentDescription}</span>
+                <span className="block text-brand/75">{option.adjustmentDescription}</span>
               )}
               {option.disabled && <span className="block">{copy.incompatibleShort}</span>}
             </span>
@@ -150,12 +150,12 @@ export function VideoSettingsControl({
   };
   const profileControl = profile?.options.length > 1 && (
     <fieldset className="min-w-0">
-      <legend className="text-xs font-semibold text-white/75">{copy.provider}</legend>
-      {copy.providerHelp && <p className="mb-2 mt-1 text-[11px] leading-relaxed text-white/45">{copy.providerHelp}</p>}
+      <legend className="text-xs font-semibold text-ink">{copy.provider}</legend>
+      {copy.providerHelp && <p className="mb-2 mt-1 text-[11px] leading-relaxed text-ink-subtle">{copy.providerHelp}</p>}
       {profile.options.map(renderProfile)}
       {onDefaultResolution && (
         <button type="button" onClick={onDefaultResolution}
-          className="mt-2 px-3 py-2 text-xs text-[#22d3ee] hover:underline focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#22d3ee]">
+          className="mt-2 px-3 py-2 text-xs text-brand hover:underline focus-visible:outline focus-visible:outline-1 focus-visible:outline-line-accent">
           {copy.restoreDefaultResolution}
         </button>
       )}
@@ -179,7 +179,7 @@ export function VideoSettingsControl({
     >
       {profile?.advanced === false && profileControl}
       {qualities.length > 0 && (
-        <label className="flex flex-col gap-2 text-xs text-white/75">
+        <label className="flex flex-col gap-2 text-xs text-ink">
           <span className="font-semibold">{copy.quality}</span>
           <select aria-label={copy.quality} className={SELECT_CLASS} value={quality} onChange={(event) => onQualityChange(event.target.value)}>
             {qualities.map((value) => <option key={value} value={value}>{value}</option>)}

@@ -1,0 +1,42 @@
+{
+  "hero": {
+    "badge": "現成可变現範本",
+    "titleLine1": "上線一款 AI 應用，",
+    "titleLine2": "今天就開始賺錢。",
+    "subtitle": "每個範本都是一套功能完整、已集成 Stripe 付款的 AI SaaS 應用，幾分鐘內即可部署。向使用者收費、利润歸你所有——AI 基礎設施由 muapi 負責。"
+  },
+  "steps": {
+    "stepLabel": "步骤",
+    "deploy": {
+      "title": "幾分鐘內完成部署",
+      "body": "Fork 開源範本，填入你的 muapi 密钥，然後推送到 Vercel。無需搭建後端。"
+    },
+    "collect": {
+      "title": "收取付款",
+      "body": "Stripe 已預先接入。自行設定定價——一次性積分、訂閱製或按次付費均可。"
+    },
+    "keep": {
+      "title": "利润全歸你",
+      "body": "款項直接進入你的 Stripe 帳戶。產品、品牌和利润都歸你所有。"
+    }
+  },
+  "card": {
+    "templateFallback": "範本",
+    "github": "GitHub 仓库",
+    "demo": "演示"
+  },
+  "footer": {
+    "moreComingSoon": "Muapi 生態系統 — 更多範本即將上線"
+  },
+  "modal": {
+    "deployTitle": "部署 {appName}",
+    "body": "請留下您的資訊，我們會將 {appName} 範本及部署說明傳送給您，以便您立即部署并開始盈利。",
+    "sending": "正在傳送詳細資訊...",
+    "getTemplate": "獲取範本",
+    "maybeLater": "稍後再說"
+  },
+  "toast": {
+    "requestSuccess": "已收到！我們會盡快為您傳送範本詳細資訊。",
+    "requestError": "登記意向失敗，請稍後重試。"
+  }
+}

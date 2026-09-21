@@ -1,7 +1,9 @@
-import { listAdmins } from '@/lib/repositories/users';
+import { listAdmins } from '@/lib/services/adminRead';
 import { roleLabel } from '@/lib/admin/permissions';
 import { Card, PageHeader, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
 import AdminRoleModifier from './AdminRoleModifier';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 
 function formatDate(value) {
   return value
@@ -10,6 +12,7 @@ function formatDate(value) {
 }
 
 export default async function AdminsPage() {
+  await requireAdminPagePermission(PERMISSIONS.adminsWrite);
   const admins = await listAdmins();
 
   return (
@@ -22,27 +25,27 @@ export default async function AdminsPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <Card>
-          <div className="flex items-center justify-between border-b border-white/[0.06] pb-4 mb-4">
-            <h2 className="text-sm font-bold text-white">当前后台管理员名单</h2>
-            <StatusBadge tone="info">{admins.length} 位成员</StatusBadge>
+          <div className="flex items-center justify-between border-b border-line pb-4 mb-4">
+            <h2 className="text-sm font-semibold text-ink">当前后台管理员名单</h2>
+            <StatusBadge tone="info">{admins.length} 位团队成员</StatusBadge>
           </div>
 
           <div className="space-y-3">
             {admins.map((admin) => (
               <div
                 key={admin.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-black/20 p-4"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-base p-4 transition-all hover:border-line-strong"
               >
                 <div>
-                  <p className="text-sm font-semibold text-white">{admin.email}</p>
+                  <p className="text-sm font-semibold text-ink">{admin.email}</p>
                   <div className="mt-1 flex items-center gap-2">
                     <CopyableId id={admin.id} />
-                    <span className="text-white/20">·</span>
-                    <span className="text-[11px] text-white/40">创建于 {formatDate(admin.created_at)}</span>
+                    <span className="text-ink-subtle">·</span>
+                    <span className="text-xs text-ink-muted">创建于 {formatDate(admin.created_at)}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <StatusBadge tone={admin.role === 'super_admin' ? 'info' : 'neutral'}>
                     {roleLabel(admin.role)}
                   </StatusBadge>
@@ -57,9 +60,9 @@ export default async function AdminsPage() {
 
         {/* 角色调整客户端面板 */}
         <Card>
-          <h2 className="text-sm font-bold text-white mb-2">调整管理员角色</h2>
-          <p className="text-xs text-white/40 mb-4">
-            选择现有用户并分配管理角色。若选择“普通用户”，将取消该用户的全部后台管理权限。
+          <h2 className="text-sm font-semibold text-ink mb-1.5">调整管理员角色</h2>
+          <p className="text-xs text-ink-muted mb-4">
+            分配内置 RBAC 权限。若选择“普通用户”，将即时解除该用户的全部后台管理权限。
           </p>
           <AdminRoleModifier />
         </Card>

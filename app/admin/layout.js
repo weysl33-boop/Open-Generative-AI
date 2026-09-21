@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getUserBySession } from '@/lib/billing';
+import { getUserBySession } from '@/lib/services/auth';
 import { hasPermission, PERMISSIONS } from '@/lib/admin/permissions';
 import AdminShell from '@/components/admin/AdminShell';
 
@@ -21,25 +21,25 @@ export default async function AdminLayout({ children }) {
   // 必须具备后台查看基本权限
   if (!hasPermission(user.role, PERMISSIONS.dashboardRead)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050505] px-4 text-white">
-        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/[0.04] p-8 text-center shadow-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">
+      <div className="flex min-h-screen items-center justify-center bg-canvas px-4 text-ink">
+        <div className="w-full max-w-md rounded-2xl border border-line bg-base/95 p-8 text-center shadow-elevation-4 shadow-black/60 backdrop-blur-md">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand">
             KoyoSIM AI Studio
           </p>
-          <h1 className="mt-3 text-2xl font-bold">暂无后台访问权限</h1>
-          <p className="mt-3 text-sm leading-6 text-white/55">
+          <h1 className="mt-3 text-2xl font-bold tracking-[-0.02em] leading-8 text-ink">暂无后台访问权限</h1>
+          <p className="mt-3 text-sm leading-6 tracking-[-0.005em] text-ink-muted">
             当前登录账户身份为普通用户（{user.email}），无权访问运营管理后台。
           </p>
           <div className="mt-6 flex justify-center gap-3">
             <a
               href="/studio"
-              className="rounded-xl bg-cyan-300 px-5 py-2.5 text-sm font-bold text-black transition hover:bg-cyan-200"
+              className="inline-flex h-[38px] items-center rounded-lg bg-brand-active px-4 text-xs font-semibold text-ink-on-accent transition-all hover:bg-brand active:scale-[0.98]"
             >
               返回 Studio
             </a>
             <a
               href="/account"
-              className="rounded-xl border border-white/15 px-5 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10"
+              className="inline-flex h-[38px] items-center rounded-lg border border-line bg-wash px-4 text-xs font-medium text-ink transition-all hover:bg-wash-strong hover:text-ink active:scale-[0.98]"
             >
               切换账号
             </a>

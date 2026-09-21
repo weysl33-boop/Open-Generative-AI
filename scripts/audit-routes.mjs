@@ -2,7 +2,6 @@ import https from 'node:https';
 import http from 'node:http';
 
 const BASE_URL = 'https://www.koyosim.com';
-const OLD_BASE_URL = 'https://go.koyosim.com';
 
 const routesToTest = [
   // ????
@@ -57,38 +56,14 @@ async function runAudit() {
   console.log('====================================================');
   console.log('?? ?????????????????');
   console.log(`????: ${BASE_URL}`);
-  console.log(`????: ${OLD_BASE_URL}`);
   console.log('====================================================\n');
 
   let passed = 0;
   let failed = 0;
   const issues = [];
 
-  // 1. ????? 301 ???????
-  console.log('[Phase 1] ????? 301 ????????');
-  const redirectTests = ['/', '/studio', '/community', '/admin'];
-  for (const p of redirectTests) {
-    try {
-      const res = await request(`${OLD_BASE_URL}${p}`, { method: 'HEAD' });
-      const loc = res.headers['location'];
-      const expectedLoc = `${BASE_URL}${p}`;
-      if (res.statusCode === 301 && loc === expectedLoc) {
-        console.log(`  ? 301 Redirect: ${OLD_BASE_URL}${p} -> ${loc}`);
-        passed++;
-      } else {
-        console.warn(`  ? 301 Redirect Mismatch: ${OLD_BASE_URL}${p} Status=${res.statusCode}, Loc=${loc}, Expected=${expectedLoc}`);
-        failed++;
-        issues.push({ path: p, issue: `Redirect status ${res.statusCode} or location ${loc}` });
-      }
-    } catch (e) {
-      console.error(`  ? 301 Redirect Error on ${p}:`, e.message);
-      failed++;
-      issues.push({ path: p, issue: e.message });
-    }
-  }
-
-  // 2. ??????????? API ??
-  console.log('\n[Phase 2] ??????????? HTTP ???');
+  // 1. ??????????? API ??
+  console.log('\n[Phase 1] ??????????? HTTP ???');
   let sampleHtml = '';
   for (const r of routesToTest) {
     try {
@@ -111,8 +86,8 @@ async function runAudit() {
     }
   }
 
-  // 3. ?? /studio ???????????????????
-  console.log('\n[Phase 3] ??????????? (CSS / JS Chunks)');
+  // 2. ?? /studio ???????????????????
+  console.log('\n[Phase 2] ??????????? (CSS / JS Chunks)');
   if (sampleHtml) {
     const staticAssets = [...sampleHtml.matchAll(/href="(\/_next\/static\/[^"]+)"|src="(\/_next\/static\/[^"]+)"/g)]
       .map(m => m[1] || m[2]);
@@ -135,8 +110,8 @@ async function runAudit() {
     console.warn('  ?? ????? /studio ?? HTML?????????');
   }
 
-  // 4. ??? CSRF / RequestGuard ??
-  console.log('\n[Phase 4] ?? API RequestGuard (? CSRF ????)');
+  // 3. ??? CSRF / RequestGuard ??
+  console.log('\n[Phase 3] ?? API RequestGuard (? CSRF ????)');
   try {
     const postRes = await request(`${BASE_URL}/api/community/posts`, {
       method: 'POST',

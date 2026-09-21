@@ -2,6 +2,8 @@ import { listCoupons } from '@/lib/services/coupons';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
 import CouponGeneratorClient from './CouponGeneratorClient';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 
 function formatDate(value) {
   return value
@@ -10,6 +12,7 @@ function formatDate(value) {
 }
 
 export default async function CouponsPage({ searchParams }) {
+  await requireAdminPagePermission(PERMISSIONS.couponsRead);
   const params = toSearchParams(await searchParams);
   const result = await listCoupons(params);
 
@@ -18,7 +21,7 @@ export default async function CouponsPage({ searchParams }) {
       key: 'code',
       label: '兑换码 / 卡密',
       render: (row) => (
-        <div className="font-mono font-bold text-cyan-200">
+        <div className="font-mono font-bold text-brand-hover">
           <CopyableId id={row.code} />
         </div>
       ),
@@ -36,7 +39,7 @@ export default async function CouponsPage({ searchParams }) {
       key: 'value',
       label: '对应面值',
       render: (row) => (
-        <span className="font-bold text-white">
+        <span className="font-bold text-ink">
           {row.type === 'credits' ? `+${row.value} 额度` : `${row.value.toUpperCase()} 会员`}
         </span>
       ),
@@ -47,7 +50,7 @@ export default async function CouponsPage({ searchParams }) {
       render: (row) => {
         const isFull = row.used_count >= row.max_uses;
         return (
-          <span className={`text-xs font-mono font-medium ${isFull ? 'text-white/40' : 'text-emerald-300'}`}>
+          <span className={`text-xs font-mono font-medium ${isFull ? 'text-ink-subtle' : 'text-success'}`}>
             {row.used_count} / {row.max_uses} {isFull ? '(已满)' : ''}
           </span>
         );

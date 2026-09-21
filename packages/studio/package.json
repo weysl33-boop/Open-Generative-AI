@@ -1,12 +1,24 @@
 {
   "name": "studio",
   "version": "1.0.0",
-  "description": "Open Generative AI studio components for Muapi",
+  "description": "koyosim studio components for Muapi",
   "main": "src/index.js",
   "module": "src/index.js",
   "exports": {
     ".": "./src/index.js",
     "./package.json": "./package.json",
+    "./models": "./src/models.js",
+    "./muapi": "./src/muapi.js",
+    "./ui": "./src/ui/index.js",
+    "./ui/tokens": "./src/ui/tokens.js",
+    "./ui/feedback": "./src/ui/Feedback.jsx",
+    "./ui/navigation": "./src/ui/Navigation.jsx",
+    "./ui/overlay": "./src/ui/Overlay.jsx",
+    "./ui/field": "./src/ui/Field.jsx",
+    "./ui/surface": "./src/ui/Surface.jsx",
+    "./ui/button": "./src/ui/Button.jsx",
+    "./ui/cn": "./src/ui/cn.js",
+    "./prompt": "./src/components/prompt/PromptComposer.jsx",
     "./dist/tailwind.css": "./dist/tailwind.css",
     "./ImageStudio": "./src/components/ImageStudio.jsx",
     "./VideoStudio": "./src/components/VideoStudio.jsx",
@@ -37,8 +49,9 @@
   "license": "MIT",
   "dependencies": {
     "@xyflow/react": "^12.10.2",
-    "axios": "^1.7.0",
-    "lucide-react": "^1.8.0",
+    "axios": "^1.18.0",
+    "lucide-react": "^1.46.0",
+    "radix-ui": "^1.6.7",
     "react-hot-toast": "^2.4.1",
     "react-icons": "^5.0.1",
     "react-markdown": "^10.1.0",
@@ -59,7 +72,7 @@
     "@babel/preset-env": "^7.28.5",
     "@babel/preset-react": "^7.28.5",
     "autoprefixer": "^10.4.14",
-    "postcss": "^8.4.24",
+    "postcss": "^8.5.23",
     "tailwindcss": "^3.3.3"
   }
 }

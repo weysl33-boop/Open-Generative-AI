@@ -1,0 +1,55 @@
+{
+  "uploader": {
+    "clear": "クリア",
+    "uploadPrompt": "オーディオトラックをアップロード",
+    "uploadHint": "MP3、WAV、M4A（最大20MB）",
+    "uploading": "アップロード中...",
+    "ready": "生成の準備完了",
+    "maxSuffix": "（最大 {max}）",
+    "trackLabel": "トラック #{index}",
+    "sizeLimitError": "音声ファイルが20MBの制限を超えています。",
+    "uploadFailedError": "アップロード失敗：{message}"
+  },
+  "player": {
+    "nowPlaying": "再生中",
+    "defaultTitle": "生成されたトラック",
+    "muteUnmute": "ミュート切替",
+    "pause": "一時停止",
+    "play": "再生",
+    "download": "音声をダウンロード",
+    "save": "保存",
+    "seek": "再生位置",
+    "volume": "音量"
+  },
+  "sidebar": {
+    "modelLabel": "オーディオモデル",
+    "selectModel": "モデルを選択",
+    "descriptionLabel": "説明",
+    "selectOption": "オプションを選択",
+    "promptPlaceholder": "生成したい音楽や音声の説明を入力...",
+    "lyricsPromptLabel": "歌詞 / プロンプト",
+    "fieldPlaceholder": "{field} を入力...",
+    "requiredFieldError": "必須項目を入力してください：{field}"
+  },
+  "generate": {
+    "generating": "音声を生成中...",
+    "cta": "トラックを生成",
+    "noUrlError": "APIから音声URLが返されませんでした。",
+    "genericError": "音声の生成に失敗しました",
+    "droppedFileUploadError": "ドラッグされたファイルのアップロードに失敗しました：{message}"
+  },
+  "result": {
+    "errorHeading": "生成エラー",
+    "loadingHeading": "サウンドトラックを生成中",
+    "loadingSubtext": "音声波形とボーカルをレンダリングしています...",
+    "emptyHeading": "オーディオスタジオ",
+    "emptyBody": "AI音楽モデル、ボイスクローナー、またはサウンドジェネレーターを選択してください。左側のパラメータを調整して、高品位なトラックを作成しましょう。",
+    "newGeneration": "新規生成",
+    "success": "生成成功"
+  },
+  "history": {
+    "heading": "生成履歴（{count}）",
+    "untitled": "無題のオーディオ",
+    "fallbackModel": "オーディオ"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "tabs": {
+    "templates": "範本",
+    "my-agents": "我的智慧代理",
+    "my-chats": "我的對話"
+  },
+  "headings": {
+    "agents": "智慧代理",
+    "createAgent": "建立智慧代理"
+  },
+  "buttons": {
+    "back": "智慧代理",
+    "create": "建立",
+    "createAgentSubmit": "建立智慧代理",
+    "creating": "建立中...",
+    "send": "傳送",
+    "retry": "重試",
+    "browseTemplates": "浏覽範本"
+  },
+  "labels": {
+    "name": "名稱",
+    "description": "描述",
+    "systemPrompt": "系統提示詞",
+    "welcomeMessage": "歡迎語（可選）"
+  },
+  "placeholders": {
+    "name": "例如：文案精靈 Pro",
+    "description": "這個智慧代理能說明解決什麼問題？",
+    "systemPrompt": "你是一個樂於助人的助手，會……",
+    "welcomeMessage": "你好！今天有什麼可以帮你的吗？",
+    "chatInput": "給這個智慧代理發訊息……"
+  },
+  "empty": {
+    "noChats": "暫無對話",
+    "noAgents": "未找到智慧代理"
+  },
+  "errors": {
+    "loadFailed": "加載失敗。",
+    "loadAgentFailed": "加載智慧代理失敗",
+    "sendFailed": "傳送訊息失敗",
+    "createFailed": "建立智慧代理失敗"
+  },
+  "card": {
+    "defaultCategory": "AI 助手",
+    "unnamedAgent": "未命名智慧代理",
+    "byPrefix": "建立者：",
+    "unknownAgent": "未知智慧代理",
+    "newChat": "新對話",
+    "msgsSuffix": "條訊息"
+  },
+  "time": {
+    "justNow": "刚刚",
+    "minutesAgo": "{n} 分鐘前",
+    "hoursAgo": "{n} 小時前",
+    "daysAgo": "{n} 天前"
+  },
+  "auth": {
+    "heading": "登入後可瀏覽智慧體",
+    "description": "智慧體範本、我的智慧體與對話紀錄與 KoyoSIM 帳號綁定，請先登入。",
+    "cta": "登入"
+  }
+}

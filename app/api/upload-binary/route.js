@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
-import { validateUploadProxyTarget, getApiKeyFromRequest, isBlockedFileType } from '../../../src/lib/uploadProxyTarget';
+import { getUserFromRequest } from '@/lib/services/auth';
+import { validateUploadProxyTarget, isBlockedFileType } from '../../../src/lib/uploadProxyTarget';
+import { guardMutation } from '../../../lib/security/requestGuard';
+import { publicErrorMessage } from '../../../lib/security/publicError';
 
 export async function POST(request) {
     try {
-        const apiKey = getApiKeyFromRequest(request);
-        if (!apiKey) {
-            return NextResponse.json({ error: 'Unauthorized: Missing API key' }, { status: 401 });
-        }
+        const guarded = guardMutation(request, { maxBytes: 25 * 1024 * 1024 });
+        if (guarded) return guarded;
+        const user = await getUserFromRequest(request);
+        if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });
 
         const formData = await request.formData();
 
@@ -67,13 +70,13 @@ export async function POST(request) {
         if (s3Response.ok || s3Response.status === 204) {
             return new Response(null, { status: 204 });
         } else {
-            const errorText = await s3Response.text();
-            console.error('S3 Proxy Error:', errorText);
-            return new Response(errorText, { status: s3Response.status });
+            await s3Response.arrayBuffer().catch(() => {});
+            console.error('S3 Proxy Error:', { status: s3Response.status });
+            return NextResponse.json({ error: '上传服务暂时不可用' }, { status: s3Response.status });
         }
     } catch (error) {
         console.error('Upload Proxy Exception:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: publicErrorMessage(error, '上传服务暂时不可用') }, { status: 500 });
     }
 }
 

@@ -1,9 +1,22 @@
 import { NextResponse } from 'next/server';
-import { getUserFromRequest, submitUserOnboarding } from '@/lib/services/auth.js';
+import {
+  getUserFromRequest,
+  submitOnboardingIdentity,
+  submitOnboardingPreferences,
+  submitUserOnboarding,
+} from '@/lib/services/auth.js';
+import { ONBOARDING_STEP_PREFERENCE } from '@/lib/onboarding/schema.js';
 import { guardMutation } from '@/lib/security/requestGuard';
 import { publicErrorMessage } from '@/lib/security/publicError';
 
 export const runtime = 'nodejs';
+
+const FIELD_ERRORS = new Set([
+  'ONBOARDING_INVALID_NICKNAME',
+  'ONBOARDING_INVALID_ANSWERS',
+  'ONBOARDING_INVALID_AVATAR',
+  'ONBOARDING_FIELD_TOO_LONG',
+]);
 
 export async function POST(request) {
   try {
@@ -16,32 +29,55 @@ export async function POST(request) {
     if (guarded) return guarded;
 
     const body = await request.json().catch(() => ({}));
-    const result = await submitUserOnboarding({
-      userId: user.id,
-      displayName: body.displayName,
-      fallbackDisplayName: user.displayName,
-      zodiac: body.zodiac,
-      industry: body.industry,
-      occupation: body.occupation,
-      preferences: body.preferences,
-    });
+    const step = Number(body.step ?? ONBOARDING_STEP_PREFERENCE);
+    // 旧版一次性问卷仍要能提交，components/auth/UserOnboardingModal 走的是这条路径。
+    // 但它会把空请求体也算成「已完成」，所以必须看到旧字段才放行。
+    const legacy = body.preferences !== undefined || body.zodiac !== undefined
+      || body.industry !== undefined || body.occupation !== undefined;
+
+    if (step !== 1 && step !== ONBOARDING_STEP_PREFERENCE) {
+      return NextResponse.json({ error: '未知的引导步骤' }, { status: 422 });
+    }
+
+    let result;
+    if (step === 1) {
+      result = await submitOnboardingIdentity({
+        userId: user.id,
+        displayName: body.displayName,
+        avatarUrl: body.avatarUrl,
+        fallbackDisplayName: user.displayName,
+      });
+    } else if (body.answers) {
+      result = await submitOnboardingPreferences({ userId: user.id, answers: body.answers });
+    } else if (legacy) {
+      result = await submitUserOnboarding({
+        userId: user.id,
+        displayName: body.displayName,
+        fallbackDisplayName: user.displayName,
+        zodiac: body.zodiac,
+        industry: body.industry,
+        occupation: body.occupation,
+        preferences: body.preferences,
+      });
+    } else {
+      return NextResponse.json({ error: '请提交第二步的习惯偏好答案' }, { status: 422 });
+    }
 
     return NextResponse.json({
       ok: true,
-      message: '用户互动画像与偏好习惯保存成功',
       data: {
         userId: user.id,
+        step,
         displayName: result.profile.display_name,
-        zodiac: result.profile.zodiac,
-        industry: result.profile.industry,
-        occupation: result.profile.occupation,
-        preferences: result.profile.preferences_json ?? {},
+        avatarUrl: result.profile.avatar_url,
+        personaCode: result.personaCode ?? result.profile.creator_persona_code ?? null,
+        onboardingCompleted: result.profile.onboarding_completed === true,
         tagIds: result.tagIds,
       },
     });
   } catch (error) {
     console.error('[api/user/onboarding]', { code: error.code || 'ONBOARDING_FAILED', error });
-    const status = error.code === 'ONBOARDING_FIELD_TOO_LONG' ? 422 : 500;
+    const status = FIELD_ERRORS.has(error.code) ? 422 : error.code === 'USER_NOT_FOUND' ? 404 : 500;
     return NextResponse.json({ error: publicErrorMessage(error, '保存偏好设置失败，请稍后重试') }, { status });
   }
 }

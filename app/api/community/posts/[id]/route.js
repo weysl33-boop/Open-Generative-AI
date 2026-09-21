@@ -1,5 +1,6 @@
-﻿import { getUserFromRequest, json } from '@/lib/billing';
-import { deleteCommunityPost, getCommunityPostById } from '@/lib/repositories/community';
+import { getUserFromRequest, json } from '@/lib/services/auth';
+import { deleteCommunityPost, getCommunityPostById } from '@/lib/services/community';
+import { guardMutation } from '@/lib/security/requestGuard';
 
 export const runtime = 'nodejs';
 
@@ -23,6 +24,9 @@ export async function GET(request, { params }) {
 export async function DELETE(request, { params }) {
   const user = await getUserFromRequest(request);
   if (!user) return json({ error: '请先登录' }, { status: 401 });
+
+  const guarded = guardMutation(request, { maxBytes: 32 * 1024 });
+  if (guarded) return guarded;
 
   try {
     const { id } = await params;

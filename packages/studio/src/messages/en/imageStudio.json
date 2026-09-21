@@ -17,6 +17,36 @@
     "selectedCount": "{count} of {max} selected",
     "useSelected": "Use Selected"
   },
+  "mediaMenu": {
+    "image": "Image",
+    "imageDesc": "jpeg, jpg, png",
+    "video": "Video",
+    "videoDesc": "mp4, mov, up to 60s",
+    "script": "Script",
+    "scriptDesc": "txt, doc, pdf, md, max 50000 words",
+    "audio": "Audio",
+    "audioDesc": "mp3, wav, up to 15s"
+  },
+  "paramsPanel": {
+    "titleRatio": "Aspect Ratio",
+    "titleResolution": "Resolution",
+    "titleQuantity": "Generation Quantity",
+    "titleDimensions": "Dimensions",
+    "smartRatio": "Smart",
+    "standard15k": "Standard 1.5K",
+    "hd2k": "HD 2K ✦",
+    "ultra4k": "Ultra 4K ✦",
+    "smartReference": "Smart Reference",
+    "addReference": "Add Reference",
+    "referenceCount": "Reference Images ({count}/{max})",
+    "autoSwitchedToI2I": "Switched to reference-supported model: {model}",
+    "autoSwitchedToT2I": "Reverted to text-to-image model",
+    "modeImageGen": "Image Generation",
+    "modeImageToImage": "Image to Image",
+    "creditPerImage": "✦ {cost}/img",
+    "creditPerImageOriginal": "11/img",
+    "batchCountUnit": "{count} img"
+  },
   "modelDropdown": {
     "categoryAll": "All",
     "categoryT2I": "Text to Image",
@@ -24,7 +54,8 @@
     "allProviders": "All Providers",
     "searchPlaceholder": "Search models...",
     "modelsSuffix": "models",
-    "noModelsFound": "No models found"
+    "noModelsFound": "No models found",
+    "selectModelHeader": "Select Model"
   },
   "gallery": {
     "generatedImageAlt": "Generated image",

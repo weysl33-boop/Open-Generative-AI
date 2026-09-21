@@ -1,17 +1,27 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { getLocaleConfig, getLocaleFromPathname } from '@/lib/locales';
+
+const LOCALE_OPTIONS = [
+  { code: 'en', label: 'English', flag: '/flags/en.svg', flagAlt: 'English' },
+  { code: 'zh-CN', label: '简体中文', flag: '/flags/zh-cn.svg', flagAlt: 'Simplified Chinese' },
+  { code: 'ja-JP', label: '日本語', flag: '/flags/ja.svg', flagAlt: 'Japanese' },
+  { code: 'ko-KR', label: '한국어', flag: '/flags/ko.svg', flagAlt: 'Korean' },
+  { code: 'zh-TW', label: '繁體中文', flag: '/flags/zh-tw.svg', flagAlt: 'Traditional Chinese' },
+  { code: 'es', label: 'Español', flag: '/flags/es.svg', flagAlt: 'Spanish' },
+];
 
 export default function LanguageSwitcher({ className = '', showLabel = true }) {
   const pathname = usePathname() || '/';
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // 判断当前语言
-  const isZh = pathname === '/zh' || pathname.startsWith('/zh/');
-  const currentLocale = isZh ? 'zh' : 'en';
+  const currentLocale = getLocaleFromPathname(pathname);
+  const currentOption = LOCALE_OPTIONS.find((option) => option.code === currentLocale) || LOCALE_OPTIONS[0];
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -27,23 +37,76 @@ export default function LanguageSwitcher({ className = '', showLabel = true }) {
     setOpen(false);
     if (targetLocale === currentLocale) return;
 
-    // 设置 NEXT_LOCALE cookie (1 年有效)
-    document.cookie = `NEXT_LOCALE=${targetLocale}; path=/; max-age=31536000; SameSite=Lax`;
-    document.cookie = `locale=${targetLocale}; path=/; max-age=31536000; SameSite=Lax`;
+    // 1. 设置客户端持久 Cookie (1 年有效)
+    document.cookie = `NEXT_LOCALE=${encodeURIComponent(targetLocale)}; path=/; max-age=31536000; SameSite=Lax`;
+    document.cookie = `locale=${encodeURIComponent(targetLocale)}; path=/; max-age=31536000; SameSite=Lax`;
 
-    let newPath = pathname;
-    if (targetLocale === 'zh') {
-      if (!isZh) {
-        newPath = pathname === '/' ? '/zh' : `/zh${pathname}`;
+    // 2. 绑定个人习惯（个人设置语言），写入数据库
+    void fetch('/api/user/preferences', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ locale: targetLocale }),
+    }).catch(() => {});
+
+    void fetch('/api/user/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ locale: targetLocale }),
+    }).catch(() => {});
+
+    // 3. 精准计算跳转路径，杜绝 404
+    const isStudioPath = pathname === '/' || pathname.includes('/studio');
+    const targetConfig = getLocaleConfig(targetLocale);
+
+    if (isStudioPath) {
+      let cleanStudioPath = pathname;
+      for (const prefix of ['/zh-CN', '/zh-TW', '/ja-JP', '/ko-KR', '/es', '/zh']) {
+        if (cleanStudioPath === prefix || cleanStudioPath.startsWith(`${prefix}/`)) {
+          cleanStudioPath = cleanStudioPath.slice(prefix.length) || '/';
+          break;
+        }
+      }
+      if (!cleanStudioPath.startsWith('/studio')) {
+        cleanStudioPath = '/studio';
+      }
+
+      const targetRoot = targetConfig.rootPath;
+      const localizedPath = targetRoot ? `${targetRoot}${cleanStudioPath}` : cleanStudioPath;
+      const query = searchParams?.toString();
+      const finalUrl = `${localizedPath || '/'}${query ? `?${query}` : ''}`;
+      if (typeof window !== 'undefined') {
+        window.location.href = finalUrl;
+      } else {
+        router.push(finalUrl);
       }
     } else {
-      if (isZh) {
-        newPath = pathname.replace(/^\/zh(?=\/|$)/, '') || '/';
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      } else {
+        router.refresh();
       }
     }
+  }
 
-    router.push(newPath);
-    router.refresh();
+  function handleMenuKeyDown(event) {
+    if (event.key === 'Escape') {
+      setOpen(false);
+      return;
+    }
+    if (!open && (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown')) {
+      event.preventDefault();
+      setOpen(true);
+      return;
+    }
+    if (!open) return;
+    const currentIndex = Math.max(0, LOCALE_OPTIONS.findIndex((option) => option.code === currentLocale));
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const nextIndex = event.key === 'ArrowDown'
+        ? (currentIndex + 1) % LOCALE_OPTIONS.length
+        : (currentIndex - 1 + LOCALE_OPTIONS.length) % LOCALE_OPTIONS.length;
+      switchLocale(LOCALE_OPTIONS[nextIndex].code);
+    }
   }
 
   return (
@@ -51,38 +114,42 @@ export default function LanguageSwitcher({ className = '', showLabel = true }) {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-zinc-300 bg-zinc-900/70 border border-zinc-800 hover:text-white hover:border-zinc-700 transition-all cursor-pointer"
-        aria-label="Switch Language"
+        onKeyDown={handleMenuKeyDown}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-ink bg-zinc-900/70 border border-line hover:text-ink hover:border-line-strong transition-all cursor-pointer"
+        aria-label={`Switch language. Current language: ${currentOption.label}`}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10"/>
           <line x1="2" y1="12" x2="22" y2="12"/>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10A15.3 15.3 0 0 1 12 22A15.3 15.3 0 0 1 12 2a"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
         </svg>
-        {showLabel && <span>{isZh ? '中文' : 'EN'}</span>}
+        {showLabel && <span>{currentOption.label}</span>}
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${open ? 'rotate-180' : ''}`}>
           <polyline points="6 9 12 15 18 9"/>
         </svg>
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-1.5 w-32 py-1 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl z-50 animate-in fade-in zoom-in-95">
-          <button
-            type="button"
-            onClick={() => switchLocale('en')}
-            className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between transition-colors ${!isZh ? 'text-cyan-400 bg-cyan-950/20 font-medium' : 'text-zinc-300 hover:text-white hover:bg-zinc-800/50'}`}
-          >
-            <span>English</span>
-            {!isZh && <span className="text-cyan-400">✓</span>}
-          </button>
-          <button
-            type="button"
-            onClick={() => switchLocale('zh')}
-            className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between transition-colors ${isZh ? 'text-cyan-400 bg-cyan-950/20 font-medium' : 'text-zinc-300 hover:text-white hover:bg-zinc-800/50'}`}
-          >
-            <span>简体中文</span>
-            {isZh && <span className="text-cyan-400">✓</span>}
-          </button>
+        <div role="menu" aria-label="Language options" className="absolute right-0 mt-1.5 w-40 py-1 bg-surface border border-line rounded-lg shadow-elevation-3 z-50 animate-in fade-in zoom-in-95">
+          {LOCALE_OPTIONS.map((option) => {
+            const selected = option.code === currentLocale;
+            return (
+              <button
+                key={option.code}
+                type="button"
+                role="menuitem"
+                aria-current={selected ? 'true' : undefined}
+                onClick={() => switchLocale(option.code)}
+                className={`w-full text-left px-3 py-2 text-xs flex items-center gap-2.5 transition-colors ${selected ? 'text-brand bg-brand-pressed font-medium' : 'text-ink hover:text-ink hover:bg-zinc-800/50'}`}
+              >
+                <img src={option.flag} alt={option.flagAlt} className="h-4 w-5 rounded-xs object-cover ring-1 ring-white/10" />
+                <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                {selected && <span className="text-brand" aria-hidden="true">✓</span>}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

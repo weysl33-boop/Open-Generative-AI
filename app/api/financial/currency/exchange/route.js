@@ -1,16 +1,23 @@
-import { getUserFromRequest, json } from '../../../../../lib/billing.js';
+import { getUserFromRequest, json } from '../../../../../lib/services/auth.js';
 import { exchangeCoinToCredits, buyVipWithCoin } from '../../../../../lib/financial/index.js';
+import { guardMutation } from '../../../../../lib/security/requestGuard.js';
+import { publicErrorMessage } from '../../../../../lib/security/publicError.js';
 
 export const runtime = 'nodejs';
 
 export async function POST(request) {
   const user = await getUserFromRequest(request);
   if (!user) return json({ error: '请先登录' }, { status: 401 });
+  const guarded = guardMutation(request, { maxBytes: 32 * 1024 });
+  if (guarded) return guarded;
 
   try {
     const body = await request.json();
     const { type = 'credits', coinAmount, planId } = body;
     const idempotencyKey = request.headers.get('x-idempotency-key') || null;
+    if (!idempotencyKey || idempotencyKey.trim().length < 8) {
+      return json({ error: '缺少有效的 x-idempotency-key，重复请求可能造成重复扣款' }, { status: 422 });
+    }
 
     if (type === 'credits') {
       if (!coinAmount || Number(coinAmount) <= 0) {
@@ -37,6 +44,6 @@ export async function POST(request) {
     }
   } catch (error) {
     console.error('[api/financial/currency/exchange]', error);
-    return json({ error: error.message || '兑换操作失败' }, { status: 400 });
+    return json({ error: publicErrorMessage(error, '兑换操作失败') }, { status: 400 });
   }
 }

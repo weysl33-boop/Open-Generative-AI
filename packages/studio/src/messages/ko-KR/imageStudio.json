@@ -1,0 +1,99 @@
+{
+  "uploadButton": {
+    "faceLabel": "얼굴",
+    "referenceImageLabel": "참조 이미지",
+    "addUpToImages": "최대 {max}장까지 이미지 추가",
+    "singleSelectedTitle": "1개 이미지 선택됨 — 클릭하여 추가 (최대 {max}장)",
+    "multiSelectedTitle": "{count}/{max}개 이미지 선택됨 — 클릭하여 관리",
+    "tooLargeAlert": "다음 이미지가 너무 큽니다 (최대 10MB): {names}",
+    "uploadFailedAlert": "이미지 업로드 실패: {message}",
+    "headerTitle": "참조 이미지 목록",
+    "selectUpTo": "최대 {max}장의 이미지 선택",
+    "doneButton": "✓ 완료 ({count})",
+    "uploadFilesButton": "파일 업로드",
+    "uploadNewButton": "새 이미지 업로드",
+    "emptyState": "업로드된 이미지가 없습니다",
+    "removeFromHistory": "기록에서 제거",
+    "selectedCount": "{count}/{max}개 선택됨",
+    "useSelected": "선택 항목 적용"
+  },
+  "modelDropdown": {
+    "categoryAll": "전체",
+    "categoryT2I": "텍스트 투 이미지",
+    "categoryI2I": "이미지 투 이미지",
+    "allProviders": "모든 제공업체",
+    "searchPlaceholder": "모델 검색...",
+    "modelsSuffix": "개 모델",
+    "noModelsFound": "일치하는 모델이 없습니다",
+    "selectModelHeader": "모델 선택"
+  },
+  "gallery": {
+    "generatedImageAlt": "생성된 이미지",
+    "download": "다운로드",
+    "delete": "삭제",
+    "deleteConfirm": "이 생성 이미지를 삭제하시겠습니까?",
+    "deleteFailed": "항목 삭제에 실패했습니다",
+    "noPrompt": "지정된 프롬프트가 없습니다",
+    "modelFallback": "이미지 스튜디오"
+  },
+  "emptyState": {
+    "heading": "창작 시작하기",
+    "subtitle": "장면, 캐릭터, 분위기, 스타일을 묘사하세요 — 상상이 생생하게 살아납니다"
+  },
+  "promptBar": {
+    "placeholderMultiImage": "{count}개 이미지 선택됨 — 변환 스타일 설명 (선택 사항)",
+    "placeholderI2I": "이 이미지를 어떻게 변환할지 설명하세요 (선택 사항)",
+    "placeholderT2I": "생성하고 싶은 이미지를 자세히 설명해 주세요",
+    "swapFaceLabel": "페이스 스왑",
+    "effectFallback": "이펙트 효과",
+    "drawButton": "직접 그리기",
+    "generating": "이미지 생성 중...",
+    "generateButton": "이미지 생성"
+  },
+  "popovers": {
+    "model": "모델",
+    "aspectRatio": "화면 비율",
+    "resolution": "해상도",
+    "effectType": "이펙트 유형"
+  },
+  "errors": {
+    "noImageReferenceSupport": "{name} 모델은 이미지 참조를 지원하지 않습니다.",
+    "uploadReferenceFirst": "먼저 참조 이미지를 업로드해 주세요.",
+    "uploadSwapFaceFirst": "먼저 페이스 스왑용 얼굴 이미지를 업로드해 주세요.",
+    "enterPromptFirst": "이미지를 생성하려면 프롬프트를 입력해 주세요.",
+    "generationFailed": "이미지 생성에 실패했습니다"
+  },
+  "fullscreen": {
+    "previewAlt": "전체 화면 미리보기"
+  },
+  "mediaMenu": {
+    "image": "이미지",
+    "imageDesc": "jpeg, jpg, png",
+    "video": "비디오",
+    "videoDesc": "mp4, mov, 최대 60초",
+    "script": "스크립트",
+    "scriptDesc": "txt, doc, pdf, md, 최대 50000자",
+    "audio": "오디오",
+    "audioDesc": "mp3, wav, 최대 15초"
+  },
+  "paramsPanel": {
+    "titleRatio": "가로세로 비율",
+    "titleResolution": "해상도 선택",
+    "titleQuantity": "생성 수량 선택",
+    "titleDimensions": "치수",
+    "smartRatio": "스마트",
+    "standard15k": "표준 1.5K",
+    "hd2k": "고화질 2K ✦",
+    "ultra4k": "초고화질 4K ✦",
+    "smartReference": "스마트 참조",
+    "addReference": "참조 이미지 추가",
+    "referenceCount": "참조 이미지 ({count}/{max})",
+    "autoSwitchedToI2I": "참조 지원 모델로 자동 전환됨: {model}",
+    "autoSwitchedToT2I": "텍스트 전용 생성 모델로 복귀했습니다",
+    "modeImageGen": "이미지 생성",
+    "modeImageToImage": "이미지 투 이미지",
+    "creditPerImage": "✦ {cost}/장",
+    "creditPerImageOriginal": "11/장",
+    "batchCountUnit": "{count}장"
+  }
+}

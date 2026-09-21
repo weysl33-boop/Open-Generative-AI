@@ -1,12 +1,11 @@
 import StandaloneShell from '@/components/StandaloneShell';
+import { assertOnboardingComplete } from '@/lib/onboarding/guard';
 
 export const metadata = {
-  title: 'Studio — Open Generative AI',
+  title: 'Studio — koyosim',
 };
 
-// Additive locale route wrapper: reuses the exact same shell component as
-// app/studio/[[...slug]]/page.js, only passing `locale="zh"`. A future
-// locale repeats this file under app/<locale>/studio/[[...slug]]/page.js.
-export default function ZhStudioPage() {
-  return <StandaloneShell locale="zh" />;
+export default async function ZhStudioPage() {
+  await assertOnboardingComplete();
+  return <StandaloneShell locale="zh-CN" />;
 }

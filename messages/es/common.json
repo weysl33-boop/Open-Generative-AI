@@ -44,7 +44,9 @@
     "settingsTitle": "Configuración y Clave API",
     "dropHere": "Suelta tus archivos aquí",
     "dropHereHint": "Archivos de imagen, video o audio",
-    "dismiss": "Descartar"
+    "dismiss": "Descartar",
+    "modelDirectoryUnavailable": "El listado de modelos no está disponible temporalmente, así que algunas funciones pueden verse limitadas.",
+    "retry": "Reintentar"
   },
   "settingsModal": {
     "title": "Configuración",

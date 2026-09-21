@@ -4,11 +4,39 @@ import { useState } from 'react';
 import { Card, MetricCard, StatusBadge, Button } from '@/components/admin/AdminUi';
 import { Activity, ShieldAlert, ShieldCheck, RefreshCw, Zap, Clock, AlertTriangle, Loader2 } from 'lucide-react';
 
+const PROBE_KIND_LABEL = {
+  http: 'HTTP 实测',
+  credential: '仅凭据校验',
+};
+
+const FEEDBACK_TONE = {
+  good: 'bg-success-soft text-success border border-success-line',
+  warn: 'bg-warning-soft text-warning border border-warning-line',
+  danger: 'bg-danger-soft text-danger border border-danger-line',
+};
+
+function feedbackFor(result) {
+  const kind = PROBE_KIND_LABEL[result.probeKind] ?? '口径未知的探针';
+  const latency = result.latencyMs === null ? '' : ` (${result.latencyMs}ms)`;
+  const tone = result.healthStatus === 'healthy' ? 'good' : result.healthStatus === 'degraded' ? 'warn' : 'danger';
+  return { type: tone, text: `${kind} · ${result.message || '探测无返回'}${latency}` };
+}
+
+function probeSummary(channel) {
+  if (!channel.lastHealthCheckAt) return '最近探测: 未探测';
+  const kind = PROBE_KIND_LABEL[channel.lastProbe?.probeKind] ?? '口径未知';
+  // 仅凭据校验没有网络往返，它的 latencyMs 是 null，不能补成 0ms。
+  const latency = Number.isFinite(channel.lastProbe?.latencyMs) ? ` · ${channel.lastProbe.latencyMs}ms` : '';
+  return `最近探测: ${new Date(channel.lastHealthCheckAt).toLocaleTimeString()} · ${kind}${latency}`;
+}
+
 export default function HealthMonitorClient({ initialChannels = [] }) {
   const [channels, setChannels] = useState(initialChannels);
   const [probingId, setProbingId] = useState(null);
   const [resettingId, setResettingId] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scan, setScan] = useState(null);
   const [feedback, setFeedback] = useState({});
 
   // 刷新最新列表
@@ -37,18 +65,11 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
         body: JSON.stringify({ providerId }),
       });
       const data = await res.json();
-      if (res.ok && data.data?.success) {
-        setFeedback((prev) => ({
-          ...prev,
-          [providerId]: { type: 'good', text: `${data.data.message} (${data.data.latencyMs}ms)` },
-        }));
-        await refreshList();
-      } else {
-        setFeedback((prev) => ({
-          ...prev,
-          [providerId]: { type: 'danger', text: data.data?.message || data.error?.message || '探测失败' },
-        }));
-      }
+      const result = data.data?.results?.[0];
+      if (!res.ok || !result) throw new Error(data.error?.message || '探测请求失败');
+
+      setFeedback((prev) => ({ ...prev, [providerId]: feedbackFor(result) }));
+      if (result.success) await refreshList();
     } catch (err) {
       setFeedback((prev) => ({
         ...prev,
@@ -58,6 +79,7 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
       setProbingId(null);
     }
   };
+
 
   // 重置熔断器
   const handleResetCircuit = async (providerId) => {
@@ -91,17 +113,36 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
     }
   };
 
-  // 全量扫描
+  // 全量扫描：一次批量请求交给服务端限并发执行，
+  // 而不是前端串行打 N 次、每次再刷新一遍列表。
   const handleProbeAll = async () => {
-    setIsRefreshing(true);
-    for (const c of channels) {
-      await handleProbe(c.id);
+    setIsScanning(true);
+    setScan(null);
+    try {
+      const res = await fetch('/api/admin/models/health', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.data?.results) throw new Error(data.error?.message || '全量探测请求失败');
+
+      const { summary, unknown = [], results } = data.data;
+      setFeedback((prev) => ({
+        ...prev,
+        ...Object.fromEntries(results.map((r) => [r.providerId, feedbackFor(r)])),
+      }));
+      setScan({ summary, unknown });
+      await refreshList();
+    } catch (err) {
+      setScan({ error: err.message || '网络连接异常' });
+    } finally {
+      setIsScanning(false);
     }
-    setIsRefreshing(false);
   };
 
   const totalChannels = channels.length;
-  const openBreakers = channels.filter((c) => c.circuitState === 'open').length;
+  const openBreakers = channels.filter((c) => c.circuitState === 'circuit_open').length;
   const halfOpenBreakers = channels.filter((c) => c.circuitState === 'half_open').length;
   const closedBreakers = channels.filter((c) => c.circuitState === 'closed').length;
 
@@ -128,8 +169,8 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
       {/* 操作栏 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Activity className="size-4 text-cyan-400" />
-          <h2 className="text-base font-semibold text-white">通道健康与熔断器状态</h2>
+          <Activity className="size-4 text-brand" />
+          <h2 className="text-base font-semibold text-ink">通道健康与熔断器状态</h2>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -137,27 +178,60 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
             size="sm"
             disabled={isRefreshing}
             onClick={refreshList}
-            className="text-xs border-white/[0.1] hover:bg-white/[0.05]"
+            className="text-xs border-line hover:bg-wash"
           >
             <RefreshCw className={`mr-1.5 size-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
             刷新状态
           </Button>
           <Button
             size="sm"
-            disabled={isRefreshing}
+            disabled={isScanning || isRefreshing}
             onClick={handleProbeAll}
-            className="bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-semibold"
+            className="bg-brand-active hover:bg-brand text-ink-on-accent text-xs font-semibold"
           >
-            <Zap className="mr-1.5 size-3.5" />
-            全量通道探针扫描
+            {isScanning ? (
+              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+            ) : (
+              <Zap className="mr-1.5 size-3.5" />
+            )}
+            {isScanning ? '批量探测中...' : '全量通道探针扫描'}
           </Button>
         </div>
       </div>
 
+      {/* 本轮扫描汇总 */}
+      {scan?.error && (
+        <div className="flex items-center gap-2 rounded-lg border border-danger-line bg-danger-soft p-3 text-xs text-danger">
+          <AlertTriangle className="size-3.5 shrink-0" />
+          {scan.error}
+        </div>
+      )}
+      {scan?.summary && (
+        <div className="rounded-lg border border-line-subtle bg-wash p-3 text-xs text-ink-muted">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="flex items-center gap-1.5 font-semibold text-ink">
+              <ShieldCheck className="size-3.5 text-brand" />
+              本轮探测 {scan.summary.probed} 个渠道
+            </span>
+            <span className="text-success">健康 {scan.summary.healthy}</span>
+            <span className="text-warning">待处理 {scan.summary.degraded}</span>
+            <span className="text-danger">故障 {scan.summary.unhealthy}</span>
+            {scan.summary.credentialOnly > 0 && (
+              <span className="text-ink-subtle">
+                其中 {scan.summary.credentialOnly} 个仅校验凭据，未实测上游连通性
+              </span>
+            )}
+            {scan.unknown.length > 0 && (
+              <span className="text-danger">未找到：{scan.unknown.join('、')}</span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 通道列表 */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {channels.map((c) => {
-          const isOpen = c.circuitState === 'open';
+          const isOpen = c.circuitState === 'circuit_open';
           const isHalfOpen = c.circuitState === 'half_open';
           const isProbing = probingId === c.id;
           const isResetting = resettingId === c.id;
@@ -166,7 +240,7 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
           return (
             <Card
               key={c.id}
-              className={`p-5 border-white/[0.08] transition-all space-y-4 ${
+              className={`p-5 border-line transition-all space-y-4 ${
                 isOpen
                   ? 'border-red-500/40 bg-red-950/10'
                   : isHalfOpen
@@ -177,10 +251,10 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-gray-400">[{c.id}]</span>
-                    <h3 className="text-base font-semibold text-white">{c.name}</h3>
+                    <span className="font-mono text-xs text-ink-muted">[{c.id}]</span>
+                    <h3 className="text-base font-semibold text-ink">{c.name}</h3>
                   </div>
-                  <p className="mt-1 text-xs text-gray-400 font-mono truncate max-w-xs">
+                  <p className="mt-1 text-xs text-ink-muted font-mono truncate max-w-xs">
                     {c.baseUrl || '官方默认 Endpoint'}
                   </p>
                 </div>
@@ -193,48 +267,53 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
               </div>
 
               {/* 指标矩阵 */}
-              <div className="grid grid-cols-3 gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-xs">
+              <div className="grid grid-cols-3 gap-2 rounded-xl border border-line-subtle bg-wash p-3 text-xs">
                 <div>
-                  <p className="text-gray-500">24h 成功率</p>
-                  <p className={`mt-1 font-mono font-bold ${c.successRate24h >= 95 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                    {c.successRate24h}%
+                  <p className="text-ink-subtle">24h 成功率</p>
+                  {/* 没有样本不是 0%，也不是 100%：空表冒填会让管理员误判渠道健康。 */}
+                  <p
+                    className={`mt-1 font-mono font-bold ${
+                      c.successRate24h === null
+                        ? 'text-ink-subtle'
+                        : c.successRate24h >= 95
+                          ? 'text-success'
+                          : 'text-warning'
+                    }`}
+                  >
+                    {c.successRate24h === null ? '—' : `${c.successRate24h}%`}
                   </p>
-                  <p className="text-[10px] text-gray-500">共 {c.totalAttempts24h} 次调用</p>
+                  <p className="text-micro text-ink-subtle">共 {c.totalAttempts24h} 次调用</p>
                 </div>
 
                 <div>
-                  <p className="text-gray-500">平均耗时</p>
-                  <p className="mt-1 font-mono font-bold text-white">{c.avgLatencyMs24h} ms</p>
-                  <p className="text-[10px] text-gray-500">挂载 {c.boundModelsCount} 个模型</p>
+                  <p className="text-ink-subtle">平均耗时</p>
+                  <p className="mt-1 font-mono font-bold text-ink">
+                    {c.avgLatencyMs24h === null ? '—' : `${c.avgLatencyMs24h} ms`}
+                  </p>
+                  <p className="text-micro text-ink-subtle">挂载 {c.boundModelsCount} 个模型</p>
                 </div>
 
                 <div>
-                  <p className="text-gray-500">连续失败计数</p>
-                  <p className={`mt-1 font-mono font-bold ${c.consecutiveFailures > 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                  <p className="text-ink-subtle">连续失败计数</p>
+                  <p className={`mt-1 font-mono font-bold ${c.consecutiveFailures > 0 ? 'text-danger' : 'text-ink-muted'}`}>
                     {c.consecutiveFailures} 次
                   </p>
-                  <p className="text-[10px] text-gray-500">阈值: 5 次</p>
+                  <p className="text-micro text-ink-subtle">阈值: 5 次</p>
                 </div>
               </div>
 
               {/* 探测信息反馈 */}
               {msg && (
-                <div
-                  className={`rounded-lg p-2.5 text-xs ${
-                    msg.type === 'good'
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                      : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                  }`}
-                >
+                <div className={`rounded-lg p-2.5 text-xs ${FEEDBACK_TONE[msg.type] || FEEDBACK_TONE.danger}`}>
                   {msg.text}
                 </div>
               )}
 
               {/* 底部操作 */}
-              <div className="flex items-center justify-between border-t border-white/[0.06] pt-3 text-xs">
-                <span className="text-gray-500 flex items-center gap-1">
+              <div className="flex items-center justify-between border-t border-line-subtle pt-3 text-xs">
+                <span className="text-ink-subtle flex items-center gap-1">
                   <Clock className="size-3" />
-                  最近探测: {c.lastHealthCheckAt ? new Date(c.lastHealthCheckAt).toLocaleTimeString() : '未探测'}
+                  {probeSummary(c)}
                 </span>
 
                 <div className="flex items-center gap-2">
@@ -244,7 +323,7 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
                       size="sm"
                       disabled={isResetting}
                       onClick={() => handleResetCircuit(c.id)}
-                      className="text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                      className="text-xs border-warning-line text-warning hover:bg-warning-soft"
                     >
                       {isResetting ? <Loader2 className="mr-1 size-3 animate-spin" /> : null}
                       复位熔断器
@@ -256,7 +335,7 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
                     size="sm"
                     disabled={isProbing}
                     onClick={() => handleProbe(c.id)}
-                    className="text-xs border-white/[0.1] hover:bg-white/[0.05]"
+                    className="text-xs border-line hover:bg-wash"
                   >
                     {isProbing ? (
                       <>
@@ -265,7 +344,7 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
                       </>
                     ) : (
                       <>
-                        <Zap className="mr-1 size-3 text-cyan-400" />
+                        <Zap className="mr-1 size-3 text-brand" />
                         探测心跳
                       </>
                     )}

@@ -1,4 +1,4 @@
-﻿const puppeteer = (await import('file:///C:/Users/weysl/.gemini/antigravity/brain/a4cff523-e938-46b4-bf8e-7536e7eea510/scratch/node_modules/puppeteer/lib/puppeteer/puppeteer.js')).default;
+const puppeteer = (await import('file:///C:/Users/weysl/.gemini/antigravity/brain/a4cff523-e938-46b4-bf8e-7536e7eea510/scratch/node_modules/puppeteer/lib/puppeteer/puppeteer.js')).default;
 
 async function testUrl(desc, cookies = []) {
   console.log(`\n=== 测试场景: ${desc} ===`);
@@ -20,12 +20,18 @@ async function testUrl(desc, cookies = []) {
     console.log(`[Browser PageError Uncaught]: ${err.stack || err.message}`);
   });
 
+  page.on('response', res => {
+    if (res.status() >= 400) {
+      console.log(`[HTTP ${res.status()}] ${res.url()}`);
+    }
+  });
+
   if (cookies.length) {
     await page.setCookie(...cookies);
   }
 
   try {
-    const res = await page.goto('https://go.koyosim.com/admin', { waitUntil: 'networkidle2', timeout: 25000 });
+    const res = await page.goto('https://www.koyosim.com/admin', { waitUntil: 'networkidle2', timeout: 25000 });
     console.log(`当前页面最终 URL: ${page.url()}, 响应状态: ${res.status()}`);
     const bodyText = await page.evaluate(() => document.body.innerText);
     if (bodyText.includes('Application error')) {
@@ -48,7 +54,7 @@ async function main() {
   await testUrl('已登录管理员 Cookie 访问 /admin', [{
     name: 'ko_session',
     value: 'pd22H1-ceVCTMe5KHcbSHAEeqWF821_3hbWUBDMBIxk',
-    domain: 'go.koyosim.com',
+    domain: 'www.koyosim.com',
     path: '/',
     httpOnly: true,
     secure: true

@@ -1,7 +1,9 @@
 import Link from 'next/link';
-import { listSubscriptions } from '@/lib/repositories/billing';
+import { listSubscriptions } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 
 function formatDate(value) {
   return value
@@ -10,6 +12,7 @@ function formatDate(value) {
 }
 
 export default async function SubscriptionsPage({ searchParams }) {
+  await requireAdminPagePermission(PERMISSIONS.billingRead);
   const params = toSearchParams(await searchParams);
   const result = await listSubscriptions(params);
 
@@ -19,7 +22,7 @@ export default async function SubscriptionsPage({ searchParams }) {
       label: '用户邮箱',
       render: (row) => (
         <div>
-          <Link href={`/admin/users/${row.user_id}`} className="font-semibold text-white hover:text-cyan-200">
+          <Link href={`/admin/users/${row.user_id}`} className="font-semibold text-ink hover:text-brand-hover">
             {row.email}
           </Link>
           <div className="mt-1">
@@ -65,13 +68,13 @@ export default async function SubscriptionsPage({ searchParams }) {
             name="q"
             defaultValue={params.get('q') || ''}
             placeholder="搜索用户邮箱、订阅 ID…"
-            className="min-w-[240px] flex-1 rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-xs text-white outline-none focus:border-cyan-300/50"
+            className="min-w-[240px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
           />
 
           <select
             name="status"
             defaultValue={params.get('status') || ''}
-            className="rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-xs text-white/70 outline-none focus:border-cyan-300/50"
+            className="rounded-xl border border-line bg-canvas px-3 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
           >
             <option value="">全部状态</option>
             <option value="active">Active (正常)</option>
@@ -82,7 +85,7 @@ export default async function SubscriptionsPage({ searchParams }) {
 
           <button
             type="submit"
-            className="rounded-xl bg-cyan-300 px-5 py-2.5 text-xs font-bold text-black hover:bg-cyan-200"
+            className="rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-ink-on-accent hover:bg-brand"
           >
             筛选
           </button>

@@ -1,8 +1,11 @@
 import { getProvidersOverview } from '@/lib/services/providers';
 import { PageHeader } from '@/components/admin/AdminUi';
 import ProviderCard from '../ProviderCard';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 
 export default async function PaymentProvidersPage() {
+  await requireAdminPagePermission(PERMISSIONS.providersRead);
   const allProviders = await getProvidersOverview();
   const paymentProviders = allProviders.filter((p) => p.kind === 'payment');
 

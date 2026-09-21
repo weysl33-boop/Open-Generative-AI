@@ -28,6 +28,10 @@ import {
 } from "./prompt/PromptComposer.jsx";
 import en from "../messages/en/vibeMotionStudio.json";
 import zh from "../messages/zh/vibeMotionStudio.json";
+import ja from "../messages/ja-JP/vibeMotionStudio.json";
+import ko from "../messages/ko-KR/vibeMotionStudio.json";
+import zhTw from "../messages/zh-TW/vibeMotionStudio.json";
+import es from "../messages/es/vibeMotionStudio.json";
 import { resolveCopy } from "../i18nUtils";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -79,7 +83,7 @@ export default function VibeMotionStudio({
   onGenerationError,
   locale = "en",
 }) {
-  const copy = resolveCopy(en, zh, locale);
+  const copy = resolveCopy(en, { 'zh-CN': zh, 'ja-JP': ja, 'ko-KR': ko, 'zh-TW': zhTw, es }, locale);
   const LEGACY_PERSIST_KEY = "hg_vibe_motion_studio_persistent";
   const PERSIST_KEY = scopedPersistKey(LEGACY_PERSIST_KEY, apiKey);
   useEffect(() => {
@@ -262,17 +266,17 @@ export default function VibeMotionStudio({
       {/* ── Fullscreen overlay ── */}
       {fullscreenUrl && (
         <div
-          className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center"
+          className="fixed inset-0 z-modal bg-scrim flex items-center justify-center"
           onClick={() => setFullscreenUrl(null)}
         >
           <video
             src={fullscreenUrl}
             autoPlay loop controls
-            className="max-h-[90vh] max-w-[90vw] rounded shadow-2xl"
+            className="max-h-[90vh] max-w-[90vw] rounded shadow-elevation-4"
             onClick={(e) => e.stopPropagation()}
           />
           <button
-            className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors text-3xl font-light leading-none"
+            className="absolute top-6 right-6 text-ink-muted hover:text-ink transition-colors text-3xl font-light leading-none"
             onClick={() => setFullscreenUrl(null)}
           >×</button>
         </div>
@@ -286,7 +290,7 @@ export default function VibeMotionStudio({
             <div className="flex flex-col items-center gap-4 py-16">
               <div className="relative w-20 h-20">
                 <div className="absolute inset-0 rounded-full border-2 border-violet-500/20 animate-ping" />
-                <div className="absolute inset-2 rounded-full border-2 border-[#22d3ee]/30 animate-spin" />
+                <div className="absolute inset-2 rounded-full border-2 border-line-accent/30 animate-spin" />
                 <div className="absolute inset-4 rounded-full border-2 border-violet-400/50 animate-[spin_1.5s_linear_infinite_reverse]" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-violet-400 animate-pulse">
@@ -295,12 +299,12 @@ export default function VibeMotionStudio({
                 </div>
               </div>
               <div className="flex flex-col items-center gap-1">
-                <span className="text-white/80 font-semibold text-sm">
+                <span className="text-ink font-semibold text-sm">
                   {editMode ? copy.loading.remixing : copy.loading.generating}
                 </span>
-                <span className="text-white/30 text-xs">{copy.loading.backend}</span>
+                <span className="text-ink-subtle text-xs">{copy.loading.backend}</span>
               </div>
-              <div className="flex items-center gap-2 text-white/30 text-xs bg-white/[0.03] px-4 py-1.5 rounded-full border border-white/[0.05]">
+              <div className="flex items-center gap-2 text-ink-subtle text-xs bg-wash px-4 py-1.5 rounded-full border border-line-subtle">
                 <svg className="animate-spin" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                   <circle cx="12" cy="12" r="10" strokeOpacity="0.2"/>
                   <path d="M12 2a10 10 0 0 1 10 10"/>
@@ -316,13 +320,13 @@ export default function VibeMotionStudio({
             {history.map((entry, idx) => (
               <div
                 key={entry.id || idx}
-                className="relative group rounded overflow-hidden border border-white/10 bg-[#0a0a0a] shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col cursor-pointer"
+                className="relative group rounded overflow-hidden border border-line bg-canvas shadow-elevation-3 hover:border-primary/50 transition-all duration-page flex flex-col cursor-pointer"
                 onClick={() => setFullscreenUrl(entry.url)}
               >
                 {/* Video thumbnail */}
                 <video
                   src={entry.url}
-                  className="w-full aspect-video object-cover bg-black/40 hover:opacity-80 transition-opacity"
+                  className="w-full aspect-video object-cover bg-scrim hover:opacity-80 transition-opacity"
                   controls={false}
                   loop
                   muted
@@ -332,9 +336,9 @@ export default function VibeMotionStudio({
                 />
 
                 {/* ── Mode tag (top-left) ── */}
-                <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider backdrop-blur-sm border ${
+                <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-micro font-bold uppercase tracking-wider backdrop-blur-sm border ${
                   entry.mode === "edit"
-                    ? "bg-[#22d3ee]/20 text-[#22d3ee] border-[#22d3ee]/30"
+                    ? "bg-brand/20 text-brand border-line-accent/30"
                     : "bg-violet-600/30 text-violet-300 border-violet-500/30"
                 }`}>
                   {entry.mode === "edit" ? copy.card.modeEdit : copy.card.modeGenerated}
@@ -350,7 +354,7 @@ export default function VibeMotionStudio({
                     type="button"
                     title={copy.card.download}
                     onClick={(e) => { e.stopPropagation(); downloadFile(entry.url, `motion-${entry.id || idx}.mp4`); }}
-                    className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-primary hover:text-black transition-all border border-white/10"
+                    className="p-2 bg-scrim backdrop-blur-md rounded-full text-ink hover:bg-primary hover:text-ink-inverse transition-all border border-line"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
@@ -367,7 +371,7 @@ export default function VibeMotionStudio({
                         setPrompt("");
                         setTimeout(() => textareaRef.current?.focus(), 50);
                       }}
-                      className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-[#22d3ee] hover:text-black transition-all border border-white/10"
+                      className="p-2 bg-scrim backdrop-blur-md rounded-full text-ink hover:bg-brand hover:text-ink-on-accent transition-all border border-line"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -378,7 +382,7 @@ export default function VibeMotionStudio({
                     /* Legacy generation — animation code not saved by API, remix not available */
                     <div
                       title={copy.card.legacyRemixUnavailable}
-                      className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white/20 border border-white/5 cursor-not-allowed"
+                      className="p-2 bg-scrim backdrop-blur-md rounded-full text-ink-subtle border border-line-subtle cursor-not-allowed"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-40">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -396,7 +400,7 @@ export default function VibeMotionStudio({
                         setHistory(prev => prev.filter((_, i) => i !== idx));
                       }
                     }}
-                    className="p-2 bg-black/60 backdrop-blur-md rounded-full text-red-400 hover:bg-red-500 hover:text-white transition-all border border-white/10"
+                    className="p-2 bg-scrim backdrop-blur-md rounded-full text-danger hover:bg-danger hover:text-ink transition-all border border-line"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <polyline points="3 6 5 6 21 6" />
@@ -441,21 +445,21 @@ export default function VibeMotionStudio({
                 />
 
                 {/* ── Card footer: prompt + metadata ── */}
-                <div className="p-3 bg-black/80 backdrop-blur-sm border-t border-white/5 flex-1 flex flex-col justify-between gap-2">
-                  <p className="text-white/70 text-xs line-clamp-3 leading-relaxed" title={entry.prompt}>
+                <div className="p-3 bg-scrim backdrop-blur-sm border-t border-line-subtle flex-1 flex flex-col justify-between gap-2">
+                  <p className="text-ink-muted text-xs line-clamp-3 leading-relaxed" title={entry.prompt}>
                     {entry.prompt || copy.card.noPrompt}
                   </p>
                   <div className="flex items-center justify-between mt-1 flex-wrap gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded border border-primary/20 whitespace-nowrap">
+                      <span className="text-micro font-bold text-primary px-2 py-0.5 bg-primary/10 rounded border border-primary/20 whitespace-nowrap">
                         {copy.card.tag}
                       </span>
                       <div className="flex gap-2">
                         {entry.aspectRatio && (
-                          <span className="text-[10px] text-white/40">{entry.aspectRatio}</span>
+                          <span className="text-micro text-ink-subtle">{entry.aspectRatio}</span>
                         )}
                         {entry.duration && (
-                          <span className="text-[10px] text-white/40">{entry.duration}s</span>
+                          <span className="text-micro text-ink-subtle">{entry.duration}s</span>
                         )}
                       </div>
                     </div>
@@ -466,31 +470,31 @@ export default function VibeMotionStudio({
           </div>
         ) : !generating ? (
           /* ── Empty State ── */
-          <div className="flex flex-col items-center justify-center h-full animate-fade-in-up transition-all duration-700 min-h-[50vh]">
+          <div className="flex flex-col items-center justify-center h-full animate-fade-in-up transition-all duration-page min-h-[50vh]">
             {/* Overlapping floating cards */}
             <div className="flex items-center justify-center gap-1.5 md:gap-3 mb-10 select-none scale-90 sm:scale-100">
-              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-2xl -rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] flex-shrink-0">
+              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-line shadow-elevation-4 -rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/sdxl-image.avif"
                   alt="Creative asset 1"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-2xl -rotate-[4deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-line shadow-elevation-4 -rotate-[4deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash -ml-3 sm:-ml-4 flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/chroma-image.avif"
                   alt="Creative asset 2"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="w-18 h-18 sm:w-24 sm:h-24 rounded-full border border-white/10 shadow-2xl rotate-[6deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+              <div className="w-18 h-18 sm:w-24 sm:h-24 rounded-full border border-line shadow-elevation-4 rotate-[6deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash -ml-3 sm:-ml-4 flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/neta-lumina.avif"
                   alt="Creative asset 3"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-2xl rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-line shadow-elevation-4 rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash -ml-3 sm:-ml-4 flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/perfect-pony-xl.avif"
                   alt="Creative asset 4"
@@ -500,12 +504,12 @@ export default function VibeMotionStudio({
             </div>
 
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-center px-4 flex flex-col items-center">
-              <span className="text-white font-black uppercase text-xl sm:text-3xl tracking-wide mb-1 opacity-90">{copy.empty.titleLine1}</span>
-              <span className="text-[#22d3ee] font-black uppercase text-2xl sm:text-4xl sm:mt-1 tracking-tight">
+              <span className="text-ink font-black uppercase text-xl sm:text-3xl tracking-wide mb-1 opacity-90">{copy.empty.titleLine1}</span>
+              <span className="text-brand font-black uppercase text-2xl sm:text-4xl sm:mt-1 tracking-tight">
                 {copy.empty.titleLine2}
               </span>
             </h1>
-            <p className="text-white/40 text-xs sm:text-sm font-medium tracking-wide text-center max-w-lg leading-relaxed px-4">
+            <p className="text-ink-subtle text-xs sm:text-sm font-medium tracking-wide text-center max-w-lg leading-relaxed px-4">
               {copy.empty.description}
             </p>
           </div>
@@ -539,7 +543,7 @@ export default function VibeMotionStudio({
 
             {/* Right: Edit mode status banner beside toggle buttons */}
             {editMode && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-[#22d3ee]/5 border border-[#22d3ee]/10 rounded-full text-[11px] text-[#22d3ee] font-medium tracking-tight min-w-0 max-w-full overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-1 bg-brand/5 border border-line-accent/10 rounded-full text-[11px] text-brand font-medium tracking-tight min-w-0 max-w-full overflow-hidden">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="flex-shrink-0">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -551,7 +555,7 @@ export default function VibeMotionStudio({
                 </span>
                 <button
                   onClick={() => { setEditMode(false); setEditSourceId(null); setPrompt(""); }}
-                  className="ml-auto text-[#22d3ee]/40 hover:text-[#22d3ee] transition-colors text-sm leading-none flex-shrink-0"
+                  className="ml-auto text-brand/40 hover:text-brand transition-colors text-sm leading-none flex-shrink-0"
                   title={copy.editBanner.cancelEdit}
                 >
                   ×
@@ -577,7 +581,7 @@ export default function VibeMotionStudio({
 
           {/* ── Error banner ── */}
           {generateError && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded text-red-400 text-xs">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-danger-soft border border-danger-soft rounded text-danger text-xs">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               {generateError}
             </div>
@@ -657,13 +661,13 @@ export default function VibeMotionStudio({
                     onClick={toggleDropdown("source")}
                     className={promptControlClassName({ active: true })}
                   >
-                    <div className="w-4 h-4 bg-[#22d3ee]/20 rounded flex items-center justify-center border border-[#22d3ee]/30">
+                    <div className="w-4 h-4 bg-brand/20 rounded flex items-center justify-center border border-line-accent/30">
                       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                       </svg>
                     </div>
-                    <span className={`${PROMPT_CONTROL_LABEL_CLASS} text-[#22d3ee]/70 max-w-[120px] truncate`}>
+                    <span className={`${PROMPT_CONTROL_LABEL_CLASS} text-brand/70 max-w-[120px] truncate`}>
                       {sourceEntry ? `${copy.controls.sourcePrefix} ${sourceEntry.prompt?.slice(0, 20)}…` : copy.controls.pickSource}
                     </span>
                     <PromptChevronIcon />
@@ -675,15 +679,15 @@ export default function VibeMotionStudio({
                         {editSources.map((src) => (
                           <div
                             key={src.requestId}
-                            className="flex items-center gap-3 p-2 hover:bg-white/5 rounded cursor-pointer transition-all group/opt"
+                            className="flex items-center gap-3 p-2 hover:bg-wash rounded cursor-pointer transition-all group/opt"
                             onClick={() => { setEditSourceId(src.requestId); setOpenDropdown(null); }}
                           >
-                            <div className="w-10 h-7 rounded overflow-hidden bg-black/40 flex-shrink-0 border border-white/5">
+                            <div className="w-10 h-7 rounded overflow-hidden bg-scrim flex-shrink-0 border border-line-subtle">
                               <video src={src.url} className="w-full h-full object-cover" muted playsInline />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[11px] text-white/70 truncate leading-tight group-hover/opt:text-white">{src.prompt}</p>
-                              <p className="text-[9px] text-white/30 mt-0.5">{src.aspectRatio} · {src.duration}s</p>
+                              <p className="text-[11px] text-ink-muted truncate leading-tight group-hover/opt:text-ink">{src.prompt}</p>
+                              <p className="text-micro text-ink-subtle mt-0.5">{src.aspectRatio} · {src.duration}s</p>
                             </div>
                             {editSourceId === src.requestId && <CheckSvg />}
                           </div>
@@ -694,7 +698,7 @@ export default function VibeMotionStudio({
                 </div>
               )}
 
-              <span className="text-[10px] text-white/20 hidden sm:block ml-2">{copy.controls.shortcutHint}</span>
+              <span className="text-micro text-ink-subtle hidden sm:block ml-2">{copy.controls.shortcutHint}</span>
             </PromptControls>
 
             {/* ── Generate Button — matches VideoStudio exactly ── */}
@@ -704,7 +708,7 @@ export default function VibeMotionStudio({
             >
               {generating ? (
                 <>
-                  <span className="animate-spin inline-block text-black">◌</span>{" "}
+                  <span className="animate-spin inline-block text-ink-inverse">◌</span>{" "}
                   {editMode ? copy.generateButton.remixing : copy.generateButton.generating}
                 </>
               ) : editMode ? (
@@ -715,7 +719,7 @@ export default function VibeMotionStudio({
             </PromptAction>
           </PromptFooter>
       </PromptComposer>
-      <Toaster position="top-right" containerStyle={{ zIndex: 99999 }} toastOptions={{ duration: 5000, style: { background: '#18181b', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)', fontSize: '13px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', maxWidth: '440px', wordBreak: 'break-word', whiteSpace: 'pre-wrap', padding: '12px 16px' } }} />
+      <Toaster position="top-right" containerStyle={{ zIndex: 'var(--z-toast)' }} toastOptions={{ duration: 5000, style: { background: 'var(--bg-overlay)', color: 'var(--text-primary)', border: '1px solid var(--border-strong)', fontSize: 'var(--text-body-sm)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--elevation-3)', maxWidth: '440px', wordBreak: 'break-word', whiteSpace: 'pre-wrap', padding: '12px 16px' } }} />
     </div>
   );
 }

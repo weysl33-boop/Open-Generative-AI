@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Card, StatusBadge } from '@/components/admin/AdminUi';
+import { resolveCreditValuationFromSetting } from '@/lib/financial/creditValuation';
 
 export default function SettingsEditor({ initialSettings, gateDiagnostics }) {
   const [settings, setSettings] = useState(initialSettings || []);
@@ -65,6 +66,10 @@ export default function SettingsEditor({ initialSettings, gateDiagnostics }) {
   // 4. 探索应用 (Explore Apps) 入口开关 (默认隐藏)
   const exploreAppsCfg = getVal('feature_explore_apps', { enabled: false });
   const [exploreAppsEnabled, setExploreAppsEnabled] = useState(Boolean(exploreAppsCfg.enabled));
+
+  // 6. Credits 估值口径：预览必须走服务端同一个纯函数，否则这里显示「合法」而线上退回内置值
+  const creditValuation = resolveCreditValuationFromSetting(getVal('credit_valuation', null));
+  const [creditUsdInput, setCreditUsdInput] = useState(String(creditValuation.usdPerCredit));
 
   // 5. 中国大陆 IP 访问拦截（middleware 层，默认关闭）
   const gate = getVal('china_ip_block', {});
@@ -310,7 +315,76 @@ export default function SettingsEditor({ initialSettings, gateDiagnostics }) {
         </form>
       </Card>
 
-      {/* 维护模式开关 */}
+      {/* Credits 估值口径：模型中心与财务报表共用的换算数字 */}
+      <Card className="lg:col-span-2">
+        <div className="mb-4 flex items-start justify-between gap-3 border-b border-line pb-3">
+          <div>
+            <h2 className="text-sm font-bold text-ink">Credits 估值口径</h2>
+            <p className="mt-1 text-xs text-ink-subtle">
+              模型中心的用户售价与毛利、成本中心和利润中心报表都按这一个数字折算。
+              留空即使用内置默认值；报价链路不再自带第二套估值，避免同一个消耗算出两个毛利率。
+            </p>
+          </div>
+          <StatusBadge tone={creditValuation.source === 'setting' ? 'good' : 'warn'}>
+            {creditValuation.source === 'setting'
+              ? '按系统设置'
+              : creditValuation.source === 'invalid'
+                ? '设置值非法，已退回默认'
+                : '未设置，用内置值'}
+          </StatusBadge>
+        </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            saveSetting(
+              'credit_valuation',
+              { usdPerCredit: Number(creditUsdInput) },
+              // 估值口径是内部核算假设，不进任何匿名可读的设置出口。
+              'private',
+            );
+          }}
+          className="space-y-4"
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="text-xs font-semibold text-ink">1 Credit = ? USD</span>
+              <input
+                type="number"
+                step="0.0001"
+                min="0"
+                value={creditUsdInput}
+                onChange={(e) => setCreditUsdInput(e.target.value)}
+                className="mt-1 h-9 w-full rounded-xl border border-line bg-base px-3 text-sm text-ink"
+              />
+            </label>
+            <p className="self-end text-xs leading-5 text-ink-subtle">
+              人民币只是这个美元估值的展示换算，汇率沿用系统内部常量，不在这里改：
+              渠道成本的币种换算走另一条链路，放开一半会造成「改了不生效」的假设置。
+            </p>
+          </div>
+
+          <p className="text-xs text-ink-subtle">
+            当前生效：1 Credit ={' '}
+            <span className="font-mono text-ink">{creditValuation.usdPerCredit.toFixed(4)} USD</span>
+            {' · '}
+            <span className="font-mono text-ink">≈ ¥{creditValuation.cnyPerCredit.toFixed(4)}</span>
+            {' · '}
+            <span className="font-mono text-ink">{creditValuation.creditsPerUsd}</span> Credits / USD
+          </p>
+
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-xs text-brand-hover">{feedback['credit_valuation']}</span>
+            <button
+              type="submit"
+              disabled={savingKey === 'credit_valuation' || !(Number(creditUsdInput) > 0)}
+              className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-ink-on-accent hover:bg-brand disabled:opacity-50"
+            >
+              {savingKey === 'credit_valuation' ? '保存中…' : '保存估值口径'}
+            </button>
+          </div>
+        </form>
+      </Card>
       <Card className="lg:col-span-2">
         <div className="flex items-center justify-between border-b border-line pb-3 mb-4">
           <div>

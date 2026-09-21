@@ -17,7 +17,9 @@
     "pause": "暂停",
     "play": "播放",
     "download": "下载音频",
-    "save": "保存"
+    "save": "保存",
+    "seek": "播放进度",
+    "volume": "音量"
   },
   "sidebar": {
     "modelLabel": "音频模型",

@@ -1,7 +1,7 @@
 import { PageHeader } from '@/components/admin/AdminUi';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { listCanonicalModels, listProviders } from '@/lib/repositories/aiCatalog';
+import { listCanonicalModels, listProviders } from '@/lib/services/modelCatalog';
 import RoutingManagerClient from './RoutingManagerClient';
 
 export const dynamic = 'force-dynamic';

@@ -1,6 +1,8 @@
-import { listWebhookEvents } from '@/lib/repositories/billing';
+import { listWebhookEvents } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 import AdminActionForm from '@/components/admin/AdminActionForm';
 
 function formatDate(value) {
@@ -10,6 +12,7 @@ function formatDate(value) {
 }
 
 export default async function WebhooksPage({ searchParams }) {
+  await requireAdminPagePermission(PERMISSIONS.webhooksRead);
   const params = toSearchParams(await searchParams);
   const result = await listWebhookEvents(params);
 
@@ -47,11 +50,11 @@ export default async function WebhooksPage({ searchParams }) {
       label: '最后一次报错',
       render: (row) =>
         row.last_error ? (
-          <span className="truncate max-w-[200px] text-xs text-red-300 font-mono" title={row.last_error}>
+          <span className="truncate max-w-[200px] text-xs text-danger font-mono" title={row.last_error}>
             {row.last_error}
           </span>
         ) : (
-          <span className="text-white/30 text-xs">无报错</span>
+          <span className="text-ink-subtle text-xs">无报错</span>
         ),
     },
     {
@@ -64,12 +67,12 @@ export default async function WebhooksPage({ searchParams }) {
       label: '操作',
       render: (row) => (
         <AdminActionForm
-          action={`/api/admin/webhooks/${row.event_id}/replay`}
+          action={`/api/admin/webhooks/${encodeURIComponent(row.event_id)}/replay?provider=${encodeURIComponent(row.provider)}`}
           method="POST"
           fields={[]}
           label="幂等重放"
           tone="secondary"
-          confirmMessage="确认重放此 Webhook 事件？系统将重新校验签名与业务履约。"
+          confirmMessage="确认重放此 Webhook 事件？系统将按存档报文重新执行渠道履约（不会重新校验厂商签名）。"
         />
       ),
     },
@@ -88,7 +91,7 @@ export default async function WebhooksPage({ searchParams }) {
           <select
             name="provider"
             defaultValue={params.get('provider') || ''}
-            className="rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-2.5 text-xs text-white/70 outline-none focus:border-cyan-300/50"
+            className="rounded-xl border border-line bg-canvas px-4 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
           >
             <option value="">全部渠道</option>
             <option value="stripe">Stripe</option>
@@ -98,7 +101,7 @@ export default async function WebhooksPage({ searchParams }) {
 
           <button
             type="submit"
-            className="rounded-xl bg-cyan-300 px-5 py-2.5 text-xs font-bold text-black hover:bg-cyan-200"
+            className="rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-ink-on-accent hover:bg-brand"
           >
             筛选记录
           </button>

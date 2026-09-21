@@ -12,19 +12,19 @@ const PRESETS = [
 export default function HeadshotStudio(props) {
   const [preset, setPreset] = useState(PRESETS[0]);
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#050708]">
-      <div className="shrink-0 border-b border-white/10 bg-white/[.03] px-4 py-3 md:px-6">
+    <div className="flex h-full min-h-0 flex-col bg-canvas">
+      <div className="shrink-0 border-b border-line bg-wash px-4 py-3 md:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[.24em] text-cyan-300/70">AI Headshot</p>
-            <h1 className="mt-1 text-base font-semibold text-white">头像生成工作台</h1>
-            <p className="mt-1 text-xs text-white/45">上传一张清晰正面照，再选择适合你的商业风格预设。</p>
+            <p className="text-micro font-semibold uppercase tracking-[.24em] text-brand-hover">AI Headshot</p>
+            <h1 className="mt-1 text-base font-semibold text-ink">头像生成工作台</h1>
+            <p className="mt-1 text-xs text-ink-subtle">上传一张清晰正面照，再选择适合你的商业风格预设。</p>
           </div>
           <div className="flex flex-wrap gap-2" role="tablist" aria-label="头像风格预设">
             {PRESETS.map((item) => (
-              <button key={item.id} type="button" onClick={() => setPreset(item)} className={`rounded-xl border px-3 py-2 text-left transition ${preset.id === item.id ? 'border-cyan-300/60 bg-cyan-300/10 text-cyan-100' : 'border-white/10 bg-white/[.02] text-white/60 hover:border-white/25 hover:text-white'}`}>
+              <button key={item.id} type="button" onClick={() => setPreset(item)} className={`rounded-xl border px-3 py-2 text-left transition ${preset.id === item.id ? 'border-brand-ring bg-brand-soft text-brand-hover' : 'border-line bg-wash text-ink-muted hover:border-line-strong hover:text-ink'}`}>
                 <span className="block text-xs font-semibold">{item.label}</span>
-                <span className="mt-0.5 block text-[10px] text-white/40">{item.description}</span>
+                <span className="mt-0.5 block text-micro text-ink-subtle">{item.description}</span>
               </button>
             ))}
           </div>

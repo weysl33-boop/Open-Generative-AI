@@ -1,17 +1,18 @@
-import { requirePermission, okResponse, errorResponse, verifyAdminPassword } from '@/lib/admin/authz';
+import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { checkIdempotency, completeIdempotency } from '@/lib/admin/idempotency';
-import { rotateProviderSecret } from '@/lib/services/providers';
+import { checkIdempotency, completeIdempotency, getRequiredIdempotencyKey, releaseIdempotency } from '@/lib/admin/idempotency';
+import { rotateProviderSecret, testProviderHealth } from '@/lib/services/providers';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function PUT(request, context) {
+async function handlePUT(request, context) {
   const guard = await requirePermission(request, PERMISSIONS.providersWrite);
   if (!guard.ok) return guard.response;
 
   const { id } = await context.params;
-  const idempotencyKey = request.headers.get('idempotency-key');
+  const idempotencyKey = getRequiredIdempotencyKey(request);
+  if (!idempotencyKey) return errorResponse('VALIDATION_ERROR', '密钥配置必须提供有效的 Idempotency-Key', 422, guard.requestId);
 
   const idemp = await checkIdempotency({
     scope: 'provider_secret_rotate',
@@ -21,7 +22,7 @@ export async function PUT(request, context) {
 
   if (!idemp.allowed) {
     if (idemp.cachedResponse) return okResponse(idemp.cachedResponse, guard.requestId);
-    return errorResponse('CONFLICT', '密钥轮换处理中', 409, guard.requestId);
+    return errorResponse('CONFLICT', '密钥配置处理中', 409, guard.requestId);
   }
 
   let body = {};
@@ -29,23 +30,65 @@ export async function PUT(request, context) {
     body = await request.json();
   } catch {}
 
-  // 二次密码校验
-  if (!verifyAdminPassword(guard.user.id, body.adminPassword)) {
-    return errorResponse('UNAUTHORIZED', '管理员密码二次验证失败，拒绝轮换密钥', 403, guard.requestId);
+  // 支持 secrets 键值对象或单个 secretName
+  const secretsToUpdate = [];
+  if (body.secrets && typeof body.secrets === 'object') {
+    for (const [k, v] of Object.entries(body.secrets)) {
+      if (typeof v === 'string' && v.trim()) {
+        secretsToUpdate.push({ name: k, value: v.trim() });
+      }
+    }
+  } else if (body.secretValue) {
+    secretsToUpdate.push({ name: body.secretName || 'api_key', value: body.secretValue });
   }
 
-  const result = await rotateProviderSecret({
-    actor: guard.user,
+  if (secretsToUpdate.length === 0) {
+    await releaseIdempotency(idemp.keyHash);
+    return errorResponse('VALIDATION_ERROR', '未提供任何有效密钥内容', 422, guard.requestId);
+  }
+
+  const results = [];
+  try {
+    for (const item of secretsToUpdate) {
+      const res = await rotateProviderSecret({
+        actor: guard.user,
+        provider: id,
+        secretName: item.name,
+        secretValue: item.value,
+        requestId: guard.requestId,
+      });
+      if (res.error) {
+        await releaseIdempotency(idemp.keyHash);
+        return errorResponse('VALIDATION_ERROR', `${item.name}: ${res.error}`, 422, guard.requestId);
+      }
+      results.push(res);
+    }
+  } catch (err) {
+    await releaseIdempotency(idemp.keyHash);
+    console.error(`[rotateProviderSecret] 写入 ${id} 失败:`, err);
+    return errorResponse('INTERNAL_ERROR', `密钥安全加密存盘失败: ${err.message}`, 500, guard.requestId);
+  }
+
+  let latestCheck = null;
+  try {
+    latestCheck = await testProviderHealth({
+      actor: guard.user,
+      provider: id,
+      requestId: guard.requestId,
+    });
+  } catch (probeErr) {
+    console.warn(`[rotateProviderSecret] 存盘后自动探测 ${id} 异常:`, probeErr.message);
+  }
+
+  const responsePayload = {
+    success: true,
+    count: results.length,
     provider: id,
-    secretName: body.secretName || 'api_key',
-    secretValue: body.secretValue,
-    requestId: guard.requestId,
-  });
+    latestCheck,
+  };
 
-  if (result.error) {
-    return errorResponse('BAD_REQUEST', result.error, 400, guard.requestId);
-  }
-
-  await completeIdempotency(idemp.keyHash, result);
-  return okResponse(result, guard.requestId);
+  await completeIdempotency(idemp.keyHash, responsePayload);
+  return okResponse(responsePayload, guard.requestId);
 }
+
+export const PUT = withAdminErrorBoundary(handlePUT);

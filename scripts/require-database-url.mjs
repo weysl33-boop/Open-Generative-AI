@@ -1,4 +1,4 @@
-const value = String(process.env.DATABASE_URL || '').trim();
+let value = String(process.env.DATABASE_URL || '').trim();
 
 if (!value) {
   console.error('[startup] DATABASE_URL is required; PostgreSQL 16 is the only supported database.');

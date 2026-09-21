@@ -28,7 +28,7 @@ const INDUSTRIES = [
     name: '个人 / 自媒体',
     desc: '爆款图文 · 社交账号矩阵',
     color: 'from-blue-600/30 to-indigo-900/40',
-    border: 'hover:border-blue-500/50',
+    border: 'hover:border-info-line',
     icon: '📱',
     tagId: 'tag_ind_media',
   },
@@ -37,7 +37,7 @@ const INDUSTRIES = [
     name: '短漫剧',
     desc: 'AI 漫改 · 短剧分镜制作',
     color: 'from-amber-600/30 to-orange-900/40',
-    border: 'hover:border-amber-500/50',
+    border: 'hover:border-warning-line',
     icon: '🎬',
     tagId: 'tag_ind_anime',
   },
@@ -46,7 +46,7 @@ const INDUSTRIES = [
     name: '游戏',
     desc: '角色原画 · 道具与场景资产',
     color: 'from-purple-600/30 to-violet-900/40',
-    border: 'hover:border-purple-500/50',
+    border: 'hover:border-line-strong',
     icon: '🎮',
     tagId: 'tag_ind_game',
   },
@@ -64,7 +64,7 @@ const INDUSTRIES = [
     name: '广告',
     desc: '商业视觉海报 · 品牌宣发',
     color: 'from-cyan-600/30 to-teal-900/40',
-    border: 'hover:border-cyan-500/50',
+    border: 'hover:border-brand-ring',
     icon: '📣',
     tagId: 'tag_ind_ad',
   },
@@ -73,7 +73,7 @@ const INDUSTRIES = [
     name: 'MV',
     desc: '音乐视频 · 唯美电影视效',
     color: 'from-rose-600/30 to-red-900/40',
-    border: 'hover:border-rose-500/50',
+    border: 'hover:border-danger-ring',
     icon: '🎵',
     tagId: 'tag_ind_mv',
   },
@@ -100,7 +100,7 @@ const SITE_FEATURES = [
     name: '图像精绘',
     desc: 'Nano / Flux / SD 超清文生图与高清重绘',
     icon: Palette,
-    color: 'text-cyan-400',
+    color: 'text-brand',
   },
   {
     id: 'video',
@@ -121,7 +121,7 @@ const SITE_FEATURES = [
     name: 'AI 创意智能体',
     desc: '智能角色、创意策划与多智能体协同设计',
     icon: Bot,
-    color: 'text-amber-400',
+    color: 'text-warning',
   },
 ];
 
@@ -179,18 +179,18 @@ export default function UserOnboardingModal({ user, onComplete, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[230] flex items-center justify-center bg-black/85 backdrop-blur-xl p-3 sm:p-5 overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-modal flex items-center justify-center bg-scrim backdrop-blur-xl p-3 sm:p-5 overflow-y-auto animate-fade-in"
       role="dialog"
       aria-modal="true"
     >
-      <div className="relative w-full max-w-[860px] max-h-[92vh] rounded-3xl border border-white/[0.12] bg-[#11131a]/98 shadow-[0_30px_90px_rgba(0,0,0,0.95)] overflow-hidden backdrop-blur-2xl flex flex-col">
+      <div className="relative w-full max-w-[860px] max-h-[92vh] rounded-2xl border border-line-strong bg-overlay-glass shadow-elevation-4 overflow-hidden backdrop-blur-2xl flex flex-col">
         {/* 顶部标题区（对齐参考图：绿色萌芽吉祥物 + 标题 + 关闭按钮） */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] px-6 py-4 bg-[#0d0f16]/90 shrink-0">
+        <div className="flex items-center justify-between border-b border-line-subtle px-6 py-4 bg-overlay shrink-0">
           <div className="flex items-center gap-3">
-            <div className="size-8 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-base shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+            <div className="size-8 rounded-full bg-success-soft border border-success-line flex items-center justify-center text-base">
               🌱
             </div>
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+            <h2 className="text-base sm:text-lg font-bold text-ink tracking-tight">
               选择你的行业，快速开启创作
             </h2>
           </div>
@@ -199,7 +199,7 @@ export default function UserOnboardingModal({ user, onComplete, onClose }) {
             type="button"
             onClick={onClose}
             aria-label="关闭"
-            className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-white/[0.08] hover:text-white transition-colors"
+            className="flex size-8 items-center justify-center rounded-lg text-ink-muted hover:bg-wash-strong hover:text-ink transition-colors"
           >
             <X className="size-4" />
           </button>
@@ -209,9 +209,9 @@ export default function UserOnboardingModal({ user, onComplete, onClose }) {
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-6 custom-scrollbar">
           {/* 1. 行业选择卡片组（完全对齐参考图：左侧自由创作大卡片，右侧2行3列场景网格） */}
           <div>
-            <label className="block text-xs font-semibold text-gray-300 mb-3 flex items-center justify-between">
+            <label className="block text-xs font-semibold text-ink mb-3 flex items-center justify-between">
               <span>一、您的创作领域或行业场景</span>
-              <span className="text-[11px] text-cyan-400 font-normal">点击选中将生成对应运营模型预设</span>
+              <span className="text-[11px] text-brand font-normal">点击选中将生成对应运营模型预设</span>
             </label>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -221,12 +221,12 @@ export default function UserOnboardingModal({ user, onComplete, onClose }) {
                 onClick={() => setSelectedIndustry('free')}
                 className={`relative flex flex-col items-center justify-center rounded-2xl border p-5 text-center transition-all cursor-pointer min-h-[140px] md:min-h-[180px] ${
                   selectedIndustry === 'free'
-                    ? 'border-cyan-400/80 bg-gradient-to-b from-cyan-500/20 to-cyan-950/30 text-white shadow-[0_0_20px_rgba(6,182,212,0.25)]'
-                    : 'border-dashed border-white/20 bg-white/[0.02] text-gray-400 hover:border-white/40 hover:text-white hover:bg-white/[0.04]'
+                    ? 'border-brand-ring bg-brand-soft text-ink'
+                    : 'border-dashed border-line-strong bg-transparent text-ink-muted hover:border-line-strong hover:text-ink hover:bg-wash'
                 }`}
               >
                 {selectedIndustry === 'free' && (
-                  <span className="absolute top-2.5 right-2.5 size-5 rounded-full bg-cyan-400 text-black flex items-center justify-center text-xs font-bold">
+                  <span className="absolute top-2.5 right-2.5 size-5 rounded-full bg-brand text-ink-on-accent flex items-center justify-center text-xs font-bold">
                     <Check className="size-3" />
                   </span>
                 )}
@@ -234,7 +234,7 @@ export default function UserOnboardingModal({ user, onComplete, onClose }) {
                   <Plus className="size-5" />
                 </div>
                 <span className="text-sm font-bold tracking-wide">自由创作</span>
-                <span className="text-[11px] text-gray-400 mt-1">独立创作者 · 无限制</span>
+                <span className="text-[11px] text-ink-muted mt-1">独立创作者 · 无限制</span>
               </button>
 
               {/* 右侧 6 个行业场景卡片网格 (2行3列) */}
@@ -248,25 +248,25 @@ export default function UserOnboardingModal({ user, onComplete, onClose }) {
                       onClick={() => setSelectedIndustry(item.id)}
                       className={`relative flex flex-col items-start justify-between rounded-2xl border p-3.5 text-left transition-all cursor-pointer overflow-hidden ${
                         isSelected
-                          ? 'border-cyan-400 bg-cyan-950/30 shadow-[0_0_18px_rgba(6,182,212,0.25)]'
-                          : `border-white/10 bg-white/[0.03] ${item.border} hover:bg-white/[0.06]`
+                          ? 'border-brand-ring bg-brand-soft'
+                          : `border-line bg-transparent ${item.border} hover:bg-wash`
                       }`}
                     >
                       {/* 背景微渐变 */}
                       <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-40 pointer-events-none`} />
 
                       {isSelected && (
-                        <span className="absolute top-2 right-2 size-4.5 rounded-full bg-cyan-400 text-black flex items-center justify-center text-[10px] font-bold z-10">
+                        <span className="absolute top-2 right-2 size-4.5 rounded-full bg-brand text-ink-on-accent flex items-center justify-center text-micro font-bold z-10">
                           <Check className="size-2.5" />
                         </span>
                       )}
 
                       <div className="relative z-10 flex items-center gap-2 mb-2">
                         <span className="text-xl">{item.icon}</span>
-                        <span className="text-xs sm:text-sm font-bold text-white">{item.name}</span>
+                        <span className="text-xs sm:text-sm font-bold text-ink">{item.name}</span>
                       </div>
 
-                      <p className="relative z-10 text-[10px] text-gray-400 line-clamp-1">
+                      <p className="relative z-10 text-micro text-ink-muted line-clamp-1">
                         {item.desc}
                       </p>
                     </button>
@@ -277,33 +277,33 @@ export default function UserOnboardingModal({ user, onComplete, onClose }) {
           </div>
 
           {/* 2. 互动资料填写（用户昵称与星座选择） */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.06]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-line-subtle">
             {/* 用户昵称 */}
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-2 flex items-center gap-1.5">
-                <User className="size-3.5 text-cyan-400" />
+              <label className="block text-xs font-semibold text-ink mb-2 flex items-center gap-1.5">
+                <User className="size-3.5 text-brand" />
                 <span>二、您的创作者昵称</span>
               </label>
-              <div className="flex h-10 w-full items-center rounded-xl border border-white/10 bg-[#0a0c12] px-3 focus-within:border-cyan-500/60 focus-within:ring-2 focus-within:ring-cyan-500/20 transition">
+              <div className="flex h-10 w-full items-center rounded-xl border border-line bg-canvas px-3 focus-within:border-brand-ring focus-within:ring-2 focus-within:ring-brand-soft transition">
                 <input
                   type="text"
                   maxLength={24}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="请输入您的创作者昵称"
-                  className="w-full bg-transparent text-xs sm:text-sm text-white placeholder-gray-500 outline-none"
+                  className="w-full bg-transparent text-xs sm:text-sm text-ink placeholder-ink-subtle"
                 />
               </div>
             </div>
 
             {/* 星座选择 */}
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-2 flex items-center justify-between">
+              <label className="block text-xs font-semibold text-ink mb-2 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <Star className="size-3.5 text-amber-400" />
+                  <Star className="size-3.5 text-warning" />
                   <span>三、您的星座（选填）</span>
                 </span>
-                <span className="text-[11px] text-gray-400">
+                <span className="text-[11px] text-ink-muted">
                   {selectedZodiac || '未选择'}
                 </span>
               </label>
@@ -318,8 +318,8 @@ export default function UserOnboardingModal({ user, onComplete, onClose }) {
                       onClick={() => setSelectedZodiac(active ? '' : zod.name)}
                       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
                         active
-                          ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40 shadow-[0_0_8px_rgba(251,191,36,0.2)]'
-                          : 'bg-white/[0.04] text-gray-400 hover:text-white border border-white/[0.06]'
+                          ? 'bg-warning-soft text-warning border border-warning-line'
+                          : 'bg-wash text-ink-muted hover:text-ink border border-line-subtle'
                       }`}
                     >
                       <span>{zod.icon}</span>
@@ -332,13 +332,13 @@ export default function UserOnboardingModal({ user, onComplete, onClose }) {
           </div>
 
           {/* 3. 网站优势功能偏好 */}
-          <div className="pt-2 border-t border-white/[0.06]">
-            <label className="block text-xs font-semibold text-gray-300 mb-2.5 flex items-center justify-between">
+          <div className="pt-2 border-t border-line-subtle">
+            <label className="block text-xs font-semibold text-ink mb-2.5 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Sparkles className="size-3.5 text-cyan-400" />
+                <Sparkles className="size-3.5 text-brand" />
                 <span>四、您在 KoyoSIM 最感兴趣的优势功能（多选）</span>
               </span>
-              <span className="text-[11px] text-gray-400">便于智能推荐专属生图与生视频管线</span>
+              <span className="text-[11px] text-ink-muted">便于智能推荐专属生图与生视频管线</span>
             </label>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -352,19 +352,19 @@ export default function UserOnboardingModal({ user, onComplete, onClose }) {
                     onClick={() => toggleFeature(feat.id)}
                     className={`flex items-start gap-2.5 rounded-xl border p-2.5 text-left transition-all ${
                       active
-                        ? 'border-cyan-500/50 bg-cyan-950/20 shadow-[0_0_12px_rgba(6,182,212,0.15)]'
-                        : 'border-white/10 bg-white/[0.02] hover:bg-white/[0.05]'
+                        ? 'border-brand-ring bg-brand-soft'
+                        : 'border-line bg-transparent hover:bg-wash'
                     }`}
                   >
-                    <div className={`mt-0.5 size-7 rounded-lg bg-white/[0.05] flex items-center justify-center shrink-0 ${feat.color}`}>
+                    <div className={`mt-0.5 size-7 rounded-lg bg-wash flex items-center justify-center shrink-0 ${feat.color}`}>
                       <Icon className="size-4" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white">{feat.name}</span>
-                        {active && <Check className="size-3 text-cyan-400" />}
+                        <span className="text-xs font-bold text-ink">{feat.name}</span>
+                        {active && <Check className="size-3 text-brand" />}
                       </div>
-                      <p className="text-[10px] text-gray-400 mt-0.5 truncate">{feat.desc}</p>
+                      <p className="text-micro text-ink-muted mt-0.5 truncate">{feat.desc}</p>
                     </div>
                   </button>
                 );
@@ -374,7 +374,7 @@ export default function UserOnboardingModal({ user, onComplete, onClose }) {
 
           {/* 错误提示 */}
           {error && (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-2.5 text-xs text-red-200 text-center">
+            <div className="rounded-xl border border-danger-line bg-danger-soft p-2.5 text-xs text-danger text-center">
               {error}
             </div>
           )}
@@ -384,7 +384,7 @@ export default function UserOnboardingModal({ user, onComplete, onClose }) {
             <button
               type="submit"
               disabled={busy}
-              className="h-11 w-full rounded-xl bg-gradient-to-r from-emerald-400 via-cyan-400 to-cyan-300 hover:from-emerald-300 hover:to-cyan-200 active:scale-[0.99] text-sm font-bold text-black shadow-lg shadow-cyan-500/20 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+              className="h-11 w-full rounded-xl bg-brand hover:bg-brand-hover active:scale-[0.99] text-body-sm font-bold text-ink-on-accent shadow-elevation-2 transition  disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
               {busy ? (
                 <span>正在保存偏好并生成专属画廊…</span>

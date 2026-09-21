@@ -17,7 +17,7 @@ function addSecurityHeaders(response) {
     // font-src includes fonts.gstatic.com for actual font files
     response.headers.set(
         'Content-Security-Policy',
-        "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://muapi.ai https://*.muapi.ai; font-src 'self' data: https://fonts.gstatic.com;"
+        "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://turing.captcha.qcloud.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.recaptcha.net/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://muapi.ai https://*.muapi.ai https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.recaptcha.net/ https://turing.captcha.qcloud.com; frame-src 'self' https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://www.recaptcha.net/ https://turing.captcha.qcloud.com; font-src 'self' data: https://fonts.gstatic.com;"
     );
     // 强制 HTML 页面与动态 API 不被浏览器协商强缓存，防止版本发布后旧 HTML 错位
     response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');

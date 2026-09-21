@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function AdminRoleModifier() {
   const [userId, setUserId] = useState('');
@@ -48,29 +50,29 @@ export default function AdminRoleModifier() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3.5">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-xs font-semibold text-white/50 mb-1">
+        <label className="block text-xs font-medium text-ink-muted mb-1.5">
           目标用户 ID (usr_xxx)
         </label>
-        <input
+        <Input
           type="text"
           required
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
           placeholder="usr_..."
-          className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2 text-xs text-white outline-none focus:border-cyan-300/60"
+          size="md"
         />
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-white/50 mb-1">
+        <label className="block text-xs font-medium text-ink-muted mb-1.5">
           分配管理角色
         </label>
         <select
           value={role}
           onChange={(e) => setRole(e.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-3.5 py-2 text-xs text-white outline-none focus:border-cyan-300/60"
+          className="h-[38px] w-full rounded-lg border border-line bg-base px-3 text-xs text-ink outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
         >
           <option value="operations_admin">运营管理员 (内容、生成、用户)</option>
           <option value="finance_admin">财务管理员 (订阅、订单、调额、套餐)</option>
@@ -82,29 +84,32 @@ export default function AdminRoleModifier() {
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-white/50 mb-1">
+        <label className="block text-xs font-medium text-ink-muted mb-1.5">
           你的超级管理员登录密码（再认证）
         </label>
-        <input
+        <Input
           type="password"
           required
           value={adminPassword}
           onChange={(e) => setAdminPassword(e.target.value)}
           placeholder="当前登录超管账号的密码"
-          className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2 text-xs text-white outline-none focus:border-cyan-300/60"
+          size="md"
         />
       </div>
 
-      <button
+      <Button
         type="submit"
+        variant="primary"
+        size="md"
         disabled={busy}
-        className="w-full rounded-xl bg-cyan-300 px-4 py-2.5 text-xs font-bold text-black transition hover:bg-cyan-200 disabled:opacity-50"
+        loading={busy}
+        className="w-full mt-2 font-semibold"
       >
         {busy ? '正在执行角色变更…' : '确认变更角色并强制其会话刷新'}
-      </button>
+      </Button>
 
       {message && (
-        <p className={`text-xs ${isError ? 'text-red-300' : 'text-cyan-200'}`}>
+        <p className={`text-xs ${isError ? 'text-danger' : 'text-brand'}`}>
           {message}
         </p>
       )}

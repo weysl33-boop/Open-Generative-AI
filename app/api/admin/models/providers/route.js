@@ -1,7 +1,7 @@
 import { withAdminErrorBoundary, requirePermission, okResponse, errorResponse } from '@/lib/admin/authz';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { listProviders, getProviderById, updateProvider, createProvider, deleteProvider } from '@/lib/repositories/aiCatalog';
-import { saveProviderSecret, getProviderSecretsMetadata } from '@/lib/repositories/providers';
+import { listProviders, getProviderById, updateProvider, createProvider, deleteProvider } from '@/lib/services/modelCatalog';
+import { rotateProviderSecret, getProviderSecretsMetadata } from '@/lib/services/providers';
 import { logAudit } from '@/lib/admin/audit';
 
 export const runtime = 'nodejs';
@@ -61,7 +61,7 @@ async function handlePOST(request) {
       enabled: body.enabled !== false,
       priority: Number(body.priority ?? 100),
       base_url: body.base_url || body.baseUrl || '',
-      api_mode: body.api_mode || body.apiMode || 'async_poll',
+      api_mode: body.api_mode || body.apiMode || 'async',
       balance: Number(body.balance || 0),
       currency: body.currency || 'USD',
       metadata: body.metadata || {},
@@ -70,11 +70,14 @@ async function handlePOST(request) {
 
   // 若提交了新的 API 密钥，安全加密存储
   if (body.apiKey && String(body.apiKey).trim()) {
-    await saveProviderSecret({
+    const secretResult = await rotateProviderSecret({
+      actor: guard.user,
       provider: id,
-      name: 'api_key',
+      secretName: 'api_key',
       secretValue: String(body.apiKey).trim(),
+      requestId: guard.requestId,
     });
+    if (secretResult.error) return errorResponse('VALIDATION_ERROR', secretResult.error, 422, guard.requestId);
   }
 
   await logAudit({

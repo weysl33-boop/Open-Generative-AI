@@ -144,21 +144,24 @@ test('wechat V3 notification AES-GCM decryption', () => {
 
 test('payment routes and services export wechat and alipay capabilities', () => {
   const paymentService = fs.readFileSync(new URL('../../lib/services/paymentService.js', import.meta.url), 'utf8');
-  assert.match(paymentService, /getWechatProvider/);
-  assert.match(paymentService, /getAlipayProvider/);
+  assert.match(paymentService, /resolveWechatProvider/);
+  assert.match(paymentService, /resolveAlipayProvider/);
   assert.match(paymentService, /syncOrderPaymentStatus/);
   assert.match(paymentService, /provider === 'wechat'/);
   assert.match(paymentService, /provider === 'alipay'/);
 
   const wechatWebhook = fs.readFileSync(new URL('../../app/api/billing/webhooks/wechat/route.js', import.meta.url), 'utf8');
-  assert.match(wechatWebhook, /getWechatProvider/);
+  assert.match(wechatWebhook, /resolveWechatProvider/);
   assert.match(wechatWebhook, /dispatchPaymentWebhook/);
   assert.match(wechatWebhook, /SUCCESS/);
+  // 密钥必须经服务层解析（env 缺失时回落 provider_secrets），且不得直连仓储取密钥。
+  assert.doesNotMatch(wechatWebhook, /@\/lib\/repositories/);
 
   const alipayWebhook = fs.readFileSync(new URL('../../app/api/billing/webhooks/alipay/route.js', import.meta.url), 'utf8');
-  assert.match(alipayWebhook, /getAlipayProvider/);
+  assert.match(alipayWebhook, /resolveAlipayProvider/);
   assert.match(alipayWebhook, /dispatchPaymentWebhook/);
   assert.match(alipayWebhook, /success/);
+  assert.doesNotMatch(alipayWebhook, /@\/lib\/repositories/);
 
   const orderStatusRoute = fs.readFileSync(new URL('../../app/api/billing/orders/[id]/status/route.js', import.meta.url), 'utf8');
   assert.match(orderStatusRoute, /syncOrderPaymentStatus/);

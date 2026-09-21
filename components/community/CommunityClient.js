@@ -1,23 +1,128 @@
-﻿'use client';
+'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { resolveClientLocale } from '@/lib/locales';
+import {
+  AudioLines,
+  Clapperboard,
+  Compass,
+  Copy,
+  Flame,
+  Heart,
+  Image as ImageIcon,
+  LoaderCircle,
+  MessageCircle,
+  Music2,
+  Search,
+  Share2,
+  Sparkles,
+  WandSparkles,
+  Workflow,
+} from 'lucide-react';
 import CommunityDetailModal from './CommunityDetailModal';
+import StudioHeader from '@/components/site/StudioHeader';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const CATEGORIES = [
-  { id: 'all', label: '🌟 探索发现' },
-  { id: 'image', label: '🖼️ AI 绘画' },
-  { id: 'video', label: '🎬 AI 视频' },
-  { id: 'audio', label: '🎵 AI 音乐' },
-  { id: 'workflow', label: '⚡ 设计工作流' },
+  { id: 'all', label: '探索发现', icon: Compass },
+  { id: 'image', label: 'AI 绘画', icon: ImageIcon },
+  { id: 'video', label: 'AI 视频', icon: Clapperboard },
+  { id: 'audio', label: 'AI 音乐', icon: Music2 },
+  { id: 'workflow', label: '设计工作流', icon: Workflow },
 ];
 
 const SORTS = [
-  { id: 'trending', label: '🔥 热门趋势' },
-  { id: 'newest', label: '⚡ 最新发布' },
-  { id: 'likes', label: '💖 最多赞赏' },
+  { id: 'trending', label: '热门趋势', icon: Flame },
+  { id: 'newest', label: '最新发布', icon: Sparkles },
+  { id: 'likes', label: '最多赞赏', icon: Heart },
 ];
 
-export default function CommunityClient({ initialPostId = null }) {
+function mediaMeta(type) {
+  if (type === 'video') return { label: 'AI 视频', Icon: Clapperboard };
+  if (type === 'audio') return { label: 'AI 音乐', Icon: AudioLines };
+  if (type === 'workflow') return { label: '工作流', Icon: Workflow };
+  return { label: 'AI 图像', Icon: ImageIcon };
+}
+
+function FeedSkeleton() {
+  return (
+    <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <div key={index} className="mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-border/70 bg-card/60">
+          <Skeleton className={`w-full rounded-none ${index % 3 === 0 ? 'h-72' : index % 3 === 1 ? 'h-56' : 'h-80'}`} />
+          <div className="flex flex-col gap-3 p-4"><Skeleton className="h-4 w-3/4" /><Skeleton className="h-3 w-1/2" /></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PostCard({ post, onOpen, onLike, onRemix }) {
+  const { label, Icon } = mediaMeta(post.media_type);
+  const isVideo = post.media_type === 'video';
+  const isAudio = post.media_type === 'audio';
+
+  return (
+    <Card className="group mb-4 break-inside-avoid overflow-hidden border-border/75 bg-card/65 py-0 shadow-none transition-all duration-page hover:-translate-y-1 hover:border-primary/35 hover:shadow-[0_22px_70px_-30px_hsl(var(--primary)/0.55)]">
+      <button type="button" className="block w-full text-left" onClick={() => onOpen(post.id)} aria-label={`打开作品：${post.title}`}>
+        <div className="relative overflow-hidden bg-muted/40">
+          {isVideo ? (
+            <video src={post.cover_url || post.media_url} muted loop playsInline className="block max-h-[30rem] min-h-44 w-full object-cover transition duration-page group-hover:scale-[1.03]" />
+          ) : isAudio ? (
+            <div className="flex min-h-56 flex-col items-center justify-center gap-4 bg-gradient-to-br from-primary/15 via-card to-accent/15 p-6 text-primary">
+              <span className="flex size-16 items-center justify-center rounded-full border border-brand-line bg-brand-soft shadow-elevation-2"><AudioLines className="size-7" /></span>
+              <span className="text-xs font-medium tracking-wide">音频创作</span>
+            </div>
+          ) : (
+            <img src={post.cover_url || post.media_url} alt={post.title} loading="lazy" className="block max-h-[32rem] min-h-44 w-full object-cover transition duration-page group-hover:scale-[1.03]" />
+          )}
+          <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background/85 to-transparent" />
+          <Badge variant="secondary" className="absolute left-3 top-3 border border-line bg-background/75 text-foreground backdrop-blur-md"><Icon />{label}</Badge>
+          <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3 opacity-0 transition-opacity duration-page group-hover:opacity-100">
+            <span className="line-clamp-2 text-xs font-medium text-foreground">{post.title}</span>
+            <span className="flex shrink-0 items-center gap-1 rounded-full border border-line bg-background/80 px-2 py-1 text-[11px] text-muted-foreground backdrop-blur"><MessageCircle />{post.comments_count || 0}</span>
+          </div>
+        </div>
+      </button>
+      <CardContent className="flex flex-col gap-3 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-semibold text-foreground">{post.title || '未命名作品'}</h3>
+            <Link
+              href={`/u/${post.author_user_number || post.user_id || ''}`}
+              onClick={(e) => e.stopPropagation()}
+              className="mt-1 block truncate text-xs text-muted-foreground transition-colors hover:text-primary hover:underline"
+            >
+              {post.author_name || post.author_username || '社区创作者'}
+            </Link>
+          </div>
+          <Button type="button" variant="ghost" size="icon-sm" aria-label="点赞" className={post.is_liked ? 'text-primary' : 'text-muted-foreground'} onClick={(event) => onLike(post, event)}>
+            <Heart className={post.is_liked ? 'fill-current' : ''} />
+            <span className="sr-only">{post.likes_count || 0} 个赞</span>
+          </Button>
+        </div>
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <span>{post.likes_count || 0} 赞</span>
+            <span>·</span>
+            <span className="text-warning font-medium">🪙 {post.coins_count || 0} 币</span>
+          </div>
+          <Button type="button" variant="ghost" size="xs" className="text-primary hover:bg-primary/10" onClick={(event) => onRemix(post, event)}>
+            <WandSparkles data-icon="inline-start" />做同款
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function CommunityClient({ initialPostId = null, locale: localeProp = null }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('all');
@@ -25,333 +130,157 @@ export default function CommunityClient({ initialPostId = null }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activePostId, setActivePostId] = useState(initialPostId);
   const [toastMsg, setToastMsg] = useState('');
+  const pathname = usePathname();
+  const locale = resolveClientLocale({ explicit: localeProp, pathname });
+  const isZh = locale.startsWith('zh');
 
-  const triggerToast = (msg) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 2500);
+  const triggerToast = (message) => {
+    setToastMsg(message);
+    window.setTimeout(() => setToastMsg(''), 2500);
   };
 
   const loadPosts = useCallback(async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({ limit: '36', sort });
       if (category !== 'all') params.set('category', category);
-      if (sort) params.set('sort', sort);
       if (searchQuery.trim()) params.set('q', searchQuery.trim());
-      params.set('limit', '36');
-
-      const res = await fetch(`/api/community/posts?${params.toString()}`, { cache: 'no-store' });
-      const data = await res.json();
-      if (Array.isArray(data.posts)) {
-        setPosts(data.posts);
-      }
-    } catch (e) {
-      console.error('加载社区作品失败', e);
-      triggerToast('加载社区作品失败，请刷新');
+      const response = await fetch(`/api/community/posts?${params.toString()}`, { cache: 'no-store' });
+      const data = await response.json();
+      if (Array.isArray(data.posts)) setPosts(data.posts);
+    } catch (error) {
+      console.error('加载社区作品失败', error);
+      triggerToast('加载失败，请稍后重试');
     } finally {
       setLoading(false);
     }
-  }, [category, sort, searchQuery]);
+  }, [category, searchQuery, sort]);
 
-  useEffect(() => {
-    loadPosts();
-  }, [loadPosts]);
+  useEffect(() => { loadPosts(); }, [loadPosts]);
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    loadPosts();
-  };
-
-  const handleCardLike = async (post, e) => {
-    e.stopPropagation();
+  const handleLike = async (post, event) => {
+    event.stopPropagation();
     try {
-      const res = await fetch(`/api/community/posts/${post.id}/like`, { method: 'POST' });
-      const data = await res.json();
-      if (res.ok) {
-        setPosts((prev) =>
-          prev.map((item) =>
-            item.id === post.id
-              ? { ...item, is_liked: data.isLiked, likes_count: data.likesCount }
-              : item
-          )
-        );
-      } else {
-        triggerToast(data.error || '请先登录');
-      }
-    } catch {
-      triggerToast('网络连接失败');
-    }
+      const response = await fetch(`/api/community/posts/${post.id}/like`, { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok) return triggerToast(data.error || '请先登录');
+      setPosts((current) => current.map((item) => item.id === post.id ? { ...item, is_liked: data.isLiked, likes_count: data.likesCount } : item));
+    } catch { triggerToast('网络连接失败'); }
   };
 
-  const handleCardRemix = (post, e) => {
-    e.stopPropagation();
+  const handleRemix = (post, event) => {
+    event.stopPropagation();
     fetch(`/api/community/posts/${post.id}/remix`, { method: 'POST' }).catch(() => {});
-
-    const mediaType = post.media_type || 'image';
-    let targetStudio = 'image';
-    if (mediaType === 'video') targetStudio = 'video';
-    else if (mediaType === 'audio') targetStudio = 'audio';
-    else if (mediaType === 'workflow') targetStudio = 'workflow';
-
-    const queryParams = new URLSearchParams();
-    if (post.prompt) queryParams.set('remixPrompt', post.prompt);
-    if (post.model_name) queryParams.set('remixModel', post.model_name);
-
-    window.location.href = `/studio/${targetStudio}?${queryParams.toString()}`;
-  };
-
-  const handleLikeChangeFromModal = (postId, isLiked, likesCount) => {
-    setPosts((prev) =>
-      prev.map((item) => (item.id === postId ? { ...item, is_liked: isLiked, likes_count: likesCount } : item))
-    );
+    const target = post.media_type === 'video' ? 'video' : post.media_type === 'audio' ? 'audio' : post.media_type === 'workflow' ? 'workflow' : 'image';
+    const params = new URLSearchParams();
+    if (post.prompt) params.set('remixPrompt', post.prompt);
+    const studioRoot = isZh ? '/zh/studio' : '/studio';
+    window.location.href = `${studioRoot}/${target}?${params.toString()}`;
   };
 
   return (
-    <main className="min-h-screen bg-[#07080a] text-white">
-      {/* 顶部 Toast */}
-      {toastMsg && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 rounded-full border border-cyan-400/40 bg-[#121820]/95 px-5 py-2.5 text-xs font-semibold text-cyan-300 shadow-2xl backdrop-blur-xl animate-fade-in">
-          {toastMsg}
-        </div>
-      )}
-
-      {/* 顶部统一导航条 */}
-      <header className="border-b border-white/[0.08] bg-[#0c0e12]/85 backdrop-blur-xl sticky top-0 z-30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <a href="/studio" className="flex items-center gap-2 group">
-              <span className="text-xl font-black bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent group-hover:opacity-90 transition">
-                KoyoSIM 即梦社区
-              </span>
-            </a>
-            <div className="hidden sm:flex items-center gap-1 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs text-cyan-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              <span>灵感与做同款</span>
-            </div>
+    <main className="min-h-screen bg-base text-foreground flex flex-col selection:bg-wash-press">
+      <StudioHeader action="creations" showBrand locale={locale} title={isZh ? '社区' : 'Community'} subtitle={isZh ? '发现灵感，复用创作方法' : 'Discover inspiration, remix creative workflows'} />
+      {toastMsg && <div role="status" className="fixed left-1/2 top-20 z-50 -translate-x-1/2 rounded-full border border-primary/30 bg-popover/95 px-4 py-2 text-xs font-medium text-primary shadow-elevation-4 backdrop-blur-xl animate-float-in">{toastMsg}</div>}
+      
+      {/* 居中主内容区：严格对齐个人中心的 1360px 版心与自适应留白 */}
+      <div className="flex-1 mx-auto w-full max-w-[1360px] px-6 sm:px-8 lg:px-12 py-8 sm:py-10 flex flex-col gap-8">
+        <section className="relative overflow-hidden rounded-2xl border border-line bg-surface/95 px-6 py-10 text-center shadow-elevation-3 backdrop-blur-md sm:px-12 sm:py-14">
+          <div className="pointer-events-none absolute -left-16 -top-20 size-72 rounded-full bg-primary/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -right-16 size-80 rounded-full bg-accent/10 blur-3xl" />
+          <div className="relative mx-auto max-w-3xl">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-wash-press px-3 py-1 text-xs font-medium text-ink">
+              <Sparkles className="size-3.5" />
+              灵感社区
+            </span>
+            <h1 className="mt-5 text-3xl font-bold tracking-tight text-ink sm:text-5xl">把灵感变成下一次创作</h1>
+            <p className="mx-auto mt-4 max-w-2xl text-xs sm:text-sm leading-relaxed text-ink-muted font-normal">探索生图、视频、音乐与工作流作品，查看提示词和参数，带着方法直接开始。</p>
+            <form onSubmit={(event) => { event.preventDefault(); loadPosts(); }} className="mx-auto mt-8 flex max-w-2xl items-center gap-2 rounded-xl border border-line bg-well p-1.5 shadow-inner transition focus-within:border-line-strong focus-within:ring-2 focus-within:ring-white/10">
+              <Search className="ml-3 size-4 shrink-0 text-ink-muted" />
+              <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="搜索提示词、风格或模型" className="h-10 sm:h-11 flex-1 border-0 bg-transparent px-2 text-sm text-ink placeholder:text-ink-subtle" />
+              <button type="submit" className="h-10 sm:h-11 rounded-lg bg-surface-inverse px-6 text-xs sm:text-sm font-semibold text-ink-on-accent shadow-elevation-2 transition-all hover:bg-white/90 active:scale-95">搜索</button>
+            </form>
           </div>
+        </section>
 
-          <div className="flex items-center gap-3">
-            <a
-              href="/creations"
-              className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-white/80 hover:bg-white/10 hover:text-white transition"
-            >
-              <span>📁 我的作品</span>
-            </a>
-            <a
-              href="/studio"
-              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-1.5 text-xs font-bold text-black shadow-lg shadow-cyan-500/20 hover:from-cyan-300 hover:to-blue-400 transition"
-            >
-              <span>✨ 进入 Studio 创作</span>
-            </a>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-        {/* 即梦风探索氛围栏与搜索框 */}
-        <div className="relative mb-8 rounded-3xl border border-white/10 bg-gradient-to-b from-[#14171f]/80 to-[#0c0e12]/80 p-6 sm:p-10 shadow-2xl backdrop-blur-xl overflow-hidden text-center">
-          <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-64 w-[600px] rounded-full bg-gradient-to-r from-cyan-500/15 via-purple-500/15 to-blue-500/15 blur-3xl" />
-          
-          <h1 className="relative text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
-            汇聚 AI 创作者的万千灵感，<span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">一键即可做同款</span>
-          </h1>
-          <p className="relative mt-2 text-xs sm:text-sm text-white/50 max-w-xl mx-auto">
-            参考即梦沉浸社区，生图、生视频、生音乐等作品自由流转，随时复用创作者 Prompt 与生图模型参数。
-          </p>
-
-          {/* 居中搜索栏 */}
-          <form onSubmit={handleSearchSubmit} className="relative mt-6 max-w-2xl mx-auto flex items-center gap-2">
-            <div className="relative flex-1">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 text-sm">🔍</span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="搜索感兴趣的提示词 Prompt、风格、AI 模型..."
-                className="w-full rounded-2xl border border-white/15 bg-black/40 pl-11 pr-4 py-3 text-sm text-white placeholder-white/30 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition shadow-inner"
-              />
-            </div>
-            <button
-              type="submit"
-              className="rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-black px-6 py-3 text-sm font-bold shadow-md shadow-cyan-400/20 transition"
-            >
-              搜索
-            </button>
-          </form>
-        </div>
-
-        {/* 频道分类与排序控制条 */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
-            {CATEGORIES.map((c) => {
-              const active = category === c.id;
+        {/* 分类过滤器与排序切换栏（对齐个人中心卡片药丸风格） */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-line-subtle pb-5">
+          <div className="inline-flex max-w-full overflow-x-auto items-center gap-1.5 p-1 rounded-xl bg-surface border border-line no-scrollbar">
+            {CATEGORIES.map(({ id, label, icon: Icon }) => {
+              const isSelected = category === id;
               return (
                 <button
-                  key={c.id}
-                  onClick={() => setCategory(c.id)}
-                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
-                    active
-                      ? 'bg-cyan-400 text-black shadow-md shadow-cyan-400/20'
-                      : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-transparent'
+                  key={id}
+                  type="button"
+                  onClick={() => setCategory(id)}
+                  className={`flex shrink-0 items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                    isSelected
+                      ? 'bg-surface-inverse text-ink-inverse shadow-elevation-2'
+                      : 'text-ink-muted hover:text-ink hover:bg-wash'
                   }`}
                 >
-                  {c.label}
+                  <Icon className="size-3.5" />
+                  <span>{label}</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="flex items-center gap-2">
-            {SORTS.map((s) => {
-              const active = sort === s.id;
+          <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-surface border border-line self-start sm:self-auto">
+            {SORTS.map(({ id, label, icon: Icon }) => {
+              const isSelected = sort === id;
               return (
                 <button
-                  key={s.id}
-                  onClick={() => setSort(s.id)}
-                  className={`rounded-xl px-3 py-1 text-xs font-medium transition ${
-                    active ? 'bg-white/10 text-cyan-300 border border-cyan-400/30' : 'text-white/40 hover:text-white'
+                  key={id}
+                  type="button"
+                  onClick={() => setSort(id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    isSelected
+                      ? 'bg-wash-press text-ink font-semibold shadow-elevation-1'
+                      : 'text-ink-muted hover:text-ink hover:bg-wash'
                   }`}
                 >
-                  {s.label}
+                  <Icon className="size-3.5" />
+                  <span>{label}</span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* 作品瀑布流 */}
-        {loading ? (
-          <div className="py-32 text-center text-sm text-white/40 flex flex-col items-center justify-center gap-3">
-            <div className="h-7 w-7 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
-            <span>探索发现正在加载中...</span>
-          </div>
-        ) : posts.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.01] py-24 text-center">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/5 text-2xl">
-              🌌
-            </div>
-            <h3 className="text-base font-bold text-white">暂未找到相关灵感作品</h3>
-            <p className="mt-1 text-xs text-white/40">成为第一个在此频道发布创作的艺术家吧！</p>
-            <a
-              href="/creations"
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-5 py-2 text-xs font-bold text-black shadow-lg shadow-cyan-500/20 hover:from-cyan-300 hover:to-blue-400 transition"
-            >
-              📢 从我的作品库分享
-            </a>
-          </div>
-        ) : (
-          <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-5 space-y-5">
-            {posts.map((post) => {
-              const isVideo = post.media_type === 'video';
-              const isAudio = post.media_type === 'audio';
-
-              return (
-                <div
-                  key={post.id}
-                  onClick={() => setActivePostId(post.id)}
-                  className="group relative break-inside-avoid rounded-2xl border border-white/10 bg-[#111317] overflow-hidden hover:border-cyan-400/40 hover:shadow-2xl hover:shadow-cyan-500/10 transition duration-300 cursor-pointer flex flex-col"
+        {/* 内容网格与大卡片空状态（对齐个人中心） */}
+        <section className="flex-1 flex flex-col min-h-[420px]" aria-live="polite">
+          {loading ? (
+            <FeedSkeleton />
+          ) : posts.length === 0 ? (
+            <div className="flex-1 rounded-2xl border border-line-subtle bg-surface/80 backdrop-blur-sm p-12 sm:p-20 text-center flex flex-col items-center justify-center shadow-elevation-3">
+              <div className="flex size-14 items-center justify-center rounded-2xl border border-line bg-wash text-ink shadow-inner">
+                <Compass className="size-6 text-ink" />
+              </div>
+              <h3 className="mt-5 text-base font-bold text-ink tracking-wide">还没有匹配的灵感</h3>
+              <p className="mt-2 text-xs sm:text-sm text-ink-muted max-w-md mx-auto leading-relaxed">
+                换个关键词，或成为第一个在此频道发布创作成果的创作者。
+              </p>
+              <div className="mt-6">
+                <Link
+                  href="/creations"
+                  className="inline-flex items-center gap-2 rounded-full bg-surface-inverse hover:bg-white/90 text-ink-on-accent px-6 py-2.5 text-xs sm:text-sm font-semibold shadow-elevation-2 transition-transform active:scale-95"
                 >
-                  {/* 媒体封面 */}
-                  <div className="relative w-full bg-black/60 overflow-hidden">
-                    {isVideo ? (
-                      <div className="relative aspect-[9/14] sm:aspect-auto">
-                        <video
-                          src={post.media_url}
-                          className="w-full h-auto object-cover transition duration-300 group-hover:scale-102"
-                          muted
-                          loop
-                          onMouseEnter={(e) => e.target.play()}
-                          onMouseLeave={(e) => { e.target.pause(); e.target.currentTime = 0; }}
-                        />
-                        <div className="absolute top-2.5 left-2.5 rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-[10px] font-semibold text-white/90 border border-white/10 flex items-center gap-1">
-                          <span>▶</span> <span>视频</span>
-                        </div>
-                      </div>
-                    ) : isAudio ? (
-                      <div className="p-6 bg-gradient-to-b from-[#1a1d26] to-[#0f1116] flex flex-col items-center justify-center text-center">
-                        <div className="h-20 w-20 rounded-full bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-3xl mb-3 shadow-lg group-hover:rotate-45 transition duration-500">
-                          🎵
-                        </div>
-                        <h4 className="text-xs font-bold text-white truncate max-w-[200px]">{post.title}</h4>
-                        <span className="text-[10px] text-cyan-300/60 font-mono mt-1">AI Audio Track</span>
-                      </div>
-                    ) : (
-                      <img
-                        src={post.cover_url || post.media_url}
-                        alt={post.title}
-                        loading="lazy"
-                        className="w-full h-auto object-cover transition duration-300 group-hover:scale-102"
-                      />
-                    )}
-
-                    {/* 悬停快捷按钮区 */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-between p-3.5">
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={(e) => handleCardLike(post, e)}
-                          className={`rounded-full p-2 backdrop-blur-md transition ${
-                            post.is_liked
-                              ? 'bg-pink-500/30 text-pink-400 border border-pink-500/50'
-                              : 'bg-black/60 text-white/80 hover:bg-black/80 hover:text-white border border-white/10'
-                          }`}
-                          title="点赞"
-                        >
-                          <span className="text-sm">{post.is_liked ? '❤️' : '🤍'}</span>
-                        </button>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-white/90 line-clamp-2 mb-2.5 font-medium">
-                          {post.prompt || post.title}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={(e) => handleCardRemix(post, e)}
-                          className="w-full rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 py-2 text-xs font-extrabold text-black shadow-lg shadow-cyan-500/20 hover:brightness-110 active:scale-[0.98] transition flex items-center justify-center gap-1.5"
-                        >
-                          <span>✨</span>
-                          <span>做同款</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 底部作者与信息栏 */}
-                  <div className="p-3.5 flex items-center justify-between border-t border-white/[0.06] bg-[#111317]">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="h-6 w-6 rounded-full bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center flex-shrink-0 overflow-hidden text-[10px]">
-                        {post.author_avatar ? (
-                          <img src={post.author_avatar} alt="u" className="h-full w-full object-cover" />
-                        ) : (
-                          '✨'
-                        )}
-                      </div>
-                      <span className="text-xs font-medium text-white/80 truncate">
-                        {post.author_name || post.author_username || 'AI 探索家'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 text-xs text-white/40">
-                      <span>❤️</span>
-                      <span className="font-mono">{post.likes_count || 0}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                  <Share2 className="size-4" />
+                  从我的作品分享
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="columns-1 gap-5 sm:columns-2 lg:columns-3 xl:columns-4">
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} onOpen={setActivePostId} onLike={handleLike} onRemix={handleRemix} />
+              ))}
+            </div>
+          )}
+        </section>
       </div>
-
-      {/* 沉浸式作品详情弹窗 */}
-      {activePostId && (
-        <CommunityDetailModal
-          postId={activePostId}
-          onClose={() => setActivePostId(null)}
-          onLikeChange={handleLikeChangeFromModal}
-        />
-      )}
+      {activePostId && <CommunityDetailModal postId={activePostId} initialPost={posts.find((post) => post.id === activePostId)} onClose={() => setActivePostId(null)} onLikeChange={(id, liked, count) => setPosts((current) => current.map((post) => post.id === id ? { ...post, is_liked: liked, likes_count: count } : post))} />}
     </main>
   );
 }

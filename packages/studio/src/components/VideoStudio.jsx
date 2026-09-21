@@ -98,7 +98,17 @@ import {
 import usePromptMenu from "./prompt/usePromptMenu.js";
 import en from "../messages/en/videoStudio.json";
 import zh from "../messages/zh/videoStudio.json";
+import ja from "../messages/ja-JP/videoStudio.json";
+import ko from "../messages/ko-KR/videoStudio.json";
+import zhTw from "../messages/zh-TW/videoStudio.json";
+import es from "../messages/es/videoStudio.json";
 import { resolveCopy } from "../i18nUtils";
+import {
+  PROVIDER_LOGOS,
+  invertLogos,
+  getProviderLogo,
+  getProviderStyle,
+} from "../providerLogos.js";
 
 async function downloadFile(url, filename) {
   try {
@@ -139,13 +149,13 @@ function ReferenceMediaLabel({ label, required = false }) {
   if (!label) return null;
   return (
     <span
-      className={`flex min-h-6 max-w-[88px] items-start justify-center text-balance text-center text-[10px] font-semibold leading-3 ${
-        required ? "text-white/60" : "text-white/45"
+      className={`flex min-h-6 max-w-[88px] items-start justify-center text-balance text-center text-micro font-semibold leading-3 ${
+        required ? "text-ink-muted" : "text-ink-subtle"
       }`}
     >
       {label}
       {required && (
-        <span className="ml-0.5 text-[#22d3ee]" aria-hidden="true">
+        <span className="ml-0.5 text-brand" aria-hidden="true">
           *
         </span>
       )}
@@ -172,7 +182,7 @@ function ReferencePreview({
         ) : type === "video" ? (
           <video src={url} className="w-full h-full object-cover" muted />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-white/5 text-primary">
+          <div className="w-full h-full flex items-center justify-center bg-wash text-primary">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M9 18V5l10-2v13" />
               <circle cx="6" cy="18" r="3" />
@@ -185,7 +195,7 @@ function ReferencePreview({
           aria-label={`${copy.media.removePrefix} ${actionLabel}`}
           title={`${copy.media.removePrefix} ${actionLabel}`}
           onClick={() => onRemove(index)}
-          className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 hover:bg-black rounded-full flex items-center justify-center text-white/85 hover:text-white text-[8px] border border-white/5"
+          className="absolute top-0.5 right-0.5 w-4 h-4 bg-scrim hover:bg-canvas rounded-full flex items-center justify-center text-ink hover:text-ink text-micro border border-line-subtle"
         >
           ×
         </button>
@@ -307,9 +317,9 @@ function ReferenceUploadButton({
         }`}
       >
         {uploading ? (
-          <div className="flex flex-col items-center justify-center w-full h-full absolute inset-0 bg-black/80 z-20 backdrop-blur-[2px]">
+          <div className="flex flex-col items-center justify-center w-full h-full absolute inset-0 bg-scrim z-20 backdrop-blur-[2px]">
             <svg className="w-8 h-8 -rotate-90">
-              <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-white/10" />
+              <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-ink-subtle" />
               <circle
                 cx="16"
                 cy="16"
@@ -319,24 +329,24 @@ function ReferenceUploadButton({
                 fill="transparent"
                 strokeDasharray={88}
                 strokeDashoffset={88 - (88 * progress) / 100}
-                className="text-[#22d3ee] transition-all duration-300"
+                className="text-brand transition-all duration-page"
               />
             </svg>
-            <span className="absolute text-[9px] font-black text-[#22d3ee] leading-none">{progress}%</span>
+            <span className="absolute text-micro font-black text-brand leading-none">{progress}%</span>
           </div>
         ) : type === "video" ? (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-white/40 group-hover:text-[#22d3ee] transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-ink-subtle group-hover:text-brand transition-colors">
             <polygon points="23 7 16 12 23 17 23 7" />
             <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
           </svg>
         ) : type === "audio" ? (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-white/40 group-hover:text-[#22d3ee] transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-ink-subtle group-hover:text-brand transition-colors">
             <path d="M9 18V5l10-2v13" />
             <circle cx="6" cy="18" r="3" />
             <circle cx="16" cy="16" r="3" />
           </svg>
         ) : (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-white/40 group-hover:text-[#22d3ee] transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-ink-subtle group-hover:text-brand transition-colors">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
@@ -403,36 +413,6 @@ const VideoReadySvg = () => (
 
 // ── Dropdown components ───────────────────────────────────────────────────────
 
-const PROVIDER_LOGOS = {
-  openai: "https://cdn.muapi.ai/models/openai.png",
-  google: "https://cdn.muapi.ai/models/gemini.png",
-  kling: "https://cdn.muapi.ai/models/kling.png",
-  alibaba: "https://cdn.muapi.ai/models/alibaba.png",
-  bytedance: "https://cdn.muapi.ai/models/bytedance.png",
-  blackforest: "https://cdn.muapi.ai/models/bfl.png",
-  minimax: "https://cdn.muapi.ai/models/minimax.png",
-  suno: "https://cdn.muapi.ai/models/suno.png",
-  anthropic: "https://cdn.muapi.ai/models/claude.png",
-  meshy: "https://cdn.muapi.ai/models/meshy-3.png",
-  tripo3d: "https://cdn.muapi.ai/models/tripo3d.png",
-  grok: "https://cdn.muapi.ai/models/xai.png",
-  muapi: "https://cdn.muapi.ai/models/muapi.png",
-  midjourney: "https://cdn.muapi.ai/models/midjourney.png",
-  vidu: "https://cdn.muapi.ai/models/vidu.png",
-  runway: "https://cdn.muapi.ai/models/runway.png",
-  luma: "https://cdn.muapi.ai/models/luma.png",
-  ideogram: "https://cdn.muapi.ai/models/ideogram.png",
-  leonardoai: "https://cdn.muapi.ai/models/leonardoai.png",
-  hunyuan: "https://cdn.muapi.ai/models/hunyuan.png",
-  hidream: "https://cdn.muapi.ai/models/hidream.png",
-  lightricks: "https://cdn.muapi.ai/models/lightricks.png",
-  pixverse: "https://cdn.muapi.ai/models/pixverse.png",
-  reve: "https://cdn.muapi.ai/models/reve.png",
-  stability: "https://cdn.muapi.ai/models/stability.png"
-};
-
-const invertLogos = ['openai', 'blackforest', 'runway', 'ideogram', 'lightricks', 'grok'];
-
 function seedanceToolLabel(tool, copy, includeAction = false) {
   return [
     includeAction ? copy.seedance.toolNames[tool.group] : null,
@@ -483,41 +463,6 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy = en }) {
     }
   }, []);
 
-  const getProviderStyle = (provider) => {
-    switch (provider) {
-      case "grok":
-        return { text: "xI", bg: "bg-orange-500/10 text-orange-400 border-orange-500/25" };
-      case "openai":
-        return { text: "O", bg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/25" };
-      case "google":
-        return { text: "G", bg: "bg-blue-500/10 text-blue-400 border-blue-500/25" };
-      case "blackforest":
-        return { text: "BF", bg: "bg-amber-500/10 text-amber-400 border-amber-500/25" };
-      case "bytedance":
-        return { text: "BD", bg: "bg-purple-500/10 text-purple-400 border-purple-500/25" };
-      case "midjourney":
-        return { text: "MJ", bg: "bg-indigo-500/10 text-indigo-400 border-indigo-500/25" };
-      case "kling":
-        return { text: "KL", bg: "bg-rose-500/10 text-rose-400 border-rose-500/25" };
-      case "vidu":
-        return { text: "VD", bg: "bg-cyan-500/10 text-cyan-400 border-cyan-500/25" };
-      case "minimax":
-        return { text: "MX", bg: "bg-pink-500/10 text-pink-400 border-pink-500/25" };
-      case "ideogram":
-        return { text: "ID", bg: "bg-yellow-500/10 text-yellow-400 border-yellow-500/25" };
-      case "luma":
-        return { text: "LM", bg: "bg-teal-500/10 text-teal-400 border-teal-500/25" };
-      case "alibaba":
-        return { text: "AL", bg: "bg-sky-500/10 text-sky-400 border-sky-500/25" };
-      case "leonardoai":
-        return { text: "LE", bg: "bg-violet-500/10 text-violet-400 border-violet-500/25" };
-      case "stability":
-        return { text: "SD", bg: "bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/25" };
-      default:
-        const name = provider ? provider.toUpperCase() : "AI";
-        return { text: name.substring(0, 2), bg: "bg-primary/10 text-primary border-primary/25" };
-    }
-  };
 
   // Dynamically compute list of providers from the input models lists
   const availableProviders = [];
@@ -558,9 +503,9 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy = en }) {
   }
 
   const getIconColor = (family) => {
-    if (family.id.includes("kling")) return "bg-blue-500/10 text-blue-400 border-blue-500/10";
+    if (family.id.includes("kling")) return "bg-info-soft text-info border-info-soft";
     if (family.id.includes("veo")) return "bg-purple-500/10 text-purple-400 border-purple-500/10";
-    if (family.id.includes("sora")) return "bg-rose-500/10 text-rose-400 border-rose-500/10";
+    if (family.id.includes("sora")) return "bg-danger-soft text-danger border-danger-soft";
     return "bg-primary/10 text-primary border-primary/10";
   };
 
@@ -573,7 +518,7 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy = en }) {
       key={entry.id}
       aria-pressed={isSelected}
       ref={isSelected ? activeItemRef : null}
-      className={`flex w-full text-left items-center justify-between p-3.5 hover:bg-white/5 rounded-2xl cursor-pointer transition-all border border-transparent hover:border-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${isSelected ? "bg-white/5 border-white/5" : ""}`}
+      className={`flex w-full text-left items-center justify-between p-3.5 hover:bg-wash rounded-2xl cursor-pointer transition-all border border-transparent hover:border-line-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${isSelected ? "bg-wash border-line-subtle" : ""}`}
       onClick={(e) => {
         e.stopPropagation();
         onSelect(entry, activeCategory.id);
@@ -581,28 +526,34 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy = en }) {
       }}
     >
       <div className="flex items-center gap-3.5">
-        {PROVIDER_LOGOS[family.provider] ? (
-          <div className="w-8 h-8 rounded-xl border border-white/5 overflow-hidden shrink-0 flex items-center justify-center bg-white/[0.02]">
-            <img
-              src={PROVIDER_LOGOS[family.provider]}
-              alt={family.provider_name}
-              className={`w-full h-full object-contain p-1 ${invertLogos.includes(family.provider) ? "invert" : ""}`}
-            />
-          </div>
-        ) : (
-          <div
-            className={`w-9 h-9 ${getIconColor(family)} border rounded-xl flex items-center justify-center font-black text-xs shadow-inner uppercase`}
-          >
-            {entry.name.charAt(0)}
-          </div>
-        )}
+        {(() => {
+          const logo = getProviderLogo(family.provider);
+          return logo ? (
+            <div className="w-8 h-8 rounded-xl border border-line-subtle overflow-hidden shrink-0 flex items-center justify-center bg-wash">
+              <img
+                src={logo}
+                alt={family.provider_name}
+                className={`w-full h-full object-contain p-1 ${invertLogos.includes(family.provider) ? "invert" : ""}`}
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            </div>
+          ) : (
+            <div
+              className={`w-9 h-9 ${getIconColor(family)} border rounded-xl flex items-center justify-center font-black text-xs shadow-inner uppercase`}
+            >
+              {entry.name.charAt(0)}
+            </div>
+          );
+        })()}
         <div className="flex flex-col gap-0.5 min-w-0">
-          <span className="text-xs font-bold text-white tracking-tight truncate">
+          <span className="text-xs font-bold text-ink tracking-tight truncate">
             {label}
           </span>
           <div className="flex items-center gap-1.5">
             {selectedProvider === "all" && family.provider_name && (
-              <span className="text-[9px] text-white/40">
+              <span className="text-micro text-ink-subtle">
                 {family.provider_name}
               </span>
             )}
@@ -617,14 +568,14 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy = en }) {
   return (
     <div className="flex gap-4 h-full max-h-[70vh] min-h-[350px]">
       {/* Left Sidebar: Provider tabs */}
-      <div className="flex flex-col gap-2.5 items-center pr-2 border-r border-white/5 shrink-0 select-none overflow-y-auto custom-scrollbar w-14 pt-0.5">
+      <div className="flex flex-col gap-2.5 items-center pr-2 border-r border-line-subtle shrink-0 select-none overflow-y-auto custom-scrollbar w-14 pt-0.5">
         <button
           type="button"
           onClick={() => setSelectedProvider("all")}
           className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all flex-shrink-0 cursor-pointer ${
             selectedProvider === "all"
-              ? "bg-white/10 text-yellow-400 border-yellow-500/30 shadow-md scale-105"
-              : "bg-white/[0.02] text-white/50 border-white/[0.03] hover:bg-white/5 hover:text-white"
+              ? "bg-wash-press text-yellow-400 border-yellow-500/30 shadow-elevation-2 scale-105"
+              : "bg-wash text-ink-subtle border-line-subtle hover:bg-wash hover:text-ink"
           }`}
           title={copy.providers.allProviders}
         >
@@ -642,22 +593,28 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy = en }) {
               type="button"
               onClick={() => setSelectedProvider(p.id)}
               aria-pressed={isSelected}
-              className={`w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center overflow-hidden font-black text-[10px] border transition-all cursor-pointer ${
+              className={`w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center overflow-hidden font-black text-micro border transition-all cursor-pointer ${
                 isSelected
-                  ? `${style.bg} scale-105 shadow-md shadow-black/10`
-                  : "bg-white/[0.02] text-white/40 border-white/[0.02] hover:bg-white/5 hover:text-white/80"
+                  ? `${style.bg} scale-105 shadow-elevation-2 shadow-black/10`
+                  : "bg-wash text-ink-subtle border-line-subtle hover:bg-wash hover:text-ink"
               }`}
               title={p.name}
             >
-              {PROVIDER_LOGOS[p.id] ? (
-                <img
-                  src={PROVIDER_LOGOS[p.id]}
-                  alt={p.name}
-                  className={`w-full h-full rounded-full object-contain ${invertLogos.includes(p.id) ? "invert" : ""}`}
-                />
-              ) : (
-                style.text
-              )}
+              {(() => {
+                const logo = getProviderLogo(p.id);
+                return logo ? (
+                  <img
+                    src={logo}
+                    alt={p.name}
+                    className={`w-full h-full rounded-full object-contain ${invertLogos.includes(p.id) ? "invert" : ""}`}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  style.text
+                );
+              })()}
             </button>
           );
         })}
@@ -665,7 +622,7 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy = en }) {
 
       {/* Right Pane: Search + Lists */}
       <div className="flex-1 flex flex-col gap-2 min-w-0">
-        <div className="px-1 pb-2 border-b border-white/5 shrink-0 space-y-2">
+        <div className="px-1 pb-2 border-b border-line-subtle shrink-0 space-y-2">
           <div className="flex gap-1.5 overflow-x-auto custom-scrollbar pb-0.5">
             {modelCategories.map((category) => (
               <button
@@ -675,17 +632,17 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy = en }) {
                   setSelectedCategory(category.id);
                   setSelectedProvider("all");
                 }}
-                className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition-colors border ${
+                className={`shrink-0 rounded-lg px-2.5 py-1.5 text-micro font-bold transition-colors border ${
                   selectedCategory === category.id
                     ? "bg-primary/15 text-primary border-primary/30"
-                    : "bg-white/[0.02] text-white/50 border-white/[0.04] hover:bg-white/5 hover:text-white"
+                    : "bg-wash text-ink-subtle border-line-subtle hover:bg-wash hover:text-ink"
                 }`}
               >
                 {category.label}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-2 border border-white/5 focus-within:border-primary/50 transition-colors">
+          <div className="flex items-center gap-3 bg-wash rounded-xl px-4 py-2 border border-line-subtle focus-within:border-primary/50 transition-colors">
             <svg
               width="14"
               height="14"
@@ -708,7 +665,7 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy = en }) {
                 if (value.trim()) setSelectedProvider("all");
               }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-transparent border-none text-xs text-white focus:ring-0 w-full p-0 outline-none"
+              className="bg-transparent border-none text-xs text-ink focus:ring-0 w-full p-0 outline-none"
             />
           </div>
         </div>
@@ -716,7 +673,7 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy = en }) {
         <div className="text-xs font-bold text-secondary px-2 py-1 shrink-0 flex items-center justify-between">
           <span>{activeCategory.label} models</span>
           {selectedProvider !== "all" && (
-            <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-white/60">
+            <span className="text-micro bg-wash px-2 py-0.5 rounded text-ink-muted">
               {availableProviders.find(p => p.id === selectedProvider)?.name || selectedProvider}
             </span>
           )}
@@ -724,22 +681,22 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy = en }) {
         
         <div className="flex flex-col gap-1.5 overflow-y-auto custom-scrollbar pr-1 pb-2 flex-1">
           {filtered.length === 0 ? (
-            <div className="text-xs text-white/30 text-center py-6">
+            <div className="text-xs text-ink-subtle text-center py-6">
               No models found
             </div>
           ) : (
             <>
               {mainEntries.map((entry) => renderItem(entry))}
               {Object.values(seedanceToolsByGroup).some((entries) => entries.length > 0) && (
-                <details open={Boolean(search.trim()) || Boolean(selectedTool)} className="mt-2 border-t border-white/5 pt-2">
-                  <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-white/50">
+                <details open={Boolean(search.trim()) || Boolean(selectedTool)} className="mt-2 border-t border-line-subtle pt-2">
+                  <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-ink-subtle">
                     {copy.seedance.tools}
                   </summary>
                   {["continueGenerated", "removeWatermark"].map((group) => {
                     const entries = seedanceToolsByGroup[group].filter(Boolean);
                     return entries.length > 0 && (
                       <div key={group} role="group" aria-label={copy.seedance[group]} className="pt-2">
-                        <p className="px-3 pb-1 text-[11px] font-semibold text-white/60">{copy.seedance[group]}</p>
+                        <p className="px-3 pb-1 text-[11px] font-semibold text-ink-muted">{copy.seedance[group]}</p>
                         {entries.map((entry) => renderItem(entry, seedanceToolLabel(getSeedanceToolConfiguration(entry.defaultVariant.model.id), copy)))}
                       </div>
                     );
@@ -747,9 +704,9 @@ function ModelDropdown({ selectedModel, onSelect, onClose, copy = en }) {
                 </details>
               )}
               {veoTools.length > 0 && (
-                <details open={Boolean(search.trim()) || Boolean(selectedVeoTool)} className="mt-2 border-t border-white/5 pt-2">
-                  <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-white/50">{copy.veo.tools}</summary>
-                  <p className="px-3 pb-2 text-[11px] text-white/45">{copy.veo.toolsHelp}</p>
+                <details open={Boolean(search.trim()) || Boolean(selectedVeoTool)} className="mt-2 border-t border-line-subtle pt-2">
+                  <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-ink-subtle">{copy.veo.tools}</summary>
+                  <p className="px-3 pb-2 text-[11px] text-ink-subtle">{copy.veo.toolsHelp}</p>
                   {veoTools.filter(Boolean).map((entry) => renderItem(
                     entry, copy.veo.toolNames[getVeoToolConfiguration(entry.defaultVariant.model.id).key],
                   ))}
@@ -782,7 +739,7 @@ export default function VideoStudio({
   onFilesHandled,
   locale = "en",
 }) {
-  const copy = useMemo(() => resolveCopy(en, zh, locale), [locale]);
+  const copy = useMemo(() => resolveCopy(en, { 'zh-CN': zh, 'ja-JP': ja, 'ko-KR': ko, 'zh-TW': zhTw, es }, locale), [locale]);
   const LEGACY_PERSIST_KEY = "hg_video_studio_persistent";
   const PERSIST_KEY = scopedPersistKey(LEGACY_PERSIST_KEY, apiKey);
   useEffect(() => {
@@ -2497,12 +2454,12 @@ export default function VideoStudio({
               return (
                 <div
                   key={entry.id || idx}
-                  className="relative group rounded-lg overflow-hidden border border-white/10 bg-[#0a0a0a] shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col cursor-pointer"
+                  className="relative group rounded-lg overflow-hidden border border-line bg-canvas shadow-elevation-3 hover:border-primary/50 transition-all duration-page flex flex-col cursor-pointer"
                   onClick={() => setFullscreenUrl(entry.url)}
                 >
                   <video
                     src={entry.url}
-                    className="w-full aspect-video object-cover bg-black/40 hover:opacity-80 transition-opacity"
+                    className="w-full aspect-video object-cover bg-scrim hover:opacity-80 transition-opacity"
                     controls={false}
                     loop
                     muted
@@ -2527,7 +2484,7 @@ export default function VideoStudio({
                         e.stopPropagation();
                         downloadFile(entry.url, `video-${entry.id || idx}.mp4`);
                       }}
-                      className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-primary hover:text-black transition-all border border-white/10"
+                      className="p-2 bg-scrim backdrop-blur-md rounded-full text-ink hover:bg-primary hover:text-ink-inverse transition-all border border-line"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
@@ -2541,7 +2498,7 @@ export default function VideoStudio({
                           e.stopPropagation();
                           handleExtend(entry.id, entry.model);
                         }}
-                        className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-primary hover:text-black transition-all border border-white/10"
+                        className="p-2 bg-scrim backdrop-blur-md rounded-full text-ink hover:bg-primary hover:text-ink-inverse transition-all border border-line"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M5 12h14M12 5l7 7-7 7" />
@@ -2559,7 +2516,7 @@ export default function VideoStudio({
                           });
                         }
                       }}
-                      className="p-2 bg-black/60 backdrop-blur-md rounded-full text-red-400 hover:bg-red-500 hover:text-white transition-all border border-white/10"
+                      className="p-2 bg-scrim backdrop-blur-md rounded-full text-danger hover:bg-danger hover:text-ink transition-all border border-line"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <polyline points="3 6 5 6 21 6" />
@@ -2600,21 +2557,21 @@ export default function VideoStudio({
                   />
 
                   {/* Prompt & Details */}
-                  <div className="p-3 bg-black/80 backdrop-blur-sm border-t border-white/5 flex-1 flex flex-col justify-between gap-2">
-                    <p className="text-white/70 text-xs line-clamp-3 leading-relaxed" title={entry.prompt}>
+                  <div className="p-3 bg-scrim backdrop-blur-sm border-t border-line-subtle flex-1 flex flex-col justify-between gap-2">
+                    <p className="text-ink-muted text-xs line-clamp-3 leading-relaxed" title={entry.prompt}>
                       {entry.prompt || copy.gallery.noPromptProvided}
                     </p>
                     <div className="flex items-center justify-between mt-1 flex-wrap gap-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded border border-primary/20 whitespace-nowrap capitalize">
+                        <span className="text-micro font-bold text-primary px-2 py-0.5 bg-primary/10 rounded border border-primary/20 whitespace-nowrap capitalize">
                           {entry.model?.replace("-", " ") || copy.gallery.fallbackTitle}
                         </span>
                         <div className="flex gap-2">
                           {entry.resolution && (
-                            <span className="text-[10px] text-white/40">{entry.resolution}</span>
+                            <span className="text-micro text-ink-subtle">{entry.resolution}</span>
                           )}
                           {entry.duration && (
-                            <span className="text-[10px] text-white/40">{entry.duration}s</span>
+                            <span className="text-micro text-ink-subtle">{entry.duration}s</span>
                           )}
                         </div>
                       </div>
@@ -2625,31 +2582,31 @@ export default function VideoStudio({
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full animate-fade-in-up transition-all duration-700 min-h-[50vh]">
+          <div className="flex flex-col items-center justify-center h-full animate-fade-in-up transition-all duration-page min-h-[50vh]">
             {/* Overlapping floating cards */}
             <div className="flex items-center justify-center gap-1.5 md:gap-3 mb-10 select-none scale-90 sm:scale-100">
-              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-2xl -rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] flex-shrink-0">
+              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-line shadow-elevation-4 -rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/sdxl-image.avif"
                   alt={copy.creativeAssets.asset1}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-2xl -rotate-[4deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-line shadow-elevation-4 -rotate-[4deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash -ml-3 sm:-ml-4 flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/chroma-image.avif"
                   alt={copy.creativeAssets.asset2}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="w-18 h-18 sm:w-24 sm:h-24 rounded-full border border-white/10 shadow-2xl rotate-[6deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+              <div className="w-18 h-18 sm:w-24 sm:h-24 rounded-full border border-line shadow-elevation-4 rotate-[6deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash -ml-3 sm:-ml-4 flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/neta-lumina.avif"
                   alt={copy.creativeAssets.asset3}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-white/10 shadow-2xl rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-300 overflow-hidden bg-white/[0.01] -ml-3 sm:-ml-4 flex-shrink-0">
+              <div className="w-18 h-22 sm:w-24 sm:h-28 rounded-2xl border border-line shadow-elevation-4 rotate-[12deg] transform hover:rotate-0 hover:scale-110 hover:z-20 transition-all duration-page overflow-hidden bg-wash -ml-3 sm:-ml-4 flex-shrink-0">
                 <img
                   src="https://d3adwkbyhxyrtq.cloudfront.net/webassets/videomodels/perfect-pony-xl.avif"
                   alt={copy.creativeAssets.asset4}
@@ -2659,13 +2616,13 @@ export default function VideoStudio({
             </div>
 
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-center px-4 flex flex-col items-center">
-              {!selectedTool && !selectedVeoTool && <span className="text-white font-black uppercase text-xl sm:text-3xl tracking-wide mb-1 opacity-90">{copy.empty.heading}</span>}
-              <span className="text-[#22d3ee] font-black uppercase text-2xl sm:text-4xl sm:mt-1 tracking-tight">
+              {!selectedTool && !selectedVeoTool && <span className="text-ink font-black uppercase text-xl sm:text-3xl tracking-wide mb-1 opacity-90">{copy.empty.heading}</span>}
+              <span className="text-brand font-black uppercase text-2xl sm:text-4xl sm:mt-1 tracking-tight">
                 {selectedTool || selectedVeoTool || selectedPickerEntry?.groupedVideo ? selectedPickerLabel : selectedFamily.name}
               </span>
             </h1>
             {!selectedTool && !selectedVeoTool && (
-              <p className="text-white/40 text-xs sm:text-sm font-medium tracking-wide text-center max-w-lg leading-relaxed px-4">
+              <p className="text-ink-subtle text-xs sm:text-sm font-medium tracking-wide text-center max-w-lg leading-relaxed px-4">
                 {groupedConfiguration
                   ? getVideoModeDescription(selectedVariant.model, selectedWorkflowId, groupCopy)
                   : copy.empty.subtitle}
@@ -2895,10 +2852,10 @@ export default function VideoStudio({
           {selectedVeoTool ? (
             <div className="mx-3 rounded-lg border border-primary/10 bg-primary/5 px-3 py-2">
               {selectedVeoSource ? (
-                <label className="flex min-w-0 items-center gap-3 text-xs text-white/70">
+                <label className="flex min-w-0 items-center gap-3 text-xs text-ink-muted">
                   <span className="shrink-0">{copy.veo.sourceVideo}</span>
                   <select
-                    className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#17191c] px-2 py-2 text-xs text-white"
+                    className="min-w-0 flex-1 rounded-lg border border-line bg-raised px-2 py-2 text-xs text-ink"
                     value={selectedVeoSource.requestId}
                     onChange={(event) => setSelectedVeoSourceId(event.target.value)}
                   >
@@ -2908,11 +2865,11 @@ export default function VideoStudio({
                   </select>
                 </label>
               ) : (
-                <p className="text-xs text-white/60">{copy.veo.sourceHelp[selectedVeoTool.key]}</p>
+                <p className="text-xs text-ink-muted">{copy.veo.sourceHelp[selectedVeoTool.key]}</p>
               )}
             </div>
           ) : isExtendMode && (
-            <div className="flex items-center gap-2 px-3 py-1.5 mx-3 bg-primary/5 border border-primary/10 rounded-lg text-[10px] text-primary/80 font-medium tracking-tight">
+            <div className="flex items-center gap-2 px-3 py-1.5 mx-3 bg-primary/5 border border-primary/10 rounded-lg text-micro text-primary/80 font-medium tracking-tight">
               <svg
                 width="13"
                 height="13"
@@ -2930,13 +2887,13 @@ export default function VideoStudio({
           )}
 
           {groupedConfiguration && selectedVariant.model.aspectRatioMode === "inherited" && (
-            <p className="px-2 text-[10px] text-white/40">{groupCopy.inheritedFormat}</p>
+            <p className="px-2 text-micro text-ink-subtle">{groupCopy.inheritedFormat}</p>
           )}
           {groupedConfiguration && selectedWorkflowId === "extend_uploaded_video" && groupedResolution.options.length === 0 && (
-            <p className="px-2 text-[10px] text-white/40">{groupCopy.inheritedVideoResolution}</p>
+            <p className="px-2 text-micro text-ink-subtle">{groupCopy.inheritedVideoResolution}</p>
           )}
           {groupedResolution?.label && (
-            <p className="px-2 text-[10px] text-white/40">{groupCopy.resolutionUnknown}</p>
+            <p className="px-2 text-micro text-ink-subtle">{groupCopy.resolutionUnknown}</p>
           )}
 
           {/* Bottom row: controls + generate */}
@@ -2951,17 +2908,24 @@ export default function VideoStudio({
                     active: openDropdown === "model",
                   })}
                 >
-                  <div className="w-4 h-4 rounded overflow-hidden shrink-0 flex items-center justify-center bg-white/5">
+                  <div className="w-4 h-4 rounded overflow-hidden shrink-0 flex items-center justify-center bg-wash">
                     {(() => {
                       const selectedModelProvider = selectedFamily.provider || 'muapi';
-                      return PROVIDER_LOGOS[selectedModelProvider] ? (
+                      const logo = getProviderLogo(selectedModelProvider);
+                      const style = getProviderStyle(selectedModelProvider);
+                      return logo ? (
                         <img 
-                          src={PROVIDER_LOGOS[selectedModelProvider]} 
+                          src={logo} 
                           alt="" 
                           className={`w-full h-full object-contain ${invertLogos.includes(selectedModelProvider) ? "invert" : ""}`} 
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
                         />
                       ) : (
-                        <span className="text-[9px] font-bold text-black uppercase">V</span>
+                        <span className="text-micro font-bold text-ink uppercase">
+                          {style.text || "V"}
+                        </span>
                       );
                     })()}
                 </div>
@@ -3072,7 +3036,7 @@ export default function VideoStudio({
                               <>
                                 {workflow.description}
                                 {workflow.adjustmentDescription && (
-                                  <span className="mt-1 block text-amber-200/85">{workflow.adjustmentDescription}</span>
+                                  <span className="mt-1 block text-warning">{workflow.adjustmentDescription}</span>
                                 )}
                               </>
                             )}
@@ -3088,7 +3052,7 @@ export default function VideoStudio({
                           </PromptMenuItem>
                         ))}
                         {!groupedConfiguration && selectedWorkflow && workflowFamily?.hasBase && (
-                          <div className="mt-2 border-t border-white/[0.05] pt-2">
+                          <div className="mt-2 border-t border-line-subtle pt-2">
                             <button
                               type="button"
                               role="menuitemradio"
@@ -3098,7 +3062,7 @@ export default function VideoStudio({
                                 clearWorkflow();
                                 closeWorkflowMenu(true);
                               }}
-                              className="flex min-h-9 w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[11px] font-semibold text-white/40 transition-colors hover:bg-white/[0.04] hover:text-white/70 focus:outline-none focus-visible:bg-white/[0.04] focus-visible:text-white/70"
+                              className="flex min-h-9 w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[11px] font-semibold text-ink-subtle transition-colors hover:bg-wash hover:text-ink-muted focus-visible:bg-wash focus-visible:text-ink-muted"
                             >
                               <svg
                                 width="13"
@@ -3185,7 +3149,7 @@ export default function VideoStudio({
                         {copy.dropdowns.aspectRatio}
                       </PromptPopoverHeader>
                       {aspectRatioHelp && (
-                        <p className="px-3 pb-2 text-[11px] text-white/45">{aspectRatioHelp}</p>
+                        <p className="px-3 pb-2 text-[11px] text-ink-subtle">{aspectRatioHelp}</p>
                       )}
                       <PromptMenuList>
                         {(groupedConfiguration ? commonOptions.aspectRatios : getCurrentAspectRatios(selectedModel)).map((r) => (
@@ -3224,7 +3188,7 @@ export default function VideoStudio({
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
-                      className="opacity-40 text-white"
+                      className="opacity-40 text-ink"
                     >
                       <path d="M5 3l14 9-14 9V3z" />
                     </svg>
@@ -3384,7 +3348,7 @@ export default function VideoStudio({
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2.5"
-                    className="opacity-40 text-white group-hover:text-[#22d3ee] transition-colors"
+                    className="opacity-40 text-ink group-hover:text-brand transition-colors"
                   >
                     <path d="M12 20h9" />
                     <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
@@ -3401,7 +3365,7 @@ export default function VideoStudio({
             >
               {generating ? (
                 <>
-                  <span className="animate-spin inline-block text-black">
+                  <span className="animate-spin inline-block text-ink-inverse">
                     ◌
                   </span>{" "}
                   {copy.controls.generating}
@@ -3418,12 +3382,13 @@ export default function VideoStudio({
       {/* ── FULLSCREEN VIDEO MODAL ── */}
       {fullscreenUrl && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-scrim backdrop-blur-sm animate-fade-in"
           onClick={() => setFullscreenUrl(null)}
         >
           <button
+          aria-label="Close fullscreen preview"
             type="button"
-            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors border border-white/10"
+            className="absolute top-6 right-6 p-3 bg-wash-press hover:bg-wash-press rounded-full text-ink transition-colors border border-line"
             onClick={(e) => {
               e.stopPropagation();
               setFullscreenUrl(null);
@@ -3439,7 +3404,7 @@ export default function VideoStudio({
             controls 
             autoPlay 
             loop 
-            className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up" 
+            className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-elevation-4 object-contain animate-scale-up" 
             onClick={(e) => e.stopPropagation()}
           />
         </div>
@@ -3452,7 +3417,7 @@ export default function VideoStudio({
         batchSize={1}
         onAddHistoryItem={handleDrawReference}
       />
-      <Toaster position="top-right" containerStyle={{ zIndex: 99999 }} toastOptions={{ duration: 5000, style: { background: '#18181b', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)', fontSize: '13px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', maxWidth: '440px', wordBreak: 'break-word', whiteSpace: 'pre-wrap', padding: '12px 16px' } }} />
+      <Toaster position="top-right" containerStyle={{ zIndex: 'var(--z-toast)' }} toastOptions={{ duration: 5000, style: { background: 'var(--bg-overlay)', color: 'var(--text-primary)', border: '1px solid var(--border-strong)', fontSize: 'var(--text-body-sm)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--elevation-3)', maxWidth: '440px', wordBreak: 'break-word', whiteSpace: 'pre-wrap', padding: '12px 16px' } }} />
     </div>
   );
 }

@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server';
+import { getUserFromRequest } from '@/lib/services/auth';
+import { guardMutation } from '@/lib/security/requestGuard';
+import { publicErrorMessage } from '@/lib/security/publicError';
+import { resolveProviderApiKey } from '@/lib/security/byok';
+import { guardScopedProxyRequest } from '@/lib/security/scopedProxyGuard';
+import { PROXY_SCOPE } from '@/lib/security/legacyProxyPolicy';
 
 const MUAPI_BASE = 'https://api.muapi.ai';
 
-function getApiKey(request) {
-    const authHeader = request.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        const token = authHeader.substring(7).trim();
-        if (token) return token;
-    }
-    const headerKey = request.headers.get('x-api-key');
-    return (headerKey && headerKey.trim()) || null;
+async function getApiKey(request) {
+    return resolveProviderApiKey(request);
+}
+
+// 每个方法在处理前先过一遍上游路径白名单与限流。
+async function guardAppProxy(request, user, pathSegments, method) {
+    return guardScopedProxyRequest({ request, scope: PROXY_SCOPE.APP, pathSegments, method, user });
 }
 
 function cleanHeaders(request) {
@@ -18,19 +23,26 @@ function cleanHeaders(request) {
     headers.delete('connection');
     headers.delete('cookie'); // CRITICAL: Stop forwarding browser cookies to MuAPI to avoid auth conflicts
     headers.delete('authorization');
+    headers.delete('x-api-key');
     return headers;
 }
 
 export async function GET(request, { params }) {
+    const user = await getUserFromRequest(request);
+    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });
     const slug = await params;
     const pathSegments = slug.path || [];
     const path = pathSegments.join('/');
+
+    const blocked = await guardAppProxy(request, user, pathSegments, 'GET');
+    if (blocked) return blocked;
     
     // Handle alias: get_upload_file -> get_file_upload_url
     const effectivePath = path === 'get_upload_file' ? 'get_file_upload_url' : path;
     
-    const apiKey = getApiKey(request);
-    if (effectivePath === 'get_file_upload_url' && !apiKey) {
+    const apiKey = await getApiKey(request);
+    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'App 服务暂未配置或不可用' }, { status: 503 });
+    if (effectivePath === 'get_file_upload_url' && !apiKey.key) {
         return NextResponse.json({ error: 'Unauthorized: Missing API key' }, { status: 401 });
     }
 
@@ -39,7 +51,7 @@ export async function GET(request, { params }) {
 
     const headers = cleanHeaders(request);
 
-    if (apiKey) headers.set('x-api-key', apiKey);
+    if (apiKey.key) headers.set('x-api-key', apiKey.key);
 
     try {
         const response = await fetch(targetUrl, {
@@ -65,22 +77,30 @@ export async function GET(request, { params }) {
 
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: publicErrorMessage(error, '应用请求暂时不可用') }, { status: 500 });
     }
 }
 
 export async function POST(request, { params }) {
+    const user = await getUserFromRequest(request);
+    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });
+    const guarded = guardMutation(request, { maxBytes: 512 * 1024 });
+    if (guarded) return guarded;
     const slug = await params;
     const pathSegments = slug.path || [];
     const path = pathSegments.join('/');
-    
+
+    const blocked = await guardAppProxy(request, user, pathSegments);
+    if (blocked) return blocked;
+
     const { search } = new URL(request.url);
     const targetUrl = `${MUAPI_BASE}/app/${path}${search}`;
 
     const headers = cleanHeaders(request);
 
-    const apiKey = getApiKey(request);
-    if (apiKey) headers.set('x-api-key', apiKey);
+    const apiKey = await getApiKey(request);
+    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'App 服务暂未配置或不可用' }, { status: 503 });
+    if (apiKey.key) headers.set('x-api-key', apiKey.key);
 
     try {
         const body = await request.arrayBuffer();
@@ -93,22 +113,30 @@ export async function POST(request, { params }) {
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: publicErrorMessage(error, '应用请求暂时不可用') }, { status: 500 });
     }
 }
 
 export async function DELETE(request, { params }) {
+    const user = await getUserFromRequest(request);
+    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });
+    const guarded = guardMutation(request, { maxBytes: 32 * 1024 });
+    if (guarded) return guarded;
     const slug = await params;
     const pathSegments = slug.path || [];
     const path = pathSegments.join('/');
-    
+
+    const blocked = await guardAppProxy(request, user, pathSegments);
+    if (blocked) return blocked;
+
     const { search } = new URL(request.url);
     const targetUrl = `${MUAPI_BASE}/app/${path}${search}`;
 
     const headers = cleanHeaders(request);
 
-    const apiKey = getApiKey(request);
-    if (apiKey) headers.set('x-api-key', apiKey);
+    const apiKey = await getApiKey(request);
+    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'App 服务暂未配置或不可用' }, { status: 503 });
+    if (apiKey.key) headers.set('x-api-key', apiKey.key);
 
     try {
         const response = await fetch(targetUrl, {
@@ -118,22 +146,30 @@ export async function DELETE(request, { params }) {
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: publicErrorMessage(error, '应用请求暂时不可用') }, { status: 500 });
     }
 }
 
 export async function PUT(request, { params }) {
+    const user = await getUserFromRequest(request);
+    if (!user) return NextResponse.json({ error: '请先登录' }, { status: 401 });
+    const guarded = guardMutation(request, { maxBytes: 512 * 1024 });
+    if (guarded) return guarded;
     const slug = await params;
     const pathSegments = slug.path || [];
     const path = pathSegments.join('/');
-    
+
+    const blocked = await guardAppProxy(request, user, pathSegments);
+    if (blocked) return blocked;
+
     const { search } = new URL(request.url);
     const targetUrl = `${MUAPI_BASE}/app/${path}${search}`;
 
     const headers = cleanHeaders(request);
 
-    const apiKey = getApiKey(request);
-    if (apiKey) headers.set('x-api-key', apiKey);
+    const apiKey = await getApiKey(request);
+    if (!apiKey.ok || !apiKey.key) return NextResponse.json({ error: 'App 服务暂未配置或不可用' }, { status: 503 });
+    if (apiKey.key) headers.set('x-api-key', apiKey.key);
 
     try {
         const body = await request.arrayBuffer();
@@ -145,6 +181,6 @@ export async function PUT(request, { params }) {
         const data = await response.json();
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: publicErrorMessage(error, '应用请求暂时不可用') }, { status: 500 });
     }
 }

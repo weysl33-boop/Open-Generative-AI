@@ -1,9 +1,11 @@
 import Link from 'next/link';
-import { listActiveSessions } from '@/lib/repositories/sessions';
+import { listActiveSessions } from '@/lib/services/adminRead';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { roleLabel } from '@/lib/admin/permissions';
 import { Card, DataTable, PageHeader, Pagination, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
 import AdminActionForm from '@/components/admin/AdminActionForm';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 
 function formatDate(value) {
   return value
@@ -12,6 +14,7 @@ function formatDate(value) {
 }
 
 export default async function SessionsPage({ searchParams }) {
+  await requireAdminPagePermission(PERMISSIONS.sessionsRevoke);
   const params = toSearchParams(await searchParams);
   const result = await listActiveSessions(params);
 
@@ -21,7 +24,7 @@ export default async function SessionsPage({ searchParams }) {
       label: '账户邮箱 / 角色',
       render: (row) => (
         <div>
-          <p className="font-semibold text-white">{row.email}</p>
+          <p className="font-semibold text-ink">{row.email}</p>
           <div className="mt-1 flex items-center gap-2">
             <StatusBadge tone={row.role === 'user' ? 'neutral' : 'info'}>
               {roleLabel(row.role)}
@@ -45,7 +48,7 @@ export default async function SessionsPage({ searchParams }) {
       key: 'expires_at',
       label: '凭据有效期至',
       render: (row) => (
-        <span className="text-white/60">{formatDate(row.expires_at)}</span>
+        <span className="text-ink-muted">{formatDate(row.expires_at)}</span>
       ),
     },
     {
@@ -78,11 +81,11 @@ export default async function SessionsPage({ searchParams }) {
             name="q"
             defaultValue={params.get('q') || ''}
             placeholder="搜索邮箱或用户 ID…"
-            className="min-w-[240px] flex-1 rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-xs text-white outline-none focus:border-cyan-300/50"
+            className="min-w-[240px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
           />
           <button
             type="submit"
-            className="rounded-xl bg-cyan-300 px-5 py-2.5 text-xs font-bold text-black hover:bg-cyan-200"
+            className="rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-ink-on-accent hover:bg-brand"
           >
             查询会话
           </button>

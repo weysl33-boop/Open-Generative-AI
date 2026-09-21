@@ -1,71 +1,135 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { GoogleIcon, XIcon, TikTokIcon } from './SocialIcons';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AlertCircle, Eye, EyeOff, Layers, X } from 'lucide-react';
+import { DouyinIcon, GoogleIcon, QQIcon, TikTokIcon, WeChatIcon, XIcon } from './SocialIcons';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { IconButton } from 'studio/ui/button';
+import { Label } from 'studio/ui/field';
+import { Alert } from 'studio/ui/feedback';
+import { SegmentedControl } from 'studio/ui/navigation';
+import {
+  DIALOG_CLOSE_BUTTON,
+  DIALOG_DESCRIPTION,
+  DIALOG_TITLE,
+} from 'studio/ui/tokens';
+import { cn } from '@/lib/utils';
+import { completePhoneCaptchaChallenge } from '@/lib/auth/phone-captcha-client';
+import {
+  DEFAULT_LOCALE,
+  getCommonCopy,
+  getLocaleFromPathname,
+  isSupportedLocale,
+  normalizeLocale,
+} from '@/lib/locales';
 
-const COUNTRY_CODES = [
-  { code: '+86', label: '中国大陆 (+86)' },
-  { code: '+1', label: '美国 / 加拿大 (+1)' },
-  { code: '+852', label: '中国香港 (+852)' },
-  { code: '+886', label: '中国台湾 (+886)' },
-  { code: '+81', label: '日本 (+81)' },
-  { code: '+65', label: '新加坡 (+65)' },
-  { code: '+44', label: '英国 (+44)' },
-];
+const COUNTRY_CODES = ['+86', '+1', '+44', '+49', '+61', '+65', '+81', '+82', '+852', '+853', '+886'];
 
-const PROVIDERS = [
-  { id: 'google', label: '谷歌登录', icon: GoogleIcon, hover: 'hover:border-blue-500/40 hover:bg-blue-500/10' },
-  { id: 'x', label: 'X 登录', icon: XIcon, hover: 'hover:border-white/40 hover:bg-white/10' },
-  { id: 'tiktok', label: 'TikTok 登录', icon: TikTokIcon, hover: 'hover:border-pink-500/40 hover:bg-pink-500/10' },
-];
+const PROVIDER_CATALOG = {
+  wechat: { icon: WeChatIcon, labelKey: 'providerWeChat' },
+  qq: { icon: QQIcon, labelKey: 'providerQQ' },
+  douyin: { icon: DouyinIcon, labelKey: 'providerDouyin' },
+  google: { icon: GoogleIcon, labelKey: 'providerGoogle' },
+  x: { icon: XIcon, labelKey: 'providerX' },
+  tiktok: { icon: TikTokIcon, labelKey: 'providerTikTok' },
+};
 
-// 图2灵动萌宠 Mascot SVG
-function MascotIcon() {
-  return (
-    <svg className="w-11 h-11 drop-shadow-[0_0_12px_rgba(52,211,153,0.4)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="mascotGrad" cx="45%" cy="40%" r="55%">
-          <stop offset="0%" stopColor="#a7f3d0" />
-          <stop offset="60%" stopColor="#34d399" />
-          <stop offset="100%" stopColor="#059669" />
-        </radialGradient>
-      </defs>
-      {/* 头部精灵轮廓与头顶芽 */}
-      <path
-        d="M50 8C48 16 38 24 38 32C38 34 39 36 40 37C26 42 16 55 16 70C16 86 31 95 50 95C69 95 84 86 84 70C84 55 74 42 60 37C61 36 62 34 62 32C62 24 52 16 50 8Z"
-        fill="url(#mascotGrad)"
-      />
-      {/* 脸部高光与红晕 */}
-      <ellipse cx="28" cy="71" rx="5" ry="3" fill="#f472b6" opacity="0.6" />
-      <ellipse cx="72" cy="71" rx="5" ry="3" fill="#f472b6" opacity="0.6" />
-      {/* 灵动大眼睛 */}
-      <circle cx="37" cy="62" r="6.5" fill="#064e3b" />
-      <circle cx="63" cy="62" r="6.5" fill="#064e3b" />
-      <circle cx="39" cy="60" r="2.5" fill="#ffffff" />
-      <circle cx="65" cy="60" r="2.5" fill="#ffffff" />
-      <circle cx="35.5" cy="64" r="1.2" fill="#ffffff" />
-      <circle cx="61.5" cy="64" r="1.2" fill="#ffffff" />
-      {/* 萌宠小嘴 */}
-      <path d="M44 72 Q50 78 56 72" stroke="#064e3b" strokeWidth="2.4" strokeLinecap="round" fill="none" />
-      {/* 招手小手掌 */}
-      <path
-        d="M80 62C85 58 92 60 93 66C94 70 90 75 83 73"
-        fill="#34d399"
-        stroke="#059669"
-        strokeWidth="1.5"
-      />
-    </svg>
-  );
+function phoneErrorCopy(copy, data, fallback) {
+  const messages = {
+    INVALID_PHONE: copy.errorInvalidPhone,
+    UNSUPPORTED_COUNTRY: copy.errorUnsupportedCountry,
+    OTP_RATE_LIMITED: copy.errorRateLimited,
+    OTP_EXPIRED: copy.errorCodeExpired,
+    OTP_INCORRECT: copy.errorCodeInvalid,
+    OTP_ATTEMPTS_EXCEEDED: copy.errorCodeInvalid,
+    OTP_MISSING: copy.errorCodeInvalid,
+    CAPTCHA_INVALID: copy.errorSecurityChallengeFailed,
+    CAPTCHA_NOT_CONFIGURED: copy.errorSecurityChallengeFailed,
+    APP_VERIFICATION_REQUIRED: copy.errorSecurityChallengeFailed,
+    PHONE_ALREADY_BOUND: copy.errorPhoneAlreadyBound,
+    PHONE_BINDING_REQUIRED: copy.errorPhoneAlreadyBound,
+    ACCOUNT_SUSPENDED: copy.errorAccountSuspended,
+    SMS_PROVIDER_NOT_CONFIGURED: copy.errorSmsUnavailable,
+    SMS_PROVIDER_DISABLED: copy.errorSmsUnavailable,
+    SMS_PROVIDER_UNAVAILABLE: copy.errorSmsUnavailable,
+    PROVIDER_UNAUTHORIZED: copy.errorSmsUnavailable,
+    PROVIDER_QUOTA_EXCEEDED: copy.errorSmsUnavailable,
+    PROVIDER_UNAVAILABLE: copy.errorSmsUnavailable,
+    PROVIDER_SERVICE_ERROR: copy.errorSmsUnavailable,
+  };
+  return messages[data?.code] || fallback;
 }
 
-export default function AuthModal({ onSuccess, onClose }) {
-  // tab: 'phone' | 'email'
-  const [activeTab, setActiveTab] = useState('phone');
-  
+/**
+ * 与 middleware.js 的判定顺序保持一致：语言路由前缀优先，其次 `?lang`/`?locale`，
+ * 再次已存偏好，最后英语。顺序不同会让弹框文案与它所在的页面错位。
+ */
+function resolveLocale(locale) {
+  if (locale) return normalizeLocale(locale);
+  if (typeof window === 'undefined') return DEFAULT_LOCALE;
+
+  const fromPath = getLocaleFromPathname(window.location.pathname);
+  if (fromPath !== DEFAULT_LOCALE) return fromPath;
+
+  const params = new URLSearchParams(window.location.search);
+  const fromQuery = params.get('lang') || params.get('locale');
+  if (fromQuery && isSupportedLocale(fromQuery)) return normalizeLocale(fromQuery);
+
+  const match = document.cookie.match(/(?:^|;\s*)(?:NEXT_LOCALE|locale)=([^;]+)/);
+  const fromCookie = match ? decodeURIComponent(match[1]) : null;
+  if (fromCookie && isSupportedLocale(fromCookie)) return normalizeLocale(fromCookie);
+
+  return DEFAULT_LOCALE;
+}
+
+export default function AuthModal({
+  isOpen = true,
+  onSuccess,
+  onClose,
+  isInline = false,
+  locale = null,
+}) {
+  const copy = useMemo(() => getCommonCopy(resolveLocale(locale)).authModal, [locale]);
+
+  const triggerSuccess = (user, entitlements) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('koyosim-auth-success', { detail: { user, entitlements } }));
+    }
+    onSuccess?.(user, entitlements);
+  };
+
+  // 未完成引导的新用户不进原页面，先去引导页；/studio 侧还有服务端守卫兜底。
+  const goToOnboardingIfNeeded = (needsIt) => {
+    if (!needsIt || typeof window === 'undefined') return false;
+    window.location.href = '/onboarding';
+    return true;
+  };
+
+  // tab: 'email' | 'phone'
+  const [mode, setMode] = useState('email');
+
   // 手机号登录/注册状态
   const [countryCode, setCountryCode] = useState('+86');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
+  const [challengeId, setChallengeId] = useState('');
+  const [captchaChallenge, setCaptchaChallenge] = useState(null);
+  const captchaHostRef = useRef(null);
   const [countdown, setCountdown] = useState(0);
   const timerRef = useRef(null);
 
@@ -73,11 +137,36 @@ export default function AuthModal({ onSuccess, onClose }) {
   const [emailMode, setEmailMode] = useState('login'); // 'login' | 'register'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // 通用交互状态
   const [message, setMessage] = useState('');
-  const [devCodeTip, setDevCodeTip] = useState('');
   const [busy, setBusy] = useState(false);
+  const [socialLoading, setSocialLoading] = useState(null);
+  const [socialOptions, setSocialOptions] = useState(null);
+  const [socialOptionsError, setSocialOptionsError] = useState(false);
+  const [socialOptionsRetry, setSocialOptionsRetry] = useState(0);
+
+  // IP 分区由服务端完成，语言/时区/用户资料都不会覆盖地理判定结果。
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const controller = new AbortController();
+    setSocialOptions(null);
+    setSocialOptionsError(false);
+
+    fetch('/api/auth/social-options', { cache: 'no-store', signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Unable to load regional social providers');
+        const result = await response.json();
+        if (!Array.isArray(result.providers)) throw new Error('Invalid social provider response');
+        setSocialOptions(result);
+      })
+      .catch((error) => {
+        if (error.name !== 'AbortError') setSocialOptionsError(true);
+      });
+
+    return () => controller.abort();
+  }, [isOpen, socialOptionsRetry]);
 
   // 倒计时清理
   useEffect(() => {
@@ -91,47 +180,71 @@ export default function AuthModal({ onSuccess, onClose }) {
     const handleOAuthMessage = (event) => {
       if (event.origin !== window.location.origin || event.data?.type !== 'koyosim-auth-complete') return;
       if (!event.data.ok) {
-        setMessage(event.data.message || '第三方登录未成功，请重试');
+        setMessage(event.data.message || copy.errorSocialFailed);
         return;
       }
       fetch('/api/auth/me', { cache: 'no-store' })
         .then((response) => response.json())
         .then((data) => {
           if (data.user) {
-            onSuccess?.(data.user, data.entitlements);
+            if (!goToOnboardingIfNeeded(data.user.onboardingCompleted === false)) {
+              triggerSuccess(data.user, data.entitlements);
+            }
           } else {
-            setMessage('登录状态同步失败，请重试');
+            setMessage(copy.errorSessionSync);
           }
         })
-        .catch(() => setMessage('登录状态同步失败，请重试'));
+        .catch(() => setMessage(copy.errorSessionSync));
     };
     window.addEventListener('message', handleOAuthMessage);
     return () => window.removeEventListener('message', handleOAuthMessage);
-  }, [onSuccess]);
+  }, [onSuccess, copy]);
 
   // 发送手机验证码
   const handleSendCode = async () => {
     if (countdown > 0 || busy) return;
     const cleanPhone = phone.trim();
     if (!cleanPhone) {
-      setMessage('请输入手机号');
+      setMessage(copy.errorMissingPhone);
       return;
     }
     setMessage('');
-    setDevCodeTip('');
     setBusy(true);
 
     try {
-      const res = await fetch('/api/auth/phone/send-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: cleanPhone, countryCode }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '验证码发送失败');
+      const postSendCode = async (extra = {}) => {
+        const response = await fetch('/api/auth/phone/send-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: cleanPhone, countryCode, purpose: 'login', ...extra }),
+        });
+        return { response, data: await response.json() };
+      };
 
-      // 启动 60 秒倒计时
-      setCountdown(60);
+      let outcome;
+      if (captchaChallenge) {
+        outcome = await completePhoneCaptchaChallenge(captchaChallenge, { postSendCode, locale: resolveLocale(locale), container: captchaHostRef.current });
+      } else {
+        outcome = await postSendCode();
+        if (outcome.response.status === 428 && outcome.data.requiresCaptcha) {
+          setChallengeId(outcome.data.challengeId);
+          setCaptchaChallenge(outcome.data);
+          outcome = await completePhoneCaptchaChallenge(outcome.data, { postSendCode, locale: resolveLocale(locale), container: captchaHostRef.current });
+        }
+      }
+
+      if (!outcome.response.ok || !outcome.data.success) {
+        if (outcome.response.status !== 428) {
+          setCaptchaChallenge(null);
+          setChallengeId('');
+        }
+        throw new Error(phoneErrorCopy(copy, outcome.data, copy.errorCodeSendFailed));
+      }
+
+      setChallengeId(outcome.data.challengeId);
+      setCaptchaChallenge(null);
+      setCountdown(Number(outcome.data.cooldown) || 60);
+      if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
@@ -142,12 +255,10 @@ export default function AuthModal({ onSuccess, onClose }) {
         });
       }, 1000);
 
-      if (data.devCode) {
-        setDevCodeTip(`[开发测试体验码: ${data.devCode}]`);
-        setCode(data.devCode);
-      }
     } catch (err) {
-      setMessage(err.message);
+      setMessage(err.message === 'SECURITY_CHALLENGE_FAILED'
+        ? copy.errorSecurityChallengeFailed
+        : err.message || copy.errorCodeSendFailed);
     } finally {
       setBusy(false);
     }
@@ -160,26 +271,27 @@ export default function AuthModal({ onSuccess, onClose }) {
     setBusy(true);
 
     try {
-      if (activeTab === 'phone') {
+      if (mode === 'phone') {
         const cleanPhone = phone.trim();
         const cleanCode = code.trim();
-        if (!cleanPhone) throw new Error('请输入手机号');
-        if (!cleanCode) throw new Error('请输入短信验证码');
+        if (!cleanPhone) throw new Error(copy.errorMissingPhone);
+        if (!cleanCode) throw new Error(copy.errorMissingCode);
+        if (!challengeId) throw new Error(copy.errorCodeSendFailed);
 
         const res = await fetch('/api/auth/phone/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: cleanPhone, countryCode, code: cleanCode }),
+          body: JSON.stringify({ phone: cleanPhone, countryCode, code: cleanCode, challengeId }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || '验证码错误或已失效');
+        if (!res.ok) throw new Error(phoneErrorCopy(copy, data, copy.errorCodeInvalid));
 
-        onSuccess?.(data.user, null);
+        if (!goToOnboardingIfNeeded(data.requiresOnboarding)) triggerSuccess(data.user, null);
       } else {
         // 邮箱处理
         const cleanEmail = email.trim();
-        if (!cleanEmail) throw new Error('请输入邮箱地址');
-        if (!password || password.length < 8) throw new Error('密码长度至少为 8 位');
+        if (!cleanEmail) throw new Error(copy.errorMissingEmail);
+        if (!password || password.length < 8) throw new Error(copy.errorPasswordTooShort);
 
         const endpoint = emailMode === 'register' ? '/api/auth/register' : '/api/auth/login';
         const res = await fetch(endpoint, {
@@ -189,13 +301,14 @@ export default function AuthModal({ onSuccess, onClose }) {
         });
         const data = await res.json();
         if (!res.ok) {
+          // 上游固定回中文，这里按字面量匹配后换成当前语言的提示。
           if (emailMode === 'login' && data.error?.includes('邮箱或密码不正确')) {
-            throw new Error('邮箱或密码不正确，新用户请点击下方切换为「注册账户」');
+            throw new Error(copy.errorLoginHint);
           }
-          throw new Error(data.error || '认证失败');
+          throw new Error(data.error || copy.errorAuthFailed);
         }
 
-        onSuccess?.(data.user, null);
+        if (!goToOnboardingIfNeeded(data.requiresOnboarding)) triggerSuccess(data.user, null);
       }
     } catch (err) {
       setMessage(err.message);
@@ -204,231 +317,325 @@ export default function AuthModal({ onSuccess, onClose }) {
     }
   };
 
-  // 第三方登录唤起
+  // 第三方登录唤起（直接全页导航，彻底杜绝浏览器弹窗拦截）
   const handleSocialLogin = (provider) => {
+    if (socialLoading || busy) return;
     setMessage('');
+    setSocialLoading(provider);
     const returnTo = `${window.location.pathname}${window.location.search}`;
-    const url = `/api/auth/oauth/${provider}?returnTo=${encodeURIComponent(returnTo)}`;
-    const popup = window.open(url, 'koyosim-oauth', 'popup,width=520,height=720');
-    if (!popup) window.location.assign(url);
+    window.location.href = `/api/auth/oauth/${provider}?returnTo=${encodeURIComponent(returnTo)}`;
   };
 
-  return (
-    <div
-      className="fixed inset-0 z-[220] flex items-center justify-center bg-black/80 px-4 backdrop-blur-md animate-fade-in"
-      role="dialog"
-      aria-modal="true"
-    >
-      {/* 弹窗卡片容器：点阵网格微纹理 + 极简暗黑质感（参考图2） */}
-      <div className="relative w-full max-w-[440px] rounded-3xl border border-white/10 bg-[#121316]/95 p-6 sm:p-8 shadow-2xl backdrop-blur-2xl overflow-hidden [background-image:radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:16px_16px]">
-        
-        {/* 右上角关闭按钮 */}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="关闭"
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/40 transition hover:bg-white/10 hover:text-white"
-        >
-          ✕
-        </button>
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else if (isInline) {
+      window.location.href = '/studio';
+    }
+  };
 
-        {/* 顶部卡通 Mascot + 胶囊气泡（严格对齐图2） */}
-        <div className="mb-6 flex items-center justify-center gap-3 pt-1">
-          <div className="flex-shrink-0 animate-bounce-short">
-            <MascotIcon />
-          </div>
-          <div className="relative rounded-full bg-[#1c1e24] px-4 py-1.5 shadow-md border border-white/10">
-            {/* 气泡指向小三角形 */}
-            <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-0 h-0 border-y-[5px] border-y-transparent border-r-[6px] border-r-[#1c1e24]" />
-            <span className="text-sm font-bold text-white tracking-wide">
-              注册 / 登录领积分哦
-            </span>
-          </div>
-        </div>
+  const visibleSocialProviders = (socialOptions?.providers || [])
+    .map((provider) => ({ ...provider, ...PROVIDER_CATALOG[provider.id] }))
+    .filter((provider) => provider.icon);
 
-        {/* 双 Tab 胶囊切换：[ 手机号 ]  [ 邮箱 ] */}
-        <div className="mb-5 flex justify-center">
-          <div className="inline-flex rounded-full bg-[#1a1b20] p-1 border border-white/5 shadow-inner">
-            <button
-              type="button"
-              onClick={() => { setActiveTab('phone'); setMessage(''); }}
-              className={`rounded-full px-6 py-1.5 text-xs font-semibold transition-all ${
-                activeTab === 'phone'
-                  ? 'bg-[#2b2d35] text-white shadow-sm'
-                  : 'text-white/40 hover:text-white/70'
-              }`}
-            >
-              手机号
-            </button>
-            <button
-              type="button"
-              onClick={() => { setActiveTab('email'); setMessage(''); }}
-              className={`rounded-full px-6 py-1.5 text-xs font-semibold transition-all ${
-                activeTab === 'email'
-                  ? 'bg-[#2b2d35] text-white shadow-sm'
-                  : 'text-white/40 hover:text-white/70'
-              }`}
-            >
-              邮箱
-            </button>
-          </div>
-        </div>
+  const title =
+    mode === 'phone' ? copy.titlePhone : emailMode === 'register' ? copy.titleRegister : copy.titleLogin;
 
-        {/* 登录与注册表单 */}
-        <form onSubmit={handleSubmit} className="space-y-3">
-          {activeTab === 'phone' ? (
-            <>
-              {/* 手机号输入框（带区号选择） */}
-              <div className="flex h-12 w-full items-center rounded-xl border border-white/5 bg-[#1b1c21] px-3.5 focus-within:border-white/20 transition">
-                <div className="flex items-center gap-1 border-r border-white/10 pr-2.5 mr-2.5">
-                  <select
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    className="bg-transparent text-xs font-semibold text-white/90 outline-none cursor-pointer"
-                  >
-                    {COUNTRY_CODES.map((item) => (
-                      <option key={item.code} value={item.code} className="bg-[#1b1c21] text-white">
-                        {item.code}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="请输入手机号"
-                  className="w-full bg-transparent text-sm text-white placeholder-white/30 outline-none"
-                />
-              </div>
+  const submitLabel = busy
+    ? copy.processing
+    : mode === 'phone'
+      ? copy.submitPhone
+      : emailMode === 'register'
+        ? copy.submitRegister
+        : copy.submitLogin;
 
-              {/* 验证码输入框（内嵌获取验证码按钮） */}
-              <div className="flex h-12 w-full items-center rounded-xl border border-white/5 bg-[#1b1c21] px-3.5 focus-within:border-white/20 transition">
-                <input
-                  type="text"
-                  maxLength={6}
-                  required
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="请输入验证码"
-                  className="w-full bg-transparent text-sm text-white placeholder-white/30 outline-none"
-                />
-                <div className="h-4 w-px bg-white/10 mx-2 flex-shrink-0" />
-                <button
-                  type="button"
-                  onClick={handleSendCode}
-                  disabled={countdown > 0 || busy}
-                  className="flex-shrink-0 text-xs font-medium text-white/60 hover:text-white transition disabled:cursor-not-allowed disabled:text-white/30"
-                >
-                  {countdown > 0 ? `${countdown}s 后重发` : '获取验证码'}
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* 邮箱输入框 */}
-              <div className="flex h-12 w-full items-center rounded-xl border border-white/5 bg-[#1b1c21] px-3.5 focus-within:border-white/20 transition">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="请输入邮箱地址"
-                  className="w-full bg-transparent text-sm text-white placeholder-white/30 outline-none"
-                />
-              </div>
+  // Radix 用 Title/Description 供给 dialog 的可访问名称，也会给它们注入自己的
+  // id；内联变体不是 dialog，就把同样的文案渲染成裸标题。
+  const Heading = isInline ? 'h2' : DialogTitle;
+  const Description = isInline ? 'p' : DialogDescription;
+  const headingClass = isInline ? DIALOG_TITLE : undefined;
+  const descriptionClass = isInline ? DIALOG_DESCRIPTION : undefined;
 
-              {/* 密码输入框 */}
-              <div className="flex h-12 w-full items-center rounded-xl border border-white/5 bg-[#1b1c21] px-3.5 focus-within:border-white/20 transition">
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={emailMode === 'register' ? '设置登录密码（至少8位）' : '请输入密码'}
-                  className="w-full bg-transparent text-sm text-white placeholder-white/30 outline-none"
-                />
-              </div>
-
-              {/* 邮箱模式微调切换 */}
-              <div className="flex justify-end pt-0.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmailMode(emailMode === 'login' ? 'register' : 'login');
-                    setMessage('');
-                  }}
-                  className="text-[11px] text-white/40 hover:text-white/75 transition"
-                >
-                  {emailMode === 'login' ? '没有账号？切换为邮箱注册' : '已有账号？切换为邮箱登录'}
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* 开发测试验证码提示 */}
-          {devCodeTip && (
-            <div className="text-[11px] text-emerald-400 bg-emerald-500/10 rounded-lg px-2.5 py-1 text-center font-mono">
-              {devCodeTip}
-            </div>
-          )}
-
-          {/* 错误提示 */}
-          {message && (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200 text-center">
-              {message}
-            </div>
-          )}
-
-          {/* 主操作按钮（图2品红/渐变高亮） */}
-          <button
-            type="submit"
-            disabled={busy}
-            className="h-12 w-full rounded-xl bg-[#b71676] hover:bg-[#c91882] active:scale-[0.99] text-sm font-bold text-white shadow-lg shadow-[#b71676]/20 transition-all disabled:opacity-50 disabled:cursor-wait mt-1"
-          >
-            {busy ? '处理中…' : '创建账户 / 登录'}
-          </button>
-        </form>
-
-        {/* 分割线：其他登录方式 */}
-        <div className="my-5 flex items-center gap-3">
-          <div className="h-px flex-1 bg-white/5" />
-          <span className="text-[11px] text-white/40">其他登录方式</span>
-          <div className="h-px flex-1 bg-white/5" />
-        </div>
-
-        {/* 三方登录药丸胶囊按钮组（Google、TikTok、X） */}
-        <div className="grid grid-cols-3 gap-2">
-          {PROVIDERS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleSocialLogin(item.id)}
-                className={`flex h-10 items-center justify-center gap-1.5 rounded-full border border-white/5 bg-[#1b1c21] text-xs font-medium text-white/80 transition-all ${item.hover}`}
-              >
-                <Icon size={16} />
-                <span className="truncate">{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 底部协议说明（图2极简风格） */}
-        <div className="mt-5 text-center text-[11px] text-white/35">
-          继续即表示您同意{' '}
-          <a href="/terms" target="_blank" rel="noreferrer" className="text-white/60 hover:text-white underline underline-offset-2">
-            用户协议
-          </a>{' '}
-          与{' '}
-          <a href="/privacy" target="_blank" rel="noreferrer" className="text-white/60 hover:text-white underline underline-offset-2">
-            隐私政策
-          </a>
+  const panel = (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col items-center gap-3 px-8 text-center">
+        <span className="flex size-11 items-center justify-center rounded-lg bg-brand text-ink-on-accent shadow-elevation-2">
+          <Layers className="size-5" strokeWidth={2} aria-hidden="true" />
+        </span>
+        <div className="space-y-1">
+          <Heading className={headingClass}>{title}</Heading>
+          <Description className={descriptionClass}>{copy.subtitle}</Description>
         </div>
       </div>
+
+      <SegmentedControl
+        ariaLabel={copy.modeLabel}
+        value={mode}
+        onValueChange={(next) => {
+          setMode(next);
+          setMessage('');
+        }}
+        options={[
+          { value: 'email', label: copy.tabEmail },
+          { value: 'phone', label: copy.tabPhone },
+        ]}
+      />
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        {mode === 'phone' ? (
+          <>
+            <div className="space-y-1.5">
+              <Label htmlFor="auth-phone" required>
+                {copy.phoneLabel}
+              </Label>
+              <div className="flex items-start gap-2">
+                <div className="w-24 shrink-0">
+                  <Select value={countryCode} onValueChange={(value) => {
+                    setCountryCode(value);
+                    setChallengeId('');
+                    setCaptchaChallenge(null);
+                    setCountdown(0);
+                    if (timerRef.current) clearInterval(timerRef.current);
+                  }}>
+                    <SelectTrigger size="lg" aria-label={copy.countryCodeLabel}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COUNTRY_CODES.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {item}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Input
+                  id="auth-phone"
+                  type="tel"
+                  required
+                  size="lg"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  className="min-w-0 flex-1"
+                  value={phone}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    setChallengeId('');
+                    setCaptchaChallenge(null);
+                    setCountdown(0);
+                    if (timerRef.current) clearInterval(timerRef.current);
+                  }}
+                  placeholder={copy.phonePlaceholder}
+                />
+              </div>
+            </div>
+            <div ref={captchaHostRef} aria-hidden="true" className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0" />
+
+            <div className="space-y-1.5">
+              <Label htmlFor="auth-code" required>
+                {copy.codeLabel}
+              </Label>
+              <div className="flex items-start gap-2">
+                <Input
+                  id="auth-code"
+                  type="text"
+                  required
+                  size="lg"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  className="min-w-0 flex-1"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder={copy.codePlaceholder}
+                />
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="shrink-0"
+                  disabled={countdown > 0 || busy}
+                  onClick={handleSendCode}
+                >
+                  {countdown > 0 ? copy.resendCode.replace('{seconds}', countdown) : copy.sendCode}
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="space-y-1.5">
+              <Label htmlFor="auth-email" required>
+                {copy.emailLabel}
+              </Label>
+              <Input
+                id="auth-email"
+                type="email"
+                required
+                size="lg"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={copy.emailPlaceholder}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="auth-password" required>
+                {copy.passwordLabel}
+              </Label>
+              <div className="relative">
+                <Input
+                  id="auth-password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  minLength={8}
+                  size="lg"
+                  className="pr-11"
+                  autoComplete={emailMode === 'register' ? 'new-password' : 'current-password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={
+                    emailMode === 'register' ? copy.passwordNewPlaceholder : copy.passwordPlaceholder
+                  }
+                />
+                <IconButton
+                  icon={showPassword ? EyeOff : Eye}
+                  label={showPassword ? copy.hidePassword : copy.showPassword}
+                  className="absolute right-1 top-1/2 -translate-y-1/2"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                variant="tertiary"
+                size="xs"
+                onClick={() => {
+                  setEmailMode(emailMode === 'login' ? 'register' : 'login');
+                  setMessage('');
+                }}
+              >
+                {emailMode === 'login' ? copy.switchToRegister : copy.switchToLogin}
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* danger 让 Alert 输出 role="alert"，校验失败才能被读屏播报 */}
+        {message && (
+          <Alert tone="danger" icon={<AlertCircle className="size-4" strokeWidth={1.8} />}>
+            {message}
+          </Alert>
+        )}
+
+        <Button type="submit" variant="primary" size="lg" fullWidth loading={busy}>
+          {submitLabel}
+        </Button>
+      </form>
+
+      <div className="flex items-center gap-3">
+        <span className="h-px flex-1 bg-line" />
+        <span className="text-caption text-ink-subtle">{copy.socialDivider}</span>
+        <span className="h-px flex-1 bg-line" />
+      </div>
+
+      {socialOptionsError ? (
+        <div className="flex flex-col items-center gap-2 text-center" role="status">
+          <p className="text-caption text-ink-muted">{copy.socialOptionsUnavailable}</p>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setSocialOptionsRetry((value) => value + 1)}
+          >
+            {copy.socialOptionsRetry}
+          </Button>
+        </div>
+      ) : !socialOptions ? (
+        <div className="grid grid-cols-3 gap-2" role="status" aria-label={copy.socialOptionsLoading}>
+          {Array.from({ length: 3 }, (_, index) => (
+            <div key={index} className="h-10 animate-pulse rounded-md border border-line-subtle bg-wash" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-2">
+        {visibleSocialProviders.map(({ id, icon: ProviderIcon, labelKey, available }) => {
+          const isLoading = socialLoading === id;
+          return (
+            <Button
+              key={id}
+              variant="secondary"
+              size="md"
+              className="min-w-0"
+              disabled={Boolean(socialLoading) || busy || !available}
+              loading={isLoading}
+              title={!available ? copy.providerInProgressHint : undefined}
+              aria-label={!available ? `${copy[labelKey]}，${copy.providerInProgress}` : copy[labelKey]}
+              onClick={() => handleSocialLogin(id)}
+            >
+              {/* SocialIcons 只接收 className/size，多余属性会被忽略。 */}
+              {!isLoading && <ProviderIcon size={16} className="size-4" />}
+              <span className="min-w-0 truncate">
+                {isLoading
+                  ? copy.socialConnecting
+                  : available
+                    ? copy[labelKey]
+                    : `${copy[labelKey]} · ${copy.providerInProgress}`}
+              </span>
+            </Button>
+          );
+        })}
+        </div>
+      )}
+
+      {socialOptions?.region === 'mainland_china' && (
+        <p className="text-center text-caption text-ink-subtle">{copy.socialRegionProviderNotice}</p>
+      )}
+
+      <p className="text-center text-caption text-ink-subtle">
+        {copy.termsPrefix}{' '}
+        <a
+          href="/terms"
+          target="_blank"
+          rel="noreferrer"
+          className="text-ink-muted underline underline-offset-2 transition-colors duration-fast ease-standard hover:text-ink"
+        >
+          {copy.termsLink}
+        </a>{' '}
+        {copy.termsJoin}{' '}
+        <a
+          href="/privacy"
+          target="_blank"
+          rel="noreferrer"
+          className="text-ink-muted underline underline-offset-2 transition-colors duration-fast ease-standard hover:text-ink"
+        >
+          {copy.privacyLink}
+        </a>
+      </p>
     </div>
+  );
+
+  if (isOpen === false) {
+    return null;
+  }
+
+  if (isInline) {
+    return panel;
+  }
+
+  return (
+    <Dialog open onOpenChange={(next) => !next && handleClose()}>
+      <DialogContent size="sm" showClose={false}>
+        {panel}
+        <DialogClose
+          aria-label={copy.close}
+          className={cn(DIALOG_CLOSE_BUTTON, 'absolute right-3 top-3')}
+        >
+          <X className="size-4" strokeWidth={1.8} aria-hidden="true" />
+        </DialogClose>
+      </DialogContent>
+    </Dialog>
   );
 }

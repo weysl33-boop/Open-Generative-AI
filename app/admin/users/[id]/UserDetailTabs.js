@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Card, DataTable, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
 import AdminActionForm from '@/components/admin/AdminActionForm';
 import { roleLabel } from '@/lib/admin/permissions';
+import AdminScrollableTabs from '@/components/admin/AdminScrollableTabs';
+import { GoogleIcon, XIcon, TikTokIcon, WeChatIcon, PhoneIcon, MailIcon } from '@/components/SocialIcons';
 
 function formatDate(value) {
   return value
@@ -14,16 +16,17 @@ function formatDate(value) {
 
 function getProviderBadge(provider) {
   const map = {
-    phone: { label: '手机短信', tone: 'info', icon: '📱' },
-    email: { label: '邮箱密码', tone: 'neutral', icon: '✉️' },
-    google: { label: 'Google', tone: 'good', icon: '🔵' },
-    tiktok: { label: 'TikTok', tone: 'attention', icon: '🎵' },
-    x: { label: 'X (Twitter)', tone: 'neutral', icon: '𝕏' },
+    phone: { label: '手机短信', icon: <PhoneIcon className="size-3.5 text-success" />, bg: 'bg-success-soft border-success-soft text-success' },
+    email: { label: '邮箱密码', icon: <MailIcon className="size-3.5 text-info" />, bg: 'bg-info-soft border-info-soft text-info' },
+    google: { label: 'Google', icon: <GoogleIcon className="size-3.5" />, bg: 'bg-sky-500/10 border-sky-500/20 text-sky-300' },
+    wechat: { label: '微信', icon: <WeChatIcon className="size-3.5" />, bg: 'bg-success-soft border-success-soft text-success' },
+    tiktok: { label: 'TikTok', icon: <TikTokIcon className="size-3 text-pink-400" />, bg: 'bg-pink-500/10 border-pink-500/20 text-pink-300' },
+    x: { label: 'X (Twitter)', icon: <XIcon className="size-3 text-ink" />, bg: 'bg-wash-press border-line-strong text-ink' },
   };
-  const item = map[provider] || { label: provider, tone: 'neutral', icon: '🔗' };
+  const item = map[provider] || { label: provider, icon: <span className="text-xs">🔗</span>, bg: 'bg-wash-press border-line-strong text-ink' };
   return (
-    <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold bg-white/10 text-white">
-      <span>{item.icon}</span>
+    <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold ${item.bg}`}>
+      <span className="flex items-center shrink-0">{item.icon}</span>
       <span>{item.label}</span>
     </span>
   );
@@ -59,7 +62,7 @@ export default function UserDetailTabs({ detail }) {
     try {
       const res = await fetch(`/api/admin/users/${user.id}/tags`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
         body: JSON.stringify({ tagId, action }),
       });
       const data = await res.json();
@@ -84,9 +87,12 @@ export default function UserDetailTabs({ detail }) {
       label: '三方账户标识 / 手机 / 邮箱',
       render: (row) => (
         <div>
-          <p className="font-mono text-xs text-white">{row.provider_user_id}</p>
+          <p className="font-mono text-xs text-ink">{row.provider_username || row.provider_user_id}</p>
           {row.provider_email && (
-            <p className="text-[11px] text-white/45">{row.provider_email}</p>
+            <p className="text-[11px] text-brand-hover font-mono">邮箱: {row.provider_email}</p>
+          )}
+          {row.provider_username && row.provider_user_id && row.provider_username !== row.provider_user_id && (
+            <p className="text-micro text-ink-subtle font-mono">UID: {row.provider_user_id}</p>
           )}
         </div>
       ),
@@ -105,22 +111,13 @@ export default function UserDetailTabs({ detail }) {
 
   return (
     <div>
-      {/* 标签栏 */}
-      <div className="mb-6 flex flex-wrap gap-1.5 border-b border-white/[0.08] pb-3">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
-              tab === t.id
-                ? 'bg-cyan-300/10 text-cyan-200 shadow-sm shadow-cyan-300/10'
-                : 'text-white/55 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* 可横向滑动标签栏 (对标图二可滑动菜单规范) */}
+      <div className="mb-6 border-b border-line pb-3">
+        <AdminScrollableTabs
+          tabs={tabs}
+          activeTab={tab}
+          onChange={setTab}
+        />
       </div>
 
       {/* 1. 概览与运营标签 */}
@@ -128,53 +125,53 @@ export default function UserDetailTabs({ detail }) {
         <div className="grid gap-6 lg:grid-cols-2">
           {/* 基本资料 */}
           <Card>
-            <h3 className="text-sm font-bold text-white mb-4">基本资料</h3>
+            <h3 className="text-sm font-bold text-ink mb-4">基本资料</h3>
             <div className="space-y-3 text-xs">
-              <div className="flex justify-between border-b border-white/[0.05] pb-2">
-                <span className="text-white/45">显示名称</span>
-                <span className="font-semibold text-white">{user.display_name || '—'}</span>
+              <div className="flex justify-between border-b border-line-subtle pb-2">
+                <span className="text-ink-subtle">显示名称</span>
+                <span className="font-semibold text-ink">{user.display_name || '—'}</span>
               </div>
-              <div className="flex justify-between border-b border-white/[0.05] pb-2">
-                <span className="text-white/45">绑定邮箱</span>
-                <span className="font-semibold text-white">{user.email || '未绑定'}</span>
+              <div className="flex justify-between border-b border-line-subtle pb-2">
+                <span className="text-ink-subtle">绑定邮箱</span>
+                <span className="font-semibold text-ink">{user.email || '未绑定'}</span>
               </div>
-              <div className="flex justify-between border-b border-white/[0.05] pb-2">
-                <span className="text-white/45">绑定手机号</span>
-                <span className="font-semibold text-white font-mono">
+              <div className="flex justify-between border-b border-line-subtle pb-2">
+                <span className="text-ink-subtle">绑定手机号</span>
+                <span className="font-semibold text-ink font-mono">
                   {user.phone ? `${user.phone_country_code || '+86'} ${user.phone}` : '未绑定'}
                 </span>
               </div>
-              <div className="flex justify-between border-b border-white/[0.05] pb-2">
-                <span className="text-white/45">用户 ID</span>
+              <div className="flex justify-between border-b border-line-subtle pb-2">
+                <span className="text-ink-subtle">用户 ID</span>
                 <CopyableId id={user.id} />
               </div>
-              <div className="flex justify-between border-b border-white/[0.05] pb-2">
-                <span className="text-white/45">注册来源渠道</span>
-                <span className="font-mono text-cyan-200">{user.registration_source || 'web'}</span>
+              <div className="flex justify-between border-b border-line-subtle pb-2">
+                <span className="text-ink-subtle">注册来源渠道</span>
+                <span className="font-mono text-brand-hover">{user.registration_source || 'web'}</span>
               </div>
-              <div className="flex justify-between border-b border-white/[0.05] pb-2">
-                <span className="text-white/45">账户角色</span>
+              <div className="flex justify-between border-b border-line-subtle pb-2">
+                <span className="text-ink-subtle">账户角色</span>
                 <StatusBadge tone={user.role === 'user' ? 'neutral' : 'info'}>
                   {roleLabel(user.role)}
                 </StatusBadge>
               </div>
-              <div className="flex justify-between border-b border-white/[0.05] pb-2">
-                <span className="text-white/45">封禁状态</span>
+              <div className="flex justify-between border-b border-line-subtle pb-2">
+                <span className="text-ink-subtle">封禁状态</span>
                 <StatusBadge tone={user.status === 'suspended' ? 'danger' : 'good'}>
                   {user.status === 'suspended' ? '已封禁' : '正常'}
                 </StatusBadge>
               </div>
-              <div className="flex justify-between border-b border-white/[0.05] pb-2">
-                <span className="text-white/45">注册时间</span>
-                <span className="text-white/70">{formatDate(user.created_at)}</span>
+              <div className="flex justify-between border-b border-line-subtle pb-2">
+                <span className="text-ink-subtle">注册时间</span>
+                <span className="text-ink-muted">{formatDate(user.created_at)}</span>
               </div>
-              <div className="flex justify-between border-b border-white/[0.05] pb-2">
-                <span className="text-white/45">最近登录</span>
-                <span className="text-white/70">{formatDate(user.last_login_at)}</span>
+              <div className="flex justify-between border-b border-line-subtle pb-2">
+                <span className="text-ink-subtle">最近登录</span>
+                <span className="text-ink-muted">{formatDate(user.last_login_at)}</span>
               </div>
               <div className="flex justify-between pb-1">
-                <span className="text-white/45">最近登录 IP</span>
-                <span className="font-mono text-white/70">{user.last_login_ip || '—'}</span>
+                <span className="text-ink-subtle">最近登录 IP</span>
+                <span className="font-mono text-ink-muted">{user.last_login_ip || '—'}</span>
               </div>
             </div>
           </Card>
@@ -183,20 +180,20 @@ export default function UserDetailTabs({ detail }) {
           <div className="space-y-6">
             {/* 用户运营标签控制台 */}
             <Card>
-              <h3 className="text-sm font-bold text-white mb-2">用户运营标签</h3>
-              <p className="text-xs text-white/40 mb-4">
+              <h3 className="text-sm font-bold text-ink mb-2">用户运营标签</h3>
+              <p className="text-xs text-ink-subtle mb-4">
                 为用户打上业务/生命周期标签，便于精细化运营、定向权益发放与行为分析。
               </p>
 
               {/* 当前已打标签 */}
               <div className="mb-4 flex flex-wrap gap-2">
                 {currentTags.length === 0 ? (
-                  <span className="text-xs text-white/40">暂无运营标签</span>
+                  <span className="text-xs text-ink-subtle">暂无运营标签</span>
                 ) : (
                   currentTags.map((t) => (
                     <span
                       key={t.id}
-                      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm"
+                      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-ink shadow-elevation-1"
                       style={{ backgroundColor: `${t.color}30`, borderColor: `${t.color}60`, borderWidth: 1 }}
                     >
                       <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: t.color }} />
@@ -205,7 +202,7 @@ export default function UserDetailTabs({ detail }) {
                         type="button"
                         onClick={() => handleTagAction(t.id, 'remove')}
                         disabled={tagBusy}
-                        className="ml-1 text-white/40 hover:text-white transition disabled:opacity-30"
+                        className="ml-1 text-ink-subtle hover:text-ink transition disabled:opacity-30"
                         title="移除此标签"
                       >
                         ✕
@@ -216,11 +213,11 @@ export default function UserDetailTabs({ detail }) {
               </div>
 
               {/* 添加标签操作 */}
-              <div className="flex items-center gap-2 border-t border-white/[0.06] pt-3">
+              <div className="flex items-center gap-2 border-t border-line-subtle pt-3">
                 <select
                   value={selectedTag}
                   onChange={(e) => setSelectedTag(e.target.value)}
-                  className="flex-1 rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2 text-xs text-white outline-none focus:border-cyan-300/50"
+                  className="flex-1 rounded-xl border border-line bg-canvas px-3 py-2 text-xs text-ink outline-none focus:border-brand-ring"
                 >
                   <option value="">选择要添加的标签…</option>
                   {allTags
@@ -238,27 +235,27 @@ export default function UserDetailTabs({ detail }) {
                     handleTagAction(selectedTag, 'add');
                     setSelectedTag('');
                   }}
-                  className="rounded-xl bg-cyan-300 px-4 py-2 text-xs font-bold text-black transition hover:bg-cyan-200 disabled:opacity-40"
+                  className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-ink-on-accent transition hover:bg-brand disabled:opacity-40"
                 >
                   打标
                 </button>
               </div>
 
               {tagMsg && (
-                <p className="mt-2 text-xs text-cyan-300">{tagMsg}</p>
+                <p className="mt-2 text-xs text-brand-hover">{tagMsg}</p>
               )}
             </Card>
 
             {/* 高风险账户控制 */}
             <Card>
-              <h3 className="text-sm font-bold text-white mb-2">高风险账户控制</h3>
-              <p className="text-xs text-white/40 mb-4">
+              <h3 className="text-sm font-bold text-ink mb-2">高风险账户控制</h3>
+              <p className="text-xs text-ink-subtle mb-4">
                 修改账户状态或角色会立即撤销该用户的所有会话，强制其重新登录。
               </p>
 
               <div className="space-y-4">
-                <div className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
-                  <p className="text-xs font-semibold text-white mb-1.5">账户封禁状态切换</p>
+                <div className="rounded-xl border border-line bg-black/20 p-4">
+                  <p className="text-xs font-semibold text-ink mb-1.5">账户封禁状态切换</p>
                   <AdminActionForm
                     action={`/api/admin/users/${user.id}`}
                     method="PATCH"
@@ -275,8 +272,8 @@ export default function UserDetailTabs({ detail }) {
                   />
                 </div>
 
-                <div className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
-                  <p className="text-xs font-semibold text-white mb-2">变更管理角色</p>
+                <div className="rounded-xl border border-line bg-black/20 p-4">
+                  <p className="text-xs font-semibold text-ink mb-2">变更管理角色</p>
                   <AdminActionForm
                     action={`/api/admin/users/${user.id}/role`}
                     method="PATCH"
@@ -311,8 +308,8 @@ export default function UserDetailTabs({ detail }) {
       {tab === 'accounts' && (
         <Card>
           <div className="mb-4">
-            <h3 className="text-sm font-bold text-white">关联登录账号凭据 (auth_accounts)</h3>
-            <p className="mt-1 text-xs text-white/40">
+            <h3 className="text-sm font-bold text-ink">关联登录账号凭据 (auth_accounts)</h3>
+            <p className="mt-1 text-xs text-ink-subtle">
               展示用户主体已绑定的所有认证凭据，支持手机号、邮箱、Google、TikTok、X 1:N 解耦多账号聚合。
             </p>
           </div>
@@ -325,8 +322,8 @@ export default function UserDetailTabs({ detail }) {
         <Card>
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-white">模型额度明细</h3>
-              <p className="mt-1 text-xs text-white/40">当前余额：{user.credits} 点</p>
+              <h3 className="text-sm font-bold text-ink">模型额度明细</h3>
+              <p className="mt-1 text-xs text-ink-subtle">当前余额：{user.credits} 点</p>
             </div>
             <AdminActionForm
               action={`/api/admin/users/${user.id}/credits`}
@@ -346,7 +343,7 @@ export default function UserDetailTabs({ detail }) {
                 key: 'delta',
                 label: '变动点数',
                 render: (row) => (
-                  <span className={`font-mono font-bold ${row.delta >= 0 ? 'text-emerald-300' : 'text-red-400'}`}>
+                  <span className={`font-mono font-bold ${row.delta >= 0 ? 'text-success' : 'text-danger'}`}>
                     {row.delta >= 0 ? `+${row.delta}` : row.delta}
                   </span>
                 ),
@@ -364,7 +361,7 @@ export default function UserDetailTabs({ detail }) {
       {tab === 'billing' && (
         <div className="space-y-6">
           <Card>
-            <h3 className="text-sm font-bold text-white mb-4">订阅记录</h3>
+            <h3 className="text-sm font-bold text-ink mb-4">订阅记录</h3>
             <DataTable
               columns={[
                 { key: 'plan_id', label: '套餐 Plan' },
@@ -382,7 +379,7 @@ export default function UserDetailTabs({ detail }) {
           </Card>
 
           <Card>
-            <h3 className="text-sm font-bold text-white mb-4">充值与消费订单</h3>
+            <h3 className="text-sm font-bold text-ink mb-4">充值与消费订单</h3>
             <DataTable
               columns={[
                 { key: 'id', label: '订单号', render: (row) => <CopyableId id={row.id} /> },
@@ -408,16 +405,16 @@ export default function UserDetailTabs({ detail }) {
       {/* 5. 生成记录 */}
       {tab === 'creations' && (
         <Card>
-          <h3 className="text-sm font-bold text-white mb-4">AI 生成记录</h3>
+          <h3 className="text-sm font-bold text-ink mb-4">AI 生成记录</h3>
           <DataTable
             columns={[
               { key: 'studio_id', label: '所属模块' },
               { key: 'label', label: '生成概要' },
-              { key: 'credit_cost', label: '扣减额度', render: (row) => <span className="font-mono text-cyan-200">{row.credit_cost}</span> },
+              { key: 'credit_cost', label: '扣减额度', render: (row) => <span className="font-mono text-brand-hover">{row.credit_cost}</span> },
               {
                 key: 'status',
                 label: '状态',
-                render: (row) => <StatusBadge tone={row.status === 'completed' ? 'good' : 'attention'}>{row.status}</StatusBadge>,
+                render: (row) => <StatusBadge tone={['succeeded', 'completed', 'success'].includes(row.status) ? 'good' : 'attention'}>{row.status}</StatusBadge>,
               },
               { key: 'created_at', label: '时间', render: (row) => formatDate(row.created_at) },
             ]}
@@ -431,7 +428,7 @@ export default function UserDetailTabs({ detail }) {
       {tab === 'sessions' && (
         <Card>
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white">活跃会话 (Sessions)</h3>
+            <h3 className="text-sm font-bold text-ink">活跃会话 (Sessions)</h3>
             <AdminActionForm
               action={`/api/admin/users/${user.id}/sessions`}
               method="DELETE"
@@ -456,7 +453,7 @@ export default function UserDetailTabs({ detail }) {
       {tab === 'notes' && (
         <div className="space-y-6">
           <Card>
-            <h3 className="text-sm font-bold text-white mb-2">添加运营/客服备注</h3>
+            <h3 className="text-sm font-bold text-ink mb-2">添加运营/客服备注</h3>
             <AdminActionForm
               action={`/api/admin/users/${user.id}/notes`}
               method="POST"
@@ -468,15 +465,15 @@ export default function UserDetailTabs({ detail }) {
             />
           </Card>
           <Card>
-            <h3 className="text-sm font-bold text-white mb-4">历史管理备注</h3>
+            <h3 className="text-sm font-bold text-ink mb-4">历史管理备注</h3>
             <div className="space-y-3">
               {detail.notes.length === 0 ? (
-                <p className="text-xs text-white/40">暂无备注</p>
+                <p className="text-xs text-ink-subtle">暂无备注</p>
               ) : (
                 detail.notes.map((n) => (
-                  <div key={n.id} className="rounded-xl border border-white/5 bg-black/20 p-3 text-xs">
-                    <p className="text-white">{n.body}</p>
-                    <p className="mt-2 text-[11px] text-white/40">
+                  <div key={n.id} className="rounded-xl border border-line-subtle bg-black/20 p-3 text-xs">
+                    <p className="text-ink">{n.body}</p>
+                    <p className="mt-2 text-[11px] text-ink-subtle">
                       由 {n.author_email || '管理员'} 记录于 {formatDate(n.created_at)}
                     </p>
                   </div>
@@ -490,7 +487,7 @@ export default function UserDetailTabs({ detail }) {
       {/* 8. 审计流水 */}
       {tab === 'audit' && (
         <Card>
-          <h3 className="text-sm font-bold text-white mb-4">安全审计日志</h3>
+          <h3 className="text-sm font-bold text-ink mb-4">安全审计日志</h3>
           <DataTable
             columns={[
               { key: 'action', label: '动作事件' },

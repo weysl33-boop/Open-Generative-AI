@@ -1,8 +1,8 @@
 import { PageHeader } from '@/components/admin/AdminUi';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { listProviders } from '@/lib/repositories/aiCatalog';
-import { getProviderSecretsMetadata } from '@/lib/repositories/providers';
+import { listProviders } from '@/lib/services/modelCatalog';
+import { getProviderSecretsMetadata } from '@/lib/services/providers';
 import ProvidersManagerClient from './ProvidersManagerClient';
 
 export const dynamic = 'force-dynamic';

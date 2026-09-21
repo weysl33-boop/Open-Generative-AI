@@ -17,6 +17,36 @@
     "selectedCount": "已选择 {count}/{max}",
     "useSelected": "使用所选图片"
   },
+  "mediaMenu": {
+    "image": "图片",
+    "imageDesc": "jpeg, jpg, png",
+    "video": "视频",
+    "videoDesc": "mp4, mov, 最长 60 秒",
+    "script": "剧本",
+    "scriptDesc": "txt, doc, pdf, md, 最多 50000 字",
+    "audio": "音频",
+    "audioDesc": "mp3, wav, 最长 15 秒"
+  },
+  "paramsPanel": {
+    "titleRatio": "选择比例",
+    "titleResolution": "选择分辨率",
+    "titleQuantity": "选择生成数量",
+    "titleDimensions": "尺寸",
+    "smartRatio": "智能",
+    "standard15k": "标清 1.5K",
+    "hd2k": "高清 2K ✦",
+    "ultra4k": "超清 4K ✦",
+    "smartReference": "智能参考",
+    "addReference": "添加参考图",
+    "referenceCount": "参考图像 ({count}/{max})",
+    "autoSwitchedToI2I": "已自动切换至支持参考图的模型：{model}",
+    "autoSwitchedToT2I": "已自动切回纯文生图模型",
+    "modeImageGen": "图片生成",
+    "modeImageToImage": "图生图",
+    "creditPerImage": "✦ {cost}/张",
+    "creditPerImageOriginal": "11/张",
+    "batchCountUnit": "{count}张"
+  },
   "modelDropdown": {
     "categoryAll": "全部",
     "categoryT2I": "文本生成图像",
@@ -24,7 +54,8 @@
     "allProviders": "所有提供商",
     "searchPlaceholder": "搜索模型...",
     "modelsSuffix": "个模型",
-    "noModelsFound": "未找到相关模型"
+    "noModelsFound": "未找到相关模型",
+    "selectModelHeader": "选择模型"
   },
   "gallery": {
     "generatedImageAlt": "生成的图像",

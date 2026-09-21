@@ -1,14 +1,16 @@
-import { requirePermission, okResponse } from '@/lib/admin/authz';
+import { withAdminErrorBoundary, requirePermission, okResponse } from '@/lib/admin/authz';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { listOrders } from '@/lib/repositories/billing';
+import { listOrders } from '@/lib/services/adminRead';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(request) {
+async function handleGET(request) {
   const guard = await requirePermission(request, PERMISSIONS.billingRead);
   if (!guard.ok) return guard.response;
 
-  const result = listOrders(request.nextUrl.searchParams);
+  const result = await listOrders(request.nextUrl.searchParams);
   return okResponse(result.rows, guard.requestId, result.meta);
 }
+
+export const GET = withAdminErrorBoundary(handleGET);

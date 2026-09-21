@@ -1,13 +1,14 @@
 const path = require('path');
 
-const LOCAL_AI_DIR_ENV = 'OPEN_GENERATIVE_AI_LOCAL_AI_DIR';
+const LOCAL_AI_DIR_ENV = 'KOYOSIM_LOCAL_AI_DIR';
+const LEGACY_LOCAL_AI_DIR_ENV = 'OPEN_GENERATIVE_AI_LOCAL_AI_DIR';
 
 function normalizeDirOverride(value) {
     return typeof value === 'string' ? value.trim() : '';
 }
 
 function resolveLocalAiPaths({ userDataPath, env = process.env } = {}) {
-    const customDir = normalizeDirOverride(env[LOCAL_AI_DIR_ENV]);
+    const customDir = normalizeDirOverride(env[LOCAL_AI_DIR_ENV] || env[LEGACY_LOCAL_AI_DIR_ENV]);
 
     if (!customDir && !userDataPath) {
         throw new Error(`userDataPath is required when ${LOCAL_AI_DIR_ENV} is not set`);
