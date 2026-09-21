@@ -9,12 +9,16 @@ import { buildGateResponse } from './lib/security/chinaIpResponse';
  * 这些别名会被 `app/[locale]/...` 静态解析掉，永远走不到兜底页，所以收敛必须放在
  * 这一层：308 到注册表的 rootPath，其余部分与查询串原样保留。
  *
- * Location 必须是**相对**路径：`NextResponse.redirect()` 会把 `request.nextUrl` 的
- * origin 拼进去，而 next start 的 origin 是它自己的监听地址（`localhost:3100`），
- * 既不读 Host 也不读 X-Forwarded-Host —— nginx 又没配 proxy_redirect，于是线上每个
- * 别名跳转都把用户送进一个打不开的 localhost。3xx 带相对 Location 是 RFC 7231 允许、
- * 各家浏览器与爬虫都认的写法，换域名/换端口都不用再改一次。
+ * Location 的 origin 只能来自 PUBLIC_APP_URL，不能来自请求：`request.nextUrl.origin` 是
+ * 服务自己的监听地址（`http://localhost:3100`），Next 既不读 Host 也不读 X-Forwarded-Host，
+ * 而相对形式的 Location 又过不了 NextResponse 这一关（2026-09-21 实测直接抛
+ * `ERR_INVALID_URL`）—— 于是线上每个别名跳转会把用户送进一个打不开的 localhost，
+ * 且 308 可缓存，一旦被浏览器记住就再也回不来。PUBLIC_APP_URL 未配时兜到唯一对外域名。
  */
+const CANONICAL_ORIGIN = String(process.env.PUBLIC_APP_URL || 'https://www.koyosim.com')
+    .trim()
+    .replace(/\/+$/, '');
+
 function canonicalizeLocalePrefix(url) {
     const code = matchPathLocale(url.pathname);
     if (!code) return null;
@@ -22,9 +26,7 @@ function canonicalizeLocalePrefix(url) {
     const canonical = getLocaleConfig(code).rootPath;
     if (asserted === canonical) return null;
     const rest = url.pathname.slice(asserted.length);
-    const response = new NextResponse(null, { status: 308 });
-    response.headers.set('Location', `${canonical}${rest === '/' ? '' : rest}${url.search}` || '/');
-    return response;
+    return NextResponse.redirect(`${CANONICAL_ORIGIN}${canonical}${rest === '/' ? '' : rest}${url.search}`, 308);
 }
 
 // 只有"内容会随发版变化、又没有扩展名可判别"的两类响应必须禁缓存：HTML 与 /api。

@@ -834,16 +834,17 @@ export function targetStateFailures() {
     /permanentRedirect|308/,
     '没做别名前缀 308 规范化',
   );
-  // NextResponse.redirect() 会把 request.nextUrl 的 origin 拼进 Location，而 next start
-  // 的 origin 是它的监听地址（localhost:3100），既不读 Host 也不读 X-Forwarded-Host。
-  // 2026-09-21 就是这么把线上每个别名跳转送进打不开的 localhost 的。
-  // 先看代码再看注释：解释这条禁令的注释本身就写着那个函数名。
+  // 308 的 Location origin 只能来自 PUBLIC_APP_URL：request.nextUrl.origin 是服务自己的
+  // 监听地址（localhost:3100），Next 不读 Host 也不读 X-Forwarded-Host；而相对形式的
+  // Location 在 NextResponse 那一关直接抛 ERR_INVALID_URL。2026-09-21 就是踩了这个，
+  // 线上每个别名跳转把用户送进打不开的 localhost，且 308 可缓存、记住就回不来。
+  // 先看代码再看注释：解释这条禁令的注释本身就写着那些函数名。
   const mwCode = mw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
-  if (/NextResponse\.redirect\(/.test(mwCode)) {
-    failures.push('middleware.js 用了 NextResponse.redirect()：Location 会被拼成 http://localhost:3100/…，308 要手写相对 Location 头');
+  if (mw && !/PUBLIC_APP_URL/.test(mwCode)) {
+    failures.push('middleware.js 的别名 308 没有用 PUBLIC_APP_URL 定 origin：用请求派生的 origin 会拼出 http://localhost:3100/…');
   }
-  if (mw && !/headers\.set\(\s*'Location'/.test(mwCode)) {
-    failures.push("middleware.js 的 308 没有手写 Location 头：相对跳转只能这么出，绝对 URL 会带上监听地址");
+  if (/new URL\([^)]*,\s*url\s*\)/.test(mwCode)) {
+    failures.push('middleware.js 还在拿 request.nextUrl 当 base 拼跳转目标：那正是把用户送去 localhost 的那一步');
   }
 
   // 悬空跳：/zh-CN → /zh-CN/studio 这条目标本身不存在，等于把重复 URL 又喂一遍。
