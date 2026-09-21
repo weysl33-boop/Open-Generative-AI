@@ -26,10 +26,11 @@ export default function TopMegaNavigation({
   const [currentOpenValue, setCurrentOpenValue] = useState('');
 
   // 处理菜单项点击
-  const handleItemClick = (e, item) => {
+  const handleItemClick = (e, item, cat) => {
     setCurrentOpenValue('');
-    if (item.tabId && onSelectTab) {
-      onSelectTab(e, item.tabId, item.modelKey);
+    const targetTabId = item.tabId || cat?.tabId || (item.modelKey ? 'image' : null);
+    if (targetTabId && onSelectTab) {
+      onSelectTab(e, targetTabId, item.modelKey);
     }
   };
 

@@ -84,7 +84,7 @@ export default function MegaMenuPanel({ category, locale = 'zh', onItemClick }) 
                   <a
                     key={model.id}
                     href={model.href}
-                    onClick={(e) => onItemClick?.(e, model)}
+                    onClick={(e) => onItemClick?.(e, model, category)}
                     className="group flex items-start gap-3 rounded-xl p-2.5 transition-colors duration-fast hover:bg-wash-strong"
                   >
                     <NavIcon isModel className="size-4" />

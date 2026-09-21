@@ -808,6 +808,27 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [], 
   );
 }
 
+function findPickerEntryByModelKey(key) {
+  if (!key) return null;
+  const k = key.toLowerCase();
+  let match = imageModelPickerEntries.find((e) => e.id.toLowerCase() === k);
+  if (match) return match;
+  match = imageModelPickerEntries.find(
+    (e) => e.id.toLowerCase().includes(k) || k.includes(e.id.toLowerCase())
+  );
+  if (match) return match;
+  match = imageModelPickerEntries.find((e) => e.family?.id?.toLowerCase() === k);
+  if (match) return match;
+  match = imageModelPickerEntries.find(
+    (e) =>
+      e.variantIds?.some((vid) => vid.toLowerCase() === k || vid.toLowerCase().includes(k)) ||
+      e.defaultVariant?.model?.id?.toLowerCase() === k
+  );
+  if (match) return match;
+  match = imageModelPickerEntries.find((e) => e.name.toLowerCase().includes(k));
+  return match || null;
+}
+
 // ─── ModelDropdown ────────────────────────────────────────────────────────────
 
 function ModelDropdown({ selectedModel, onSelect, onClose, copy }) {
@@ -2026,7 +2047,7 @@ export default function ImageStudio({
   }, [applySelectedVariant, copy]);
 
   // ── Model selection ──────────────────────────────────────────────────────
-  const handleModelSelect = (pickerEntry, category = "all") => {
+  const handleModelSelect = useCallback((pickerEntry, category = "all") => {
     const { family, variantsByMode, defaultVariant } = pickerEntry;
     const target = category !== "all"
       ? variantsByMode[category]
@@ -2036,7 +2057,40 @@ export default function ImageStudio({
     if (!target) return;
 
     applyUserSelectedVariant(target, target.mode, family);
-  };
+  }, [applyUserSelectedVariant, currentMode, uploadedImageUrls.length]);
+
+  // ── Sync model from URL or external select event ─────────────────────────
+  useEffect(() => {
+    const handleSelectModel = (modelKey) => {
+      if (!modelKey) return;
+      const matchedEntry = findPickerEntryByModelKey(modelKey);
+      if (matchedEntry) {
+        handleModelSelect(matchedEntry);
+      }
+    };
+
+    // 1. Check URL param on mount
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const modelFromUrl = urlParams.get("model");
+      if (modelFromUrl) {
+        handleSelectModel(modelFromUrl);
+      }
+    }
+
+    // 2. Listen to custom event dispatched by navigation
+    const handleCustomEvent = (e) => {
+      const { modelKey, tabId } = e.detail || {};
+      if (!tabId || tabId === "image") {
+        handleSelectModel(modelKey);
+      }
+    };
+
+    window.addEventListener("koyosim-select-model", handleCustomEvent);
+    return () => {
+      window.removeEventListener("koyosim-select-model", handleCustomEvent);
+    };
+  }, [handleModelSelect]);
 
   // ── History helpers ──────────────────────────────────────────────────────
   const addToHistory = useCallback(
