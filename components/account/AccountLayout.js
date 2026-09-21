@@ -206,7 +206,7 @@ export default function AccountLayout({
                   <span className="text-body-sm text-ink font-semibold truncate block">{userName}</span>
                 </span>
                 <span className="text-caption text-ink-muted font-mono truncate block">
-                  UID: {user?.id || ''}
+                  UID: {user?.userNumber || user?.id || ''}
                 </span>
               </span>
             </button>

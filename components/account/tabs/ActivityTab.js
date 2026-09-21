@@ -119,11 +119,15 @@ export default function ActivityTab({ user }) {
 
   const currentUser = data?.user || {
     id: user?.id || '',
+    userNumber: user?.userNumber || '',
     displayName: user?.displayName || '',
     daysActive: 1,
     badgeTitle: '#探险家',
   };
   const greetingName = currentUser.displayName || user?.displayName || '创作者';
+  // 线上 users.id 仍是 usr_ 前缀串、user_number 才是给用户看的 6 位号；
+  // 本地库已把数字 UID 收进 id，所以取值顺序为 user_number 优先、id 兜底。
+  const displayUid = currentUser.userNumber || currentUser.id;
   const metrics = data?.metrics || { totalCreations: 0, activeDays: 0, totalCredits: 0 };
   const weeks = data?.heatmap?.weeks || [];
   const topModels = data?.topModels || [];
@@ -146,7 +150,7 @@ export default function ActivityTab({ user }) {
               {currentUser.badgeTitle || '#探险家'}
             </span>
             <span className="text-[11px] text-ink-subtle font-mono">
-              UID: {currentUser.id}
+              UID: {displayUid}
             </span>
           </div>
         </div>

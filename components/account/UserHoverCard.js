@@ -54,7 +54,7 @@ export default function UserHoverCard({ user }) {
         </div>
         <div className="min-w-0">
           <p className="truncate text-card-title text-ink">{displayName}</p>
-          <p className="mt-1 truncate text-caption text-ink-subtle font-mono">UID: {user?.id || '—'}</p>
+          <p className="mt-1 truncate text-caption text-ink-subtle font-mono">UID: {user?.userNumber || user?.id || '—'}</p>
         </div>
       </div>
 

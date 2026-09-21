@@ -265,7 +265,7 @@ export default function ProfileTab({
   const [unbinding, setUnbinding] = useState(false);
   const [unbindError, setUnbindError] = useState('');
 
-  const userId = user?.id || '';
+  const userId = user?.userNumber || user?.id || '';
   const visibleSocialProviderIds = [...new Set([
     ...(socialOptions?.providers || []).map((provider) => provider.id),
     ...currentProviders,
