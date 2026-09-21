@@ -172,3 +172,24 @@ test('Douyin uses its website OAuth endpoints and remains distinct from TikTok',
   assert.equal(getOAuthProvider('tiktok').authorizeUrl, 'https://www.tiktok.com/v2/auth/authorize/');
   assert.notEqual(getOAuthProvider('douyin').authorizeUrl, getOAuthProvider('tiktok').authorizeUrl);
 });
+
+test('OAuth callback recovers state from in-memory cache when cookie is lost during cross-site redirect', () => {
+  const created = createOAuthState({
+    provider: 'google',
+    verifier: 'pkce-verifier-12345',
+    returnTo: '/studio',
+    bindUserId: null,
+  });
+
+  // 模拟跨站重定向导致浏览器未携带 Cookie (cookieValue 为 null/undefined)
+  const recovered = readOAuthCallbackState(null, created.state, 'google');
+  assert.ok(recovered, '必须能从服务端缓存中成功恢复 state');
+  assert.equal(recovered.provider, 'google');
+  assert.equal(recovered.verifier, 'pkce-verifier-12345');
+  assert.equal(recovered.returnTo, '/studio');
+
+  // 防重放测试：一旦消费，再次读取应返回 null
+  const replay = readOAuthCallbackState(null, created.state, 'google');
+  assert.equal(replay, null, 'state 被消费后再次使用必须返回 null，防止重放');
+});
+

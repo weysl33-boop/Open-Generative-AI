@@ -1,5 +1,8 @@
 import { redirect } from 'next/navigation';
+import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
+import { PERMISSIONS } from '@/lib/admin/permissions';
 
-export default function EmailProviderPage() {
+export default async function EmailProviderPage() {
+  await requireAdminPagePermission(PERMISSIONS.providersRead);
   redirect('/admin/email');
 }

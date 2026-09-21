@@ -58,7 +58,7 @@ export async function GET(request, { params }) {
       .card{background:#18181b;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:28px;max-width:380px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.5);}
       h2{font-size:18px;margin:0 0 10px;color:#22d3ee;} p{font-size:13px;color:#a1a1aa;line-height:1.6;margin:0 0 20px;}
       .btn{background:#22d3ee;color:#000;font-weight:bold;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-size:13px;text-decoration:none;display:inline-block;}</style>
-      </head><body><div class="card"><h2>${safeName} 登录尚未配置</h2><p>${msg} 请由管理员在「模型与集成 → 社交登录渠道」配置回调域与应用凭据，或暂用手机号/邮箱登录。</p><button class="btn" onclick="closeOrBack()">确定并返回</button></div>
+      </head><body><div class="card"><h2>${safeName} 登录尚未配置</h2><p>${msg} 请由管理员在「登录配置 → 社交登录」配置回调域与应用凭据，或暂用手机号/邮箱登录。</p><button class="btn" onclick="closeOrBack()">确定并返回</button></div>
       <script>
         const message = { type: 'koyosim-auth-complete', ok: false, message: ${jsonForInlineScript(msg)} };
         if (window.opener && window.opener !== window) {
