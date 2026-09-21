@@ -9,6 +9,7 @@ if (testUrl) process.env.DATABASE_URL = testUrl;
 
 const db = await import('../../lib/db/index.js');
 const migrations = await import('../../lib/db/migrations.js');
+const { reserveTestUserId } = await import('../../scripts/test-user-id-fixtures.mjs');
 
 test.after(async () => {
   await db.closePgPool();
@@ -30,8 +31,9 @@ test('query, queryOne and execute use PostgreSQL parameter binding', { skip: !te
 });
 
 test('transaction rollback leaves no test row behind', { skip: !testUrl }, async () => {
-  const id = `test_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  let id;
   await assert.rejects(() => db.withTransaction(async (tx) => {
+    id = await reserveTestUserId((sql, params) => tx.query(sql, params));
     await tx.execute('INSERT INTO users (id, email, password_hash, password_salt) VALUES ($1, $2, $3, $4)', [id, `${id}@example.test`, 'hash', 'salt']);
     throw new Error('intentional rollback');
   }), /transaction failed/i);
@@ -48,7 +50,7 @@ test('idempotency duplicate request is rejected by the database constraint', { s
 
 test('simulated generation settles once and releases once on provider failure', { skip: !testUrl }, async () => {
   const suffix = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
-  const userId = `p3_user_${suffix}`;
+  const userId = await reserveTestUserId((sql, params) => db.query(sql, params));
   const modelId = `p3_mock_${suffix}`;
   const key = `p3_generation_${suffix}`;
   const failureKey = `${key}_failure`;
@@ -102,7 +104,7 @@ test('simulated generation settles once and releases once on provider failure', 
 
 test('payment credit refunds reverse a grant once and preserve non-negative balances', { skip: !testUrl }, async () => {
   const suffix = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
-  const userId = `refund_user_${suffix}`;
+  const userId = await reserveTestUserId((sql, params) => db.query(sql, params));
   const referenceId = `refund_order_${suffix}`;
   const idempotencyKey = `refund_credits_${suffix}`;
   const { grantPerpetualCredits, reversePaymentCredits } = await import('../../lib/financial/creditService.js');

@@ -95,7 +95,7 @@ function PostCard({ post, onOpen, onLike, onRemix }) {
           <div className="min-w-0">
             <h3 className="truncate text-sm font-semibold text-foreground">{post.title || '未命名作品'}</h3>
             <Link
-              href={`/u/${post.author_user_number || post.user_id || ''}`}
+              href={`/u/${post.author_id || post.user_id || ''}`}
               onClick={(e) => e.stopPropagation()}
               className="mt-1 block truncate text-xs text-muted-foreground transition-colors hover:text-primary hover:underline"
             >

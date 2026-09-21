@@ -6,7 +6,7 @@ import * as notifRepo from '../lib/repositories/notifications.js';
 
 test('Database: sys_core.user_notifications table and repository functions', async () => {
   // 1. 验证表结构与存量通知
-  const sampleUser = await queryOne('SELECT id, user_number FROM auth_usr.users LIMIT 1');
+  const sampleUser = await queryOne('SELECT id FROM auth_usr.users LIMIT 1');
   assert.ok(sampleUser, 'Must have at least 1 sample user in database');
 
   const notifications = await notifRepo.getUserNotifications(sampleUser.id, 10);
@@ -58,7 +58,7 @@ test('Component: UserDropdownMenu faithfully matches the reference image layout 
 
   // 5. 验证用户头像与悬浮动效面板
   assert.ok(code.includes('animate-in') && code.includes('backdrop-blur'), 'Must have smooth animation and high-blur backdrop');
-  assert.ok(code.includes('UID:') || code.includes('userNumber'), 'Must display permanent 6-digit number ID in dropdown header');
+  assert.ok(code.includes('UID:') && code.includes('user?.id'), 'Must display the canonical root user ID in dropdown header');
   assert.ok(code.includes('handleCopyUserNumber'), 'Must support clicking UID to copy with feedback');
   assert.ok(code.includes('edit-profile'), 'Must link to Profile & Security tab');
   assert.ok(code.includes('activity'), 'Must link to Trae activity tab');

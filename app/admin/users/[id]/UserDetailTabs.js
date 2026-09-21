@@ -129,7 +129,7 @@ export default function UserDetailTabs({ detail }) {
             <div className="space-y-3 text-xs">
               <div className="flex justify-between border-b border-line-subtle pb-2">
                 <span className="text-ink-subtle">用户 UID</span>
-                <CopyableId id={user.user_number} strong />
+                <CopyableId id={user.id} strong />
               </div>
               <div className="flex justify-between border-b border-line-subtle pb-2">
                 <span className="text-ink-subtle">显示名称</span>

@@ -158,7 +158,7 @@ export default function OnboardingFlow({ initialStep = 1, initialUser, studioHre
                   <StepIdentity
                     copy={copy}
                     localeCode={localeCode}
-                    userNumber={initialUser?.userNumber}
+                    userId={initialUser?.id}
                     initialDisplayName={identity.displayName}
                     initialAvatarUrl={identity.avatarUrl}
                     busy={busy}

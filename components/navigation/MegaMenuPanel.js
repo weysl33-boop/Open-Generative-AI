@@ -1,6 +1,7 @@
 import React from 'react';
 import NavBadge from './NavBadge';
 import NavIcon from './NavIcon';
+import { getMegaNavCopy } from '../../config/mega-navigation';
 
 /**
  * 双栏 Mega Menu 浮层内容面板组件 (严格遵循 UI_DESIGN_SYSTEM.md 规范)
@@ -13,7 +14,7 @@ import NavIcon from './NavIcon';
 export default function MegaMenuPanel({ category, locale = 'zh', onItemClick }) {
   if (!category) return null;
 
-  const isZh = locale?.startsWith('zh') ?? true;
+  const copy = getMegaNavCopy(locale);
   const hasModels = Array.isArray(category.models) && category.models.length > 0;
 
   return (
@@ -24,14 +25,14 @@ export default function MegaMenuPanel({ category, locale = 'zh', onItemClick }) 
         <div className={`${hasModels ? 'w-full md:w-1/2' : 'w-full'} flex flex-col p-3`}>
           <div className="flex items-center justify-between px-3 py-1.5">
             <span className="text-caption font-bold uppercase tracking-wider text-ink-muted">
-              {isZh ? '功能与工具' : 'Features'}
+              {copy.features}
             </span>
           </div>
 
           <div className="mt-1 space-y-1 overflow-y-auto max-h-96 pr-1 scrollbar-rail">
             {category.features?.map((feat) => {
-              const label = typeof feat.label === 'object' ? (feat.label[isZh ? 'zh' : 'en'] || feat.label.en) : feat.label;
-              const desc = typeof feat.description === 'object' ? (feat.description[isZh ? 'zh' : 'en'] || feat.description.en) : feat.description;
+              const label = feat.label;
+              const desc = feat.description;
 
               return (
                 <a
@@ -68,16 +69,16 @@ export default function MegaMenuPanel({ category, locale = 'zh', onItemClick }) 
           <div className="w-full md:w-1/2 flex flex-col p-3 bg-wash">
             <div className="flex items-center justify-between px-3 py-1.5">
               <span className="text-caption font-bold uppercase tracking-wider text-ink-muted">
-                {isZh ? '核心模型矩阵' : 'Models'}
+                {copy.models}
               </span>
               <span className="text-micro text-ink-subtle">
-                {category.models.length} {isZh ? '款就绪' : 'Ready'}
+                {category.models.length} {copy.modelsReady}
               </span>
             </div>
 
             <div className="mt-1 space-y-1 overflow-y-auto max-h-96 pr-1 scrollbar-rail">
               {category.models.map((model) => {
-                const desc = typeof model.description === 'object' ? (model.description[isZh ? 'zh' : 'en'] || model.description.en) : model.description;
+                const desc = model.description;
 
                 return (
                   <a

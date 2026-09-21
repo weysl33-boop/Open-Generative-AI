@@ -145,7 +145,7 @@ export default function UserProfileClient({ creator }) {
                   </h1>
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono border border-success-line bg-success-soft text-success">
                     <Hash className="size-3" />
-                    UID: {creator.userNumber}
+                    UID: {creator.id}
                   </span>
                   {isOwner && (
                     <span className="px-2 py-0.5 rounded-full text-micro font-semibold bg-wash-press text-ink border border-line">

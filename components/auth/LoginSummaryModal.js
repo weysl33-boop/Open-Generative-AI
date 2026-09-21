@@ -40,7 +40,7 @@ export default function LoginSummaryModal({ user, onClose, onGoStudio }) {
               <h2 className="text-base font-bold text-ink flex items-center gap-2">
                 <span>用户活跃与用量总览</span>
                 <span className="text-micro uppercase font-mono px-1.5 py-0.5 rounded bg-wash-press text-ink">
-                  {user?.userNumber ? `#${user.userNumber}` : 'ONLINE'}
+                  {user?.id ? `#${user.id}` : 'ONLINE'}
                 </span>
               </h2>
               <p className="text-xs text-ink-muted">快捷登录已完成，实时同步您的创作热力与模型使用明细</p>

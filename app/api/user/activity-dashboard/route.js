@@ -24,8 +24,8 @@ export async function GET(request) {
         isHidden: true,
         user: {
           id: targetUser.id,
-          userNumber: targetUser.user_number || '000000',
-          displayName: targetUser.display_name || `创作者#${targetUser.user_number || '新星'}`,
+          id: targetUser.id,
+          displayName: targetUser.display_name || `创作者#${targetUser.id}`,
           avatarUrl: targetUser.avatar_url,
           isActivityPublic: false,
         },

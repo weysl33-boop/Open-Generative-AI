@@ -13,15 +13,16 @@ import {
   grantPerpetualCredits,
   CURRENCY
 } from '../lib/financial/index.js';
-import { execute, nowIso, randomId } from '../lib/db/index.js';
+import { execute, nowIso, randomId, query } from '../lib/db/index.js';
 import { assertSandboxDatabase } from './require-sandbox-db.mjs';
+import { reserveTestUserId } from './test-user-id-fixtures.mjs';
 
 console.log('=== [开始金融级系统核心测试套件] ===');
 
 async function main() {
   await assertSandboxDatabase();
   const now = nowIso();
-  const userA = `usr_test_a_${Date.now()}`;
+  const userA = await reserveTestUserId(query);
 
   // 创建一个测试用户
   await execute(`
@@ -139,7 +140,7 @@ async function main() {
 
   console.log(`\n7. 测试高并发防透支穿透压力测试 (Concurrency Defense)...`);
   // 创建一个仅有 5 积分的隔离用户
-  const userC = `usr_test_c_${Date.now()}`;
+  const userC = await reserveTestUserId(query);
   await execute(`
     INSERT INTO users (id, email, display_name, password_hash, password_salt, role, credits, status, created_at)
     VALUES ($1, $2, '并发测试用户C', 'fake', 'fake', 'user', 0, 'active', $3)

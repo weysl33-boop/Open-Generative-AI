@@ -83,7 +83,7 @@ export default function ActivityTab({ user }) {
   }
 
   const currentUser = data?.user || {
-    userNumber: user?.userNumber || '000000',
+    id: user?.id || '',
     daysActive: 1,
     badgeTitle: '#探险家',
   };
@@ -98,7 +98,7 @@ export default function ActivityTab({ user }) {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-line-subtle pb-5">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2.5">
-            <span>你好！用户{currentUser.userNumber}</span>
+            <span>你好！用户{currentUser.id}</span>
           </h1>
           <p className="mt-1.5 text-xs text-ink-muted">
             这是您使用 koyosim 的第 <span className="font-semibold text-ink">{currentUser.daysActive}</span> 天。
@@ -109,7 +109,7 @@ export default function ActivityTab({ user }) {
               {currentUser.badgeTitle || '#探险家'}
             </span>
             <span className="text-[11px] text-ink-subtle font-mono">
-              UID: {currentUser.userNumber}
+              UID: {currentUser.id}
             </span>
           </div>
         </div>

@@ -8,6 +8,7 @@ if (testUrl && process.env.DATABASE_URL && testUrl === process.env.DATABASE_URL)
 if (testUrl) process.env.DATABASE_URL = testUrl;
 
 const db = await import('../../lib/db/index.js');
+const { reserveTestUserId } = await import('../../scripts/test-user-id-fixtures.mjs');
 const { createOrder, listPublicPlans } = await import('../../lib/services/billing.js');
 const { dispatchPaymentWebhook } = await import('../../lib/services/webhookDispatcher.js');
 const { findCreditPackById } = await import('../../lib/payments/creditPacks.js');
@@ -18,7 +19,7 @@ test.after(async () => {
 
 test('paid one-time credit-pack order is persisted, fulfilled once, and never creates a subscription', { skip: !testUrl }, async () => {
   const suffix = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
-  const userId = `credit_pack_user_${suffix}`;
+  const userId = await reserveTestUserId((sql, params) => db.query(sql, params));
   const idempotencyKey = `credit-pack-${suffix}`;
   const eventId = `alipay_credit_pack_${suffix}`;
   const pack = findCreditPackById('credit_490');

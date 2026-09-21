@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
-import { MEGA_NAV_CATEGORIES } from '../../config/mega-navigation';
+import { getMegaNavCategories, getMegaNavCopy } from '../../config/mega-navigation';
 import MegaMenuPanel from './MegaMenuPanel';
 import NavBadge from './NavBadge';
 
@@ -21,7 +21,8 @@ export default function TopMegaNavigation({
   onSelectTab,
   className = '',
 }) {
-  const isZh = locale?.startsWith('zh') ?? true;
+  const categories = getMegaNavCategories(locale);
+  const copy = getMegaNavCopy(locale);
   const [currentOpenValue, setCurrentOpenValue] = useState('');
 
   // 处理菜单项点击
@@ -48,13 +49,13 @@ export default function TopMegaNavigation({
             href="/studio"
             className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-body-sm font-medium text-ink-muted transition-colors duration-fast hover:bg-wash hover:text-ink"
           >
-            {isZh ? '探索' : 'Explore'}
+            {copy.explore}
           </NavigationMenu.Link>
         </NavigationMenu.Item>
 
         {/* 各主分类 Mega Menu (图像、视频、音频、智能体、社区) */}
-        {MEGA_NAV_CATEGORIES.map((cat) => {
-          const label = cat.label[isZh ? 'zh' : 'en'] || cat.label.en;
+        {categories.map((cat) => {
+          const label = cat.label;
           const isCategoryActive = cat.features?.some((f) => f.tabId === activeTab);
 
           return (

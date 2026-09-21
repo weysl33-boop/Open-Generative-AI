@@ -252,8 +252,8 @@ export default function UserDropdownMenu({
     setShowMenuLangSub(false);
   }, [pathname]);
 
-  // 复制 6 位不可变数字 ID
-  const handleCopyUserNumber = (num, e) => {
+  // 复制用户根 UID
+  const handleCopyUserId = (num, e) => {
     e?.stopPropagation();
     if (!num) return;
     navigator.clipboard?.writeText?.(String(num));
@@ -286,7 +286,7 @@ export default function UserDropdownMenu({
 
   // 计算展示数据
   const displayName = user?.displayName || user?.display_name || user?.email?.split('@')[0] || (isZh ? 'AI 创作者' : 'AI Creator');
-  const userNumber = user?.userNumber || user?.user_number;
+  const userId = user?.id;
   const avatarUrl = liveAvatar !== null ? liveAvatar : (user?.avatar || user?.avatar_url);
   const coinFrame = avatarFrameClasses(user?.avatarFrame || user?.avatar_frame);
   const initialLetter = displayName.slice(0, 1).toUpperCase();
@@ -597,7 +597,7 @@ export default function UserDropdownMenu({
               role="menu"
               aria-orientation="vertical"
             >
-              {/* (1) 顶部用户信息卡片 (大头像 + 昵称 + 6位UID + 直达个人主页) */}
+              {/* (1) 顶部用户信息卡片 (大头像 + 昵称 + 根 UID + 直达个人主页) */}
               <div className="flex items-center justify-between gap-3 p-1">
                 <div className="flex min-w-0 items-center gap-2.5">
                   <div className={`bg-raised text-brand flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-body font-bold ${coinFrame || 'border border-line'}`}>
@@ -618,15 +618,15 @@ export default function UserDropdownMenu({
                         </span>
                       )}
                     </div>
-                    {/* 不可变 6 位数字 ID 展示与点击复制 */}
+                    {/* 不可变数字 UID 展示与点击复制 */}
                     <div className="mt-0.5 flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={(e) => handleCopyUserNumber(userNumber, e)}
+                        onClick={(e) => handleCopyUserId(userId, e)}
                         className={`text-mono text-caption text-ink-subtle truncate transition-colors duration-fast hover:text-brand ${FOCUS_RING}`}
-                        title={isZh ? '点击复制 6 位唯一数字 ID' : 'Click to copy UID'}
+                        title={isZh ? '点击复制唯一数字 UID' : 'Click to copy UID'}
                       >
-                        {userNumber ? `UID: ${userNumber}` : (user?.email || (isZh ? '正式创作者' : 'Creator'))}
+                        {userId ? `UID: ${userId}` : (user?.email || (isZh ? '正式创作者' : 'Creator'))}
                       </button>
                       {copyFeedback && (
                         <span className="text-caption animate-fade-in font-medium text-success">

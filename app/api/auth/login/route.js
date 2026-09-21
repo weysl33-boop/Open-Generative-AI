@@ -11,7 +11,7 @@ export async function POST(request) {
     const limit = await consumeRateLimit({ scope: 'auth_login_ip', subject: ip, limit: 20, windowMs: 15 * 60 * 1000 });
     if (!limit.allowed) return rateLimitResponse(limit);
     const body = await request.json();
-    const identifier = body.identifier || body.email || body.userNumber || body.account;
+    const identifier = body.identifier || body.id || body.email || body.account;
     const user = await authenticateUser(identifier, body.password, ip);
     if (!user) return json({ error: '账号/邮箱或密码不正确' }, { status: 401 });
     if (user.error === 'ACCOUNT_SUSPENDED') {

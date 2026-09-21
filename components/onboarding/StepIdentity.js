@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 export default function StepIdentity({
   copy,
   localeCode,
-  userNumber,
+  userId,
   initialDisplayName,
   initialAvatarUrl,
   busy,
@@ -25,7 +25,7 @@ export default function StepIdentity({
 }) {
   const [displayName, setDisplayName] = useState(initialDisplayName || '');
   const [avatarUrl, setAvatarUrl] = useState(
-    initialAvatarUrl || defaultAvatarUrl(userNumber),
+    initialAvatarUrl || defaultAvatarUrl(userId),
   );
   const [uploading, setUploading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -56,7 +56,7 @@ export default function StepIdentity({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(String(userNumber || ''));
+      await navigator.clipboard.writeText(String(userId || ''));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -73,7 +73,7 @@ export default function StepIdentity({
       <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-line-subtle bg-well px-4 py-3">
         <div className="min-w-0 flex-1">
           <p className="text-label text-ink-muted">{copy.uidLabel}</p>
-          <p className="mt-0.5 font-mono text-section-title text-brand">#{userNumber || '------'}</p>
+          <p className="mt-0.5 font-mono text-section-title text-brand">#{userId || '------'}</p>
         </div>
         <p className="w-full text-caption text-ink-subtle sm:w-auto sm:max-w-56">{copy.uidHint}</p>
         <Button variant="secondary" size="sm" onClick={handleCopy}>
@@ -114,7 +114,7 @@ export default function StepIdentity({
                 <Upload className="size-3.5" />
                 <span>{uploading ? copy.avatarUploading : copy.avatarUpload}</span>
               </Button>
-              <Button variant="tertiary" size="sm" onClick={() => setAvatarUrl(defaultAvatarUrl(userNumber))}>
+              <Button variant="tertiary" size="sm" onClick={() => setAvatarUrl(defaultAvatarUrl(userId))}>
                 <span>{copy.avatarResetDefault}</span>
               </Button>
             </div>

@@ -601,6 +601,16 @@ export function getMegaNavCategories(locale = 'zh') {
   }));
 }
 
+export function getMegaNavCopy(locale = 'zh') {
+  const isZh = locale?.startsWith('zh') ?? true;
+  return {
+    explore: isZh ? '探索' : 'Explore',
+    features: isZh ? '功能与工具' : 'Features',
+    models: isZh ? '核心模型矩阵' : 'Models',
+    modelsReady: isZh ? '款就绪' : 'Ready',
+  };
+}
+
 /**
  * 辅助函数：通过 tabId 查找 Feature
  */

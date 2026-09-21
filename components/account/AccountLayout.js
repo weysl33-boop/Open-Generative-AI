@@ -167,7 +167,7 @@ export default function AccountLayout({
                   <p className="text-[13px] text-ink font-semibold truncate">{userName}</p>
                 </div>
                 <p className="text-[11px] text-ink-muted font-mono truncate">
-                  UID: {user?.userNumber || '650410'}
+                  UID: {user?.id || ''}
                 </p>
               </div>
             </div>

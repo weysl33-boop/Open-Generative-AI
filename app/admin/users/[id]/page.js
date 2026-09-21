@@ -23,7 +23,7 @@ export default async function UserDetailPage({ params }) {
   }
 
   const { user } = detail;
-  const uid = user.user_number || null;
+  const uid = user.id || null;
   const letter = (user.email || user.phone || uid || 'U').slice(0, 1).toUpperCase();
   const accountLines = [
     user.email ? `✉️ ${user.email}` : '未绑定邮箱',

@@ -119,7 +119,7 @@ export default function CommunityDetailModal({ postId, initialPost = null, onClo
             <div className="flex w-full shrink-0 flex-col border-t border-border md:w-[390px] md:border-l md:border-t-0">
               <div className="border-b border-border p-5">
                 <Link
-                  href={`/u/${post.author_user_number || post.user_id || ''}`}
+                  href={`/u/${post.author_id || post.user_id || ''}`}
                   onClick={onClose}
                   className="group flex items-center gap-3 transition-opacity hover:opacity-90"
                 >
@@ -135,7 +135,7 @@ export default function CommunityDetailModal({ postId, initialPost = null, onClo
                       {post.author_name || post.author_username || '社区创作者'}
                     </p>
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                      {post.author_user_number ? `UID: ${post.author_user_number} · ` : ''}
+                      {post.author_id ? `UID: ${post.author_id} · ` : ''}
                       {post.created_at ? new Date(post.created_at).toLocaleDateString('zh-CN') : '刚刚发布'}
                     </p>
                   </div>
@@ -178,7 +178,7 @@ export default function CommunityDetailModal({ postId, initialPost = null, onClo
                       <div key={comment.id} className="rounded-xl bg-muted/45 p-3">
                         <div className="flex items-center justify-between">
                           <Link
-                            href={`/u/${comment.author_user_number || comment.user_id || ''}`}
+                            href={`/u/${comment.author_id || comment.user_id || ''}`}
                             onClick={onClose}
                             className="text-xs font-medium text-foreground transition-colors hover:text-primary"
                           >

@@ -1,6 +1,7 @@
 import assert from 'node:assert';
-import { execute, nowIso, randomId } from '../lib/db/index.js';
+import { execute, nowIso, query, randomId } from '../lib/db/index.js';
 import { assertSandboxDatabase } from './require-sandbox-db.mjs';
+import { reserveTestUserId } from './test-user-id-fixtures.mjs';
 import { createSession } from '../lib/services/auth.js';
 import {
   getUserAssetFolders,
@@ -19,7 +20,7 @@ const ORIGIN = 'https://www.koyosim.com';
 
 async function main() {
   await assertSandboxDatabase();
-  const testUserId = `usr_asset_test_${Date.now()}`;
+  const testUserId = await reserveTestUserId(query);
   const now = nowIso();
 
   try {

@@ -3,14 +3,15 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import pg from 'pg';
 import { requireIsolatedTestDatabase } from './test-database-guard.mjs';
+import { reserveTestUserId } from './test-user-id-fixtures.mjs';
 
 const testUrl = String(process.env.TEST_DATABASE_URL || '').trim();
 requireIsolatedTestDatabase(testUrl, process.env.DATABASE_URL, 'TEST_DATABASE_URL');
 const { Pool } = pg;
 const pool = new Pool({ connectionString: testUrl });
 const suffix = crypto.randomBytes(8).toString('hex');
-const userId = `e2e_user_${suffix}`;
-const adminId = `e2e_admin_${suffix}`;
+const userId = await reserveTestUserId((sql, params) => pool.query(sql, params));
+const adminId = await reserveTestUserId((sql, params) => pool.query(sql, params));
 const userToken = `e2e_user_token_${suffix}`;
 const adminToken = `e2e_admin_token_${suffix}`;
 const hash = (value) => crypto.createHash('sha256').update(value).digest('hex');

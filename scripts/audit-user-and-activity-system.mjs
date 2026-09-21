@@ -5,6 +5,8 @@ import * as userRepo from '../lib/repositories/users.js';
 import * as activityRepo from '../lib/repositories/activity.js';
 import * as authService from '../lib/services/auth.js';
 import * as activityService from '../lib/services/activity.js';
+import { allocateUserId } from '../lib/auth/user-id.js';
+import { reserveTestUserId } from './test-user-id-fixtures.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -32,12 +34,14 @@ async function runAudit() {
     SELECT column_name, data_type, is_nullable
     FROM information_schema.columns
     WHERE table_schema = 'auth_usr' AND table_name = 'users'
-      AND column_name IN ('user_number', 'is_activity_public', 'privacy_settings')
+      AND column_name IN ('uuid', 'user_number', 'is_activity_public', 'privacy_settings')
   `);
   const colNames = colCheck.rows.map(r => r.column_name);
-  assert(colNames.includes('user_number'), 'users 表已包含 user_number 字段');
+  assert(!colNames.includes('uuid') && !colNames.includes('user_number'), 'users 表只保留 canonical id，不再保留 uuid / user_number 别名');
   assert(colNames.includes('is_activity_public'), 'users 表已包含 is_activity_public 字段');
   assert(colNames.includes('privacy_settings'), 'users 表已包含 privacy_settings 字段');
+  const allocatorTable = await queryOne("SELECT to_regclass('auth_usr.user_id_allocations') AS relation");
+  assert(Boolean(allocatorTable?.relation), 'UID 分配登记表已建立');
 
   const tableCheck = await query(`
     SELECT table_schema, table_name
@@ -49,40 +53,44 @@ async function runAudit() {
   assert(foundTables.includes('sys_core.user_activity_logs'), '已建立 sys_core.user_activity_logs 行为追踪表');
   assert(foundTables.includes('ai_studio.user_follows'), '已建立 ai_studio.user_follows 创作者关注互动表');
 
-  // 2. 存量用户 6 位数字 ID 审计
-  console.log('\n--- 2. 6 位永久唯一数字 ID (QQ号逻辑) 审计 ---');
-  const allUsers = await query("SELECT id, username, user_number FROM auth_usr.users");
+  // 2. 存量用户 canonical numeric ID 审计
+  console.log('\n--- 2. 唯一根数字 UID 审计 ---');
+  const allUsers = await query("SELECT id, username FROM auth_usr.users");
   assert(allUsers.rows.length > 0, `系统当前存在 ${allUsers.rows.length} 个存量用户`);
 
-  let validNumbers = true;
-  const numberSet = new Set();
+  let validIds = true;
+  const idSet = new Set();
   for (const u of allUsers.rows) {
-    if (!u.user_number || !/^\d{6}$/.test(u.user_number)) {
-      validNumbers = false;
-      console.error(`  ⚠️ 用户 ${u.id} (${u.username}) 的数字 ID 非法: ${u.user_number}`);
+    if (!/^[1-9]\d{5,63}$/.test(u.id)) {
+      validIds = false;
+      console.error(`  ⚠️ 用户 ${u.id} (${u.username}) 的 canonical UID 格式非法`);
     }
-    numberSet.add(u.user_number);
+    idSet.add(u.id);
   }
-  assert(validNumbers, '所有存量用户的 user_number 均为严格 6 位纯数字格式 (100000-999999)');
-  assert(numberSet.size === allUsers.rows.length, `所有数字 ID 均具备全局唯一性，零重复碰撞 (${numberSet.size}/${allUsers.rows.length})`);
+  assert(validIds, '所有根 UID 都是至少 6 位、不带前导零的纯数字');
+  assert(idSet.size === allUsers.rows.length, `所有根 UID 全局唯一 (${idSet.size}/${allUsers.rows.length})`);
 
-  // 3. 动态 6 位数字 ID 生成防撞机制
-  console.log('\n--- 3. 动态 6 位数字 ID 生成防撞机制 ---');
-  const generatedNumbers = [];
+  // 3. 动态位数分配器实测
+  console.log('\n--- 3. 按池耗尽后扩位的 UID 分配器 ---');
+  const generatedIds = [];
   for (let i = 0; i < 20; i++) {
-    const num = await authService.generateUniqueUserNumber();
-    assert(/^\d{6}$/.test(num), `生成随机数字 ID 符合 6 位格式: ${num}`);
-    generatedNumbers.push(num);
+    const id = await withTransaction((tx) => allocateUserId({
+      reserve: async (uid, digits) => Boolean(await authRepo.reserveUserId(uid, digits, tx)),
+      findFirstAvailable: (digits) => authRepo.findFirstAvailableUserId(digits, tx),
+      isExhausted: (digits) => authRepo.isUserIdLengthExhausted(digits, tx),
+    }));
+    assert(/^\d{6,64}$/.test(id), `生成根 UID 符合可扩位数字格式: ${id}`);
+    generatedIds.push(id);
   }
-  const uniqueGenerated = new Set(generatedNumbers);
-  assert(uniqueGenerated.size === generatedNumbers.length, '20 次高频生成均唯一无重复');
+  const uniqueGenerated = new Set(generatedIds);
+  assert(uniqueGenerated.size === generatedIds.length, '20 次高频生成均唯一无重复');
 
-  // 4. 数字 ID 凭证查询与登录支持
-  console.log('\n--- 4. 6 位数字 ID 作为主账号登录能力 ---');
+  // 4. 根 ID 凭证查询与登录支持
+  console.log('\n--- 4. 根 UID 作为主账号登录能力 ---');
   const sampleUser = allUsers.rows[0];
-  const credByNum = await authRepo.findCredentialByAccount(sampleUser.user_number);
-  assert(Boolean(credByNum), `可通过 6 位数字 ID [${sampleUser.user_number}] 检索到凭据记录`);
-  assert(credByNum?.user_id === sampleUser.id, `数字 ID 关联的凭证对应真实用户 ID: ${sampleUser.id}`);
+  const credById = await authRepo.findCredentialByAccount(sampleUser.id);
+  assert(Boolean(credById), `可通过 canonical UID [${sampleUser.id}] 检索到凭据记录`);
+  assert(credById?.user_id === sampleUser.id, `根 UID 直接对应用户主键: ${sampleUser.id}`);
 
   // 5. 多渠道安全解绑与防孤儿账号机制
   console.log('\n--- 5. 多渠道解绑与防孤儿账号机制 ---');
@@ -93,14 +101,13 @@ async function runAudit() {
   assert(Array.isArray(credSummary.oauthProviders), `凭证盘点包含绑定社交平台列表: count=${credSummary.oauthProviders.length}`);
 
   // 模拟唯一凭据拦截测试（创建沙箱临时用户进行解绑与孤儿防范测试）
-  const testUserId = `usr_test_audit_${Date.now()}`;
-  const testUserNum = await authService.generateUniqueUserNumber();
+  const testUserId = await reserveTestUserId(query);
   const testPhone = `199${Math.floor(10000000 + Math.random() * 90000000)}`;
 
   await query(`
-    INSERT INTO auth_usr.users (id, username, display_name, user_number, phone, created_at, updated_at)
-    VALUES ($1, $2, '审计测试员', $3, $4, now(), now())
-  `, [testUserId, `tester_${Date.now().toString().slice(-6)}`, testUserNum, testPhone]);
+    INSERT INTO auth_usr.users (id, username, display_name, phone, created_at, updated_at)
+    VALUES ($1, $2, '审计测试员', $3, now(), now())
+  `, [testUserId, `tester_${Date.now().toString().slice(-6)}`, testPhone]);
 
   await query(`
     INSERT INTO auth_usr.auth_accounts (id, user_id, provider, provider_user_id, created_at, updated_at)
@@ -199,7 +206,7 @@ async function runAudit() {
   const targetCreator = allUsers.rows.find(u => u.id !== sampleUser.id);
   if (targetCreator) {
     const followResult = await activityRepo.toggleFollow(sampleUser.id, targetCreator.id);
-    assert(followResult.following === true, `关注创作者 [UID: ${targetCreator.user_number}] 成功`);
+    assert(followResult.following === true, `关注创作者 [UID: ${targetCreator.id}] 成功`);
 
     const stats = await activityRepo.getUserFollowStats(targetCreator.id);
     assert(stats.followersCount >= 1, `创作者粉丝数正常增加: ${stats.followersCount}`);

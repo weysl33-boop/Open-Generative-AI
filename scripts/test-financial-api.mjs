@@ -1,6 +1,7 @@
 import assert from 'node:assert';
-import { execute, nowIso, randomId } from '../lib/db/index.js';
+import { execute, nowIso, randomId, query } from '../lib/db/index.js';
 import { assertSandboxDatabase } from './require-sandbox-db.mjs';
+import { reserveTestUserId } from './test-user-id-fixtures.mjs';
 import { createSession } from '../lib/services/auth.js';
 import { getEntitlements } from '../lib/services/billing.js';
 import { CURRENCY, grantFeedbackRewardCoins, grantPerpetualCredits, getCurrencyWallet, getCreditWallet } from '../lib/financial/index.js';
@@ -38,7 +39,7 @@ function createMockRequest({ token, method = 'GET', body = null, headers = {} })
 async function main() {
   await assertSandboxDatabase();
   const now = nowIso();
-  const user1 = `usr_api_1_${Date.now()}`;
+  const user1 = await reserveTestUserId(query);
 
   await execute(`
     INSERT INTO users (id, email, display_name, password_hash, password_salt, role, credits, status, created_at)

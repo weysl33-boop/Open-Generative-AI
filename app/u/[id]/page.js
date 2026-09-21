@@ -8,7 +8,7 @@ export async function generateMetadata({ params }) {
   const resolved = await params;
   const user = await getPublicProfile(resolved.id);
   if (!user) return { title: '创作者主页 — koyosim' };
-  const name = user.display_name || `创作者#${user.user_number || ''}`;
+  const name = user.display_name || `创作者#${user.id}`;
   return {
     title: `${name} 的个人主页 — koyosim AI Studio`,
     description: user.bio || `${name} 在 koyosim 上的创作作品展与主页。`,
@@ -22,8 +22,7 @@ export default async function UserProfilePage({ params }) {
 
   const creator = {
     id: user.id,
-    userNumber: user.user_number || '000000',
-    displayName: user.display_name || `创作者#${user.user_number || '新星'}`,
+    displayName: user.display_name || `创作者#${user.id}`,
     avatarUrl: user.avatar_url,
     avatarFrame: user.avatar_frame || null,
     bio: user.bio || '',

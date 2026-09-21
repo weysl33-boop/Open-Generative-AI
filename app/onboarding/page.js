@@ -40,7 +40,7 @@ export default async function OnboardingPage() {
     <OnboardingFlow
       initialStep={user.onboardingStep >= ONBOARDING_STEP_IDENTITY ? 2 : 1}
       initialUser={{
-        userNumber: user.userNumber || '',
+        id: user.id || '',
         displayName: user.displayName || '',
         avatarUrl: user.avatar || '',
         locale,

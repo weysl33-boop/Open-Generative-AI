@@ -255,7 +255,7 @@ export default function ProfileTab({
   const [unbinding, setUnbinding] = useState(false);
   const [unbindError, setUnbindError] = useState('');
 
-  const userNumber = user?.userNumber || '650410';
+  const userId = user?.id || '';
   const visibleSocialProviderIds = [...new Set([
     ...(socialOptions?.providers || []).map((provider) => provider.id),
     ...currentProviders,
@@ -506,10 +506,10 @@ export default function ProfileTab({
       {/* 顶部标题区 */}
       <div>
         <h1 className="text-xl font-bold tracking-tight text-ink">个人资料与账号体系</h1>
-        <p className="mt-1 text-xs text-ink-muted">管理您的不可变 6 位数字身份 ID、基本资料及多登录凭据绑定。</p>
+        <p className="mt-1 text-xs text-ink-muted">管理您的不可变数字 UID、基本资料及多登录凭据绑定。</p>
       </div>
 
-      {/* 个人基本信息卡片 (包含不可更改 6 位数随机数字 ID，逻辑参考 QQ 号) */}
+      {/* 个人基本信息卡片 (展示不可更改的随机数字根 UID) */}
       <Card padding="lg">
         <CardHeader className="p-0 pb-5 flex flex-row items-center justify-between">
           <div>
@@ -518,7 +518,7 @@ export default function ProfileTab({
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-success-line bg-success-soft text-success text-xs font-mono">
             <Hash className="size-3.5" />
-            <span>UID: {userNumber}</span>
+            <span>UID: {userId}</span>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -612,7 +612,7 @@ export default function ProfileTab({
                 <span className="text-caption text-ink-subtle">终身绑定 · 支持直接登录</span>
               </span>
               <Input
-                value={`#${userNumber}`}
+                value={`#${userId}`}
                 disabled
                 className="font-mono select-all"
               />
@@ -837,7 +837,7 @@ export default function ProfileTab({
         <CardHeader className="p-0 pb-4">
           <CardTitle className="text-sm font-semibold text-ink">独立登录密码</CardTitle>
           <p className="mt-0.5 text-xs text-ink-muted">
-            设置密码后，可使用您的 6 位数字 ID ({userNumber}) 直接输入密码登录系统。
+            设置密码后，可使用您的数字 UID ({userId}) 直接输入密码登录系统。
           </p>
         </CardHeader>
         <CardContent className="p-0">
@@ -1078,7 +1078,7 @@ export default function ProfileTab({
               <h3 className="text-base font-semibold text-ink">确认解绑 {unbindTarget.label}？</h3>
             </div>
             <p className="text-xs text-ink leading-relaxed mb-4">
-              解绑后，您将无法再使用该渠道快捷登录。您的 6 位数字身份 ID (#{userNumber})、创作资产与积分将不受影响。
+              解绑后，您将无法再使用该渠道快捷登录。您的 UID (#{userId})、创作资产与积分将不受影响。
             </p>
 
             {unbindError && (

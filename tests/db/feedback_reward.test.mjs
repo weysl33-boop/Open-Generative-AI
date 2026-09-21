@@ -9,6 +9,7 @@ if (testUrl) process.env.DATABASE_URL = testUrl;
 
 const db = await import('../../lib/db/index.js');
 const migrations = await import('../../lib/db/migrations.js');
+const { reserveTestUserId } = await import('../../scripts/test-user-id-fixtures.mjs');
 const financial = await import('../../lib/financial/index.js');
 const { submitFeedback, reviewFeedback, listMyFeedback, listFeedbackForAdmin } = await import('../../lib/services/feedback.js');
 const { findFeedbackKind } = await import('../../lib/feedback/catalog.js');
@@ -16,11 +17,15 @@ const { findFeedbackKind } = await import('../../lib/feedback/catalog.js');
 if (testUrl) await migrations.runMigrations();
 
 const suffix = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-const actorId = `fb_admin_${suffix}`;
-const actor = { id: actorId, email: `admin_${suffix}@example.test` };
+let actorId = null;
+let actor = null;
 
 async function makeActor() {
   // reviewer_id 有指向 users(id) 的外键：裁决人必须是真实用户，否则结清事务直接失败。
+  if (!actorId) {
+    actorId = await reserveTestUserId((sql, params) => db.query(sql, params));
+    actor = { id: actorId, email: `admin_${suffix}@example.test` };
+  }
   await db.execute(
     `INSERT INTO users (id, email, password_hash, password_salt, role, credits, status)
      VALUES ($1, $2, 'hash', 'salt', 'admin', 0, 'active')
@@ -30,12 +35,12 @@ async function makeActor() {
 }
 
 test.after(async () => {
-  if (testUrl) await db.execute('DELETE FROM users WHERE id = $1', [actorId]).catch(() => {});
+  if (testUrl && actorId) await db.execute('DELETE FROM users WHERE id = $1', [actorId]).catch(() => {});
   await db.closePgPool();
 });
 
 async function makeUser(tag) {
-  const id = `fb_${tag}_${suffix}`;
+  const id = await reserveTestUserId((sql, params) => db.query(sql, params));
   await db.execute(
     `INSERT INTO users (id, email, password_hash, password_salt, role, credits, status)
      VALUES ($1, $2, 'hash', 'salt', 'user', 0, 'active')`,

@@ -1,6 +1,7 @@
 ﻿import assert from 'node:assert/strict';
 import { query, queryOne } from '../lib/db/pg.js';
 import { assertSandboxDatabase } from './require-sandbox-db.mjs';
+import { reserveTestUserId } from './test-user-id-fixtures.mjs';
 import {
   createCommunityPost,
   getCommunityPostById,
@@ -33,11 +34,12 @@ async function main() {
   let testUser = await queryOne("SELECT id, display_name FROM auth_usr.users LIMIT 1");
   if (!testUser) {
     console.log('未检测到用户，自动创建临时测试用户...');
+    const userId = await reserveTestUserId(query);
     testUser = await queryOne(`
       INSERT INTO auth_usr.users (id, email, display_name, role, credits)
-      VALUES ('test_community_user', 'community_test@koyosim.com', '即梦测试创作者', 'user', 100)
+      VALUES ($1, 'community_test@koyosim.com', '即梦测试创作者', 'user', 100)
       RETURNING id, display_name
-    `);
+    `, [userId]);
   }
   console.log(`✓ 测试用户就绪: ID=${testUser.id}, 昵称=${testUser.display_name}`);
 

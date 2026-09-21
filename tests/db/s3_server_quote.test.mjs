@@ -9,6 +9,7 @@ if (testUrl) process.env.DATABASE_URL = testUrl;
 
 const db = await import('../../lib/db/index.js');
 const migrations = await import('../../lib/db/migrations.js');
+const { reserveTestUserId } = await import('../../scripts/test-user-id-fixtures.mjs');
 const catalog = await import('../../lib/repositories/aiCatalog.js');
 const { createGenerationTask } = await import('../../lib/services/generationCore.js');
 const quoteService = await import('../../lib/services/generationQuote.js');
@@ -52,7 +53,7 @@ async function seedModel({ creditsPrice = 5, catalogPricing = null, synced = tru
 }
 
 async function seedUser(credits = 5000) {
-  const userId = `s3_user_${stamp}_${(seq += 1)}`;
+  const userId = await reserveTestUserId((sql, params) => db.query(sql, params));
   await db.execute(`
     INSERT INTO users (id, email, password_hash, password_salt, role, credits, status)
     VALUES ($1, $2, 'hash', 'salt', 'user', 0, 'active')

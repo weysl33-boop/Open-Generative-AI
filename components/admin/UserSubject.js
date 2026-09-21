@@ -2,11 +2,11 @@ import Link from 'next/link';
 import { CopyableId } from './AdminUi';
 
 /**
- * 后台所有"这是哪个用户"的单元格统一走这里：以 6 位 UID 为锚点，邮箱作账号说明。
+ * 后台所有"这是哪个用户"的单元格统一走这里：以 canonical UID 为锚点，邮箱作账号说明。
  * 内部 usr_ ID 与昵称不再出现在主体位（两者仍可在用户详情页取到）。
  */
 export function UserSubject({ row, href }) {
-  const uid = row.user_number || null;
+  const uid = row.id || row.user_id || null;
   const letter = (row.email || row.phone || uid || 'U').slice(0, 1).toUpperCase();
 
   return (

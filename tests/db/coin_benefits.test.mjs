@@ -9,6 +9,7 @@ if (testUrl) process.env.DATABASE_URL = testUrl;
 
 const db = await import('../../lib/db/index.js');
 const migrations = await import('../../lib/db/migrations.js');
+const { reserveTestUserId } = await import('../../scripts/test-user-id-fixtures.mjs');
 const financial = await import('../../lib/financial/index.js');
 const { CURRENCY, ACCOUNT_CODES } = financial;
 const { BENEFITS } = await import('../../lib/benefits/catalog.js');
@@ -23,7 +24,7 @@ test.after(async () => {
 });
 
 async function makeUser(tag) {
-  const id = `coin_ben_${tag}_${suffix}`;
+  const id = await reserveTestUserId((sql, params) => db.query(sql, params));
   await db.execute(
     `INSERT INTO users (id, email, password_hash, password_salt, role, credits, status)
      VALUES ($1, $2, 'hash', 'salt', 'user', 0, 'active')`,

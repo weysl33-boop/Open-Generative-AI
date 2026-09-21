@@ -63,7 +63,6 @@ export async function POST(request) {
     const response = json({
       user: {
         id: user.id,
-        uuid: user.uuid,
         displayName: user.display_name,
         phone: user.phone,
         phoneCountryCode: user.phone_country_code,
