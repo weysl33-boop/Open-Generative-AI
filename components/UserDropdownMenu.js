@@ -22,7 +22,8 @@ import {
   Zap,
   KeyRound,
 } from 'lucide-react';
-import { getLocaleConfig, normalizeLocale, resolveClientLocale } from '@/lib/locales';
+import { resolveClientLocale } from '@/lib/locales';
+import { localizedPathFor, switchLocale as applyLocaleSwitch } from '@/lib/client/localeSwitch';
 import { FOCUS_RING } from 'studio/ui/tokens';
 import { openGlobalAccountModal } from '@/lib/accountEvents';
 
@@ -78,8 +79,9 @@ export default function UserDropdownMenu({
   const handleOpenPricing = useCallback((section = 'plans') => {
     setIsMenuOpen(false);
     setIsNotifOpen(false);
-    router.push(`${isZh ? '/zh/pricing' : '/pricing'}#${section}`);
-  }, [isZh, router]);
+    // 注册表说了算：/pricing 只有 /zh 建了树，其余前缀拼出来就是 404。
+    router.push(`${localizedPathFor('/pricing', activeLocale) || '/pricing'}#${section}`);
+  }, [activeLocale, router]);
 
   // 统一打开个人中心弹窗
   const handleOpenAccountModal = useCallback((tab = 'price-details') => {
@@ -252,63 +254,14 @@ export default function UserDropdownMenu({
   };
 
   // 语言切换与持久化写入数据库
-  const toggleLanguage = async (targetLocaleOverride = null) => {
+  const toggleLanguage = (targetLocaleOverride = null) => {
     const nextLocale = targetLocaleOverride || (isZh ? 'en' : 'zh-CN');
-    const normalizedTarget = normalizeLocale(nextLocale);
-    const targetConfig = getLocaleConfig(normalizedTarget);
-    if (!targetConfig) return;
-
-    // 1. 设置客户端持久 Cookie (1 年有效)
-    document.cookie = `NEXT_LOCALE=${encodeURIComponent(normalizedTarget)}; path=/; max-age=31536000; SameSite=Lax`;
-    document.cookie = `locale=${encodeURIComponent(normalizedTarget)}; path=/; max-age=31536000; SameSite=Lax`;
     setIsMenuOpen(false);
-
-    // 2. 绑定个人习惯（个人设置语言），持久化写入数据库
-    try {
-      void fetch('/api/user/preferences', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale: normalizedTarget }),
-      }).catch(() => {});
-      void fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale: normalizedTarget }),
-      }).catch(() => {});
-    } catch {}
-
-    // 3. 正确计算跳转路径，避免 404 与无响应
-    const currentPath = pathname || (typeof window !== 'undefined' ? window.location.pathname : '/');
-    const search = typeof window !== 'undefined' ? (window.location.search || '') : '';
-    const isStudioPath = currentPath === '/' || currentPath.includes('/studio');
-
-    if (isStudioPath) {
-      let cleanStudioPath = currentPath;
-      for (const prefix of ['/zh-CN', '/zh-TW', '/ja-JP', '/ko-KR', '/es', '/zh']) {
-        if (cleanStudioPath === prefix || cleanStudioPath.startsWith(`${prefix}/`)) {
-          cleanStudioPath = cleanStudioPath.slice(prefix.length) || '/';
-          break;
-        }
-      }
-      if (!cleanStudioPath.startsWith('/studio')) {
-        cleanStudioPath = '/studio';
-      }
-
-      const targetRoot = targetConfig.rootPath; // 'en' -> '', 'zh-CN' -> '/zh'
-      const newStudioPath = `${targetRoot ? `${targetRoot}${cleanStudioPath}` : cleanStudioPath}${search}`;
-
-      if (typeof window !== 'undefined') {
-        window.location.href = newStudioPath;
-      } else {
-        router.push(newStudioPath);
-      }
-    } else {
-      if (typeof window !== 'undefined') {
-        window.location.reload();
-      } else {
-        router.refresh();
-      }
-    }
+    applyLocaleSwitch({
+      targetLocale: nextLocale,
+      pathname: pathname || (typeof window !== 'undefined' ? window.location.pathname : '/'),
+      search: typeof window !== 'undefined' ? window.location.search : '',
+    });
   };
 
   // 退出登录

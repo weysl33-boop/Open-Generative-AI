@@ -8,6 +8,8 @@ import CreativeGallery from '@/components/call-api/CreativeGallery';
 export const metadata = {
   title: 'KoyoSIM AI Studio | 新一代旗舰级生成式 AI 视觉创作平台',
   description: '聚合全球顶尖生图与视频模型。无需管理多个平台，在统一专业画布中自由创作超写实人像、电影级分镜、商业海报与动态视觉。',
+  // 零入链的落地页：没有内部链接给它导权重，被爬到的只会是搜索引擎自己猜的。
+  robots: { index: false, follow: false },
 };
 
 export default function CallApiPage() {

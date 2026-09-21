@@ -1,33 +1,21 @@
 ﻿'use client';
 
 import { useEffect } from 'react';
-
-const RECOVERY_KEY = 'koyosim_chunk_recovery_ts';
-const RECOVERY_COOLDOWN_MS = 15000; // 15秒内仅允许自动自愈一次，防止无限循环
+import { reloadBypassingCache, trySpendReload } from '@/lib/client/reloadBudget';
 
 export default function ChunkSelfHealing() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const trySelfHealing = (reason) => {
-      try {
-        const lastRecovery = sessionStorage.getItem(RECOVERY_KEY);
-        const now = Date.now();
-        if (lastRecovery && now - Number(lastRecovery) < RECOVERY_COOLDOWN_MS) {
-          console.warn('[ChunkSelfHealing] 冷却时间内已执行过自愈，跳过重复刷新:', reason);
-          return;
-        }
-
-        sessionStorage.setItem(RECOVERY_KEY, String(now));
-        console.warn('[ChunkSelfHealing] 检测到静态资源版本错位或加载失败，正在自动拉取最新版本:', reason);
-
-        // 强制带时间戳重载最新 HTML
-        const url = new URL(window.location.href);
-        url.searchParams.set('_v_reload', String(now));
-        window.location.replace(url.toString());
-      } catch (e) {
-        window.location.reload();
+      // 预算与两个错误边界共用：以前三处各记各的时间戳，一次版本发布会让它们
+      // 在 10s / 15s 的节奏上互相点燃，页面反复重载。
+      if (!trySpendReload()) {
+        console.warn('[ChunkSelfHealing] 本机 60s 内的自动重载已用尽，停在当前页面:', reason);
+        return;
       }
+      console.warn('[ChunkSelfHealing] 检测到静态资源版本错位或加载失败，正在自动拉取最新版本:', reason);
+      reloadBypassingCache();
     };
 
     // 1. 捕获未处理的 Promise 拒绝 (例如动态 import() 失败导致的 ChunkLoadError)

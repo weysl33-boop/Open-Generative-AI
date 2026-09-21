@@ -34,6 +34,19 @@ async function readCatalog(locale) {
   const common = await readJson(path.join(repoRoot, 'messages', normalized, 'common.json'));
   if (common) Object.assign(catalog, flatten({ common }));
 
+  // 首屏之外的独立命名空间（404 页等）也吃同一套键数校验：新增一份而不补全 6 种语言，
+  // 这里就该判红，而不是等到线上渲染出半英文的兜底页。
+  const launchDir = path.join(repoRoot, 'messages', normalized);
+  let launchEntries = [];
+  try { launchEntries = await fs.readdir(launchDir, { withFileTypes: true }); } catch { return catalog; }
+  for (const entry of launchEntries) {
+    if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
+    const name = entry.name.replace(/\.json$/i, '');
+    if (name === 'common') continue;
+    const bundle = await readJson(path.join(launchDir, entry.name));
+    if (bundle) Object.assign(catalog, flatten({ [name]: bundle }));
+  }
+
   const studioDir = path.join(repoRoot, 'packages', 'studio', 'src', 'messages', normalized === 'zh-CN' ? 'zh' : normalized);
   let entries = [];
   try { entries = await fs.readdir(studioDir, { withFileTypes: true }); } catch { return catalog; }

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { getLocaleConfig, getLocaleFromPathname } from '@/lib/locales';
+import { matchPathLocale, resolveClientLocale } from '@/lib/locales';
+import { switchLocale as applyLocaleSwitch } from '@/lib/client/localeSwitch';
 
 const LOCALE_OPTIONS = [
   { code: 'en', label: 'English', flag: '/flags/en.svg', flagAlt: 'English' },
@@ -16,11 +17,16 @@ const LOCALE_OPTIONS = [
 export default function LanguageSwitcher({ className = '', showLabel = true }) {
   const pathname = usePathname() || '/';
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 
-  const currentLocale = getLocaleFromPathname(pathname);
+  // 首帧只信路径（服务端没有 document.cookie），挂载后再并入 cookie ——
+  // 否则无前缀页面上这个标签会永远显示 English。
+  const [currentLocale, setCurrentLocale] = useState(() => matchPathLocale(pathname) || 'en');
+  useEffect(() => {
+    setCurrentLocale(resolveClientLocale({ pathname, search: searchParams?.toString() }));
+  }, [pathname, searchParams]);
+
   const currentOption = LOCALE_OPTIONS.find((option) => option.code === currentLocale) || LOCALE_OPTIONS[0];
 
   useEffect(() => {
@@ -36,56 +42,11 @@ export default function LanguageSwitcher({ className = '', showLabel = true }) {
   function switchLocale(targetLocale) {
     setOpen(false);
     if (targetLocale === currentLocale) return;
-
-    // 1. 设置客户端持久 Cookie (1 年有效)
-    document.cookie = `NEXT_LOCALE=${encodeURIComponent(targetLocale)}; path=/; max-age=31536000; SameSite=Lax`;
-    document.cookie = `locale=${encodeURIComponent(targetLocale)}; path=/; max-age=31536000; SameSite=Lax`;
-
-    // 2. 绑定个人习惯（个人设置语言），写入数据库
-    void fetch('/api/user/preferences', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ locale: targetLocale }),
-    }).catch(() => {});
-
-    void fetch('/api/user/profile', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ locale: targetLocale }),
-    }).catch(() => {});
-
-    // 3. 精准计算跳转路径，杜绝 404
-    const isStudioPath = pathname === '/' || pathname.includes('/studio');
-    const targetConfig = getLocaleConfig(targetLocale);
-
-    if (isStudioPath) {
-      let cleanStudioPath = pathname;
-      for (const prefix of ['/zh-CN', '/zh-TW', '/ja-JP', '/ko-KR', '/es', '/zh']) {
-        if (cleanStudioPath === prefix || cleanStudioPath.startsWith(`${prefix}/`)) {
-          cleanStudioPath = cleanStudioPath.slice(prefix.length) || '/';
-          break;
-        }
-      }
-      if (!cleanStudioPath.startsWith('/studio')) {
-        cleanStudioPath = '/studio';
-      }
-
-      const targetRoot = targetConfig.rootPath;
-      const localizedPath = targetRoot ? `${targetRoot}${cleanStudioPath}` : cleanStudioPath;
-      const query = searchParams?.toString();
-      const finalUrl = `${localizedPath || '/'}${query ? `?${query}` : ''}`;
-      if (typeof window !== 'undefined') {
-        window.location.href = finalUrl;
-      } else {
-        router.push(finalUrl);
-      }
-    } else {
-      if (typeof window !== 'undefined') {
-        window.location.reload();
-      } else {
-        router.refresh();
-      }
-    }
+    applyLocaleSwitch({
+      targetLocale,
+      pathname,
+      search: searchParams?.toString() ? `?${searchParams.toString()}` : '',
+    });
   }
 
   function handleMenuKeyDown(event) {

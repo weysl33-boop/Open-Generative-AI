@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { cookies, headers } from 'next/headers';
+import { headers } from 'next/headers';
 import { getLocaleConfig, normalizeLocale } from '@/lib/locales';
 
 export const metadata = {
@@ -8,15 +8,9 @@ export const metadata = {
 };
 
 export default async function AssetsPage() {
-  const cookieStore = await cookies();
-  const headerList = await headers();
-
-  const cookieLocale = cookieStore.get('NEXT_LOCALE')?.value || cookieStore.get('locale')?.value;
-  const headerLocale = headerList.get('x-locale');
-  const targetLocale = normalizeLocale(cookieLocale || headerLocale || 'zh');
-
-  const config = getLocaleConfig(targetLocale);
-  const rootPath = config?.rootPath || '';
-
-  redirect(`${rootPath}/studio/assets`);
+  // `assets` 不是工作台段，旧链接只能落到 studio 根上再由壳决定显示什么。
+  // 语言取 x-locale：middleware 已经按"路径 → ?lang → cookie"算过一遍，
+  // 在这里再读一次 cookie 就是给同一件事第二个优先级。
+  const config = getLocaleConfig(normalizeLocale((await headers()).get('x-locale')));
+  redirect(`${config.rootPath}/studio`);
 }

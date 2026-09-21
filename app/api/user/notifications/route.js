@@ -1,4 +1,5 @@
 import { getUserFromRequest, json } from '@/lib/services/auth';
+import { guardMutation } from '@/lib/security/requestGuard';
 import {
   getUserNotifications,
   getUnreadNotificationCount,
@@ -30,6 +31,9 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const guarded = guardMutation(request);
+  if (guarded) return guarded;
+
   try {
     const user = await getUserFromRequest(request);
     if (!user) {

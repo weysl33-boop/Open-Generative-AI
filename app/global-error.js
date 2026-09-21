@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { reloadBypassingCache, trySpendReload } from '@/lib/client/reloadBudget';
 
 export default function GlobalError({ error, reset }) {
   useEffect(() => {
@@ -20,16 +21,10 @@ export default function GlobalError({ error, reset }) {
       msg.includes('Minified React error') ||
       msg.includes('Failed to fetch');
 
-    if (isChunkOrSyncIssue && typeof window !== 'undefined') {
-      const lastReload = sessionStorage.getItem('koyosim_ge_reload');
-      const now = Date.now();
-      // 10 秒防抖，避免死循环重载
-      if (!lastReload || now - Number(lastReload) > 10000) {
-        sessionStorage.setItem('koyosim_ge_reload', String(now));
-        // 平滑刷新当前页面，自动获取最新静态资源与组件版本
-        window.location.reload();
-        return;
-      }
+    // 预算与 ChunkSelfHealing 共用：两条路径各记各的 10s/15s 冷却时，
+    // 一次版本发布会把它们轮流点燃成刷新循环。
+    if (isChunkOrSyncIssue && typeof window !== 'undefined' && trySpendReload()) {
+      reloadBypassingCache();
     }
   }, [error]);
 
@@ -39,9 +34,7 @@ export default function GlobalError({ error, reset }) {
         sessionStorage.clear();
       } catch {}
       // 通过追加随机时间戳强刷，绕过浏览器客户端可能残留的协商缓存
-      const url = new URL(window.location.href);
-      url.searchParams.set('_r', Date.now().toString());
-      window.location.href = url.toString();
+      reloadBypassingCache();
     } else {
       reset();
     }
@@ -77,10 +70,10 @@ export default function GlobalError({ error, reset }) {
               <span>↻</span>
             </button>
             <a
-              href="/studio"
+              href="/"
               className="rounded-xl border border-line-strong bg-wash px-5 py-2.5 text-xs font-medium text-ink-muted transition hover:border-line-strong hover:bg-wash-press hover:text-ink"
             >
-              返回 Studio 首页
+              返回首页
             </a>
           </div>
         </div>

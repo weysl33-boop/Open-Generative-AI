@@ -1,9 +1,37 @@
 import { NextResponse } from 'next/server';
-import { getLocaleFromPathname, isSupportedLocale, normalizeLocale, SUPPORTED_LOCALES } from './lib/locales';
+import { getLocaleConfig, getLocaleFromPathname, isSupportedLocale, matchPathLocale, normalizeLocale, SUPPORTED_LOCALES } from './lib/locales';
 import { evaluateChinaIpGate } from './lib/security/chinaIpGate';
 import { buildGateResponse } from './lib/security/chinaIpResponse';
 
-function addSecurityHeaders(response) {
+/**
+ * 语言前缀只允许一个规范写法。`/ja/studio`、`/zh-CN/studio`、`/es-ES/studio`、
+ * `/en/studio` 今天都能正常渲染 —— 也就是说同一个页面有多个可收录的 URL。
+ * 这些别名会被 `app/[locale]/...` 静态解析掉，永远走不到兜底页，所以收敛必须放在
+ * 这一层：308 到注册表的 rootPath，其余部分与查询串原样保留。
+ */
+function canonicalizeLocalePrefix(url) {
+    const code = matchPathLocale(url.pathname);
+    if (!code) return null;
+    const asserted = `/${url.pathname.split('/')[1]}`;
+    const canonical = getLocaleConfig(code).rootPath;
+    if (asserted === canonical) return null;
+    const rest = url.pathname.slice(asserted.length);
+    const target = new URL(`${canonical}${rest === '/' ? '' : rest}` || '/', url);
+    target.search = url.search;
+    return NextResponse.redirect(target, 308);
+}
+
+// 只有"内容会随发版变化、又没有扩展名可判别"的两类响应必须禁缓存：HTML 与 /api。
+// 带扩展名的路径（/robots.txt、/flags/*.svg、/uploads/**.png）由它自己的处理器声明
+// 缓存策略 —— app/uploads/[...path]/route.js 写的是 public, max-age=2592000, immutable，
+// 被这里无条件刷成 no-store 之后每一次开口都回源，那条 immutable 等于没写。
+const ASSET_EXTENSION = /\.[a-z0-9]+$/;
+
+function mustNotCache(pathname) {
+    return pathname.startsWith('/api') || !ASSET_EXTENSION.test(pathname);
+}
+
+function addSecurityHeaders(response, noStore = true) {
     // Prevent MIME type sniffing (CWE-693)
     response.headers.set('X-Content-Type-Options', 'nosniff');
     // Prevent clickjacking (CWE-1021)
@@ -20,8 +48,10 @@ function addSecurityHeaders(response) {
         "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://turing.captcha.qcloud.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.recaptcha.net/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://muapi.ai https://*.muapi.ai https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.recaptcha.net/ https://turing.captcha.qcloud.com; frame-src 'self' https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://www.recaptcha.net/ https://turing.captcha.qcloud.com; font-src 'self' data: https://fonts.gstatic.com;"
     );
     // 强制 HTML 页面与动态 API 不被浏览器协商强缓存，防止版本发布后旧 HTML 错位
-    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-    response.headers.set('Pragma', 'no-cache');
+    if (noStore) {
+        response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+        response.headers.set('Pragma', 'no-cache');
+    }
     return response;
 }
 
@@ -35,6 +65,11 @@ export function middleware(request) {
         );
         return addSecurityHeaders(buildGateResponse(request, gate));
     }
+
+    // 别名前缀在语言判定之前收敛：否则 /ja/studio 会带着 x-locale=ja-JP 渲染出
+    // 第二个可被收录的 URL，规范 URL 反而永远等不到那次 308。
+    const canonical = canonicalizeLocalePrefix(url);
+    if (canonical) return addSecurityHeaders(canonical);
 
     let locale = getLocaleFromPathname(url.pathname);
     if (locale === 'en') {
@@ -58,7 +93,9 @@ export function middleware(request) {
         },
     });
     response.headers.set('x-locale', locale);
-    return addSecurityHeaders(response);
+    // 403 提示页与 308 上面那两条永远 no-store：它们不是内容响应，缓存住只会让
+    // 门禁和收敛各自失效一个用户。只有这里放行的正常响应才分扩展名。
+    return addSecurityHeaders(response, mustNotCache(url.pathname));
 }
 
 // Match all paths for security headers. Exclude Next.js internal paths.
