@@ -30,9 +30,11 @@ function canonicalizeLocalePrefix(url) {
 }
 
 // 只有"内容会随发版变化、又没有扩展名可判别"的两类响应必须禁缓存：HTML 与 /api。
-// 带扩展名的路径（/robots.txt、/flags/*.svg、/uploads/**.png）由它自己的处理器声明
-// 缓存策略 —— app/uploads/[...path]/route.js 写的是 public, max-age=2592000, immutable，
-// 被这里无条件刷成 no-store 之后每一次开口都回源，那条 immutable 等于没写。
+// 带扩展名的路径（/robots.txt、/flags/*.svg、/uploads/**.png）不再被无条件刷成 no-store
+// —— 刷了之后每一次开口都回源，处理器自己写的缓存策略等于没写。
+// 注意这只拿回"允许缓存"的一半：app/uploads/[...path]/route.js 声明的是
+// public, max-age=2592000, immutable，而 Next 对动态 Route Handler 的响应自己钉上
+// public, max-age=0（2026-09-21 本地产物与线上同测一致），要真正 30 天不回访得另改。
 const ASSET_EXTENSION = /\.[a-z0-9]+$/;
 
 function mustNotCache(pathname) {
