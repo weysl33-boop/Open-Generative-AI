@@ -2,7 +2,10 @@
 
 # 路由架构蓝图
 
-这份文件由 `scripts/route-map.mjs` 从 `app/` 树推导，`tests/p0/route-manifest.test.mjs` 用同一批函数当闸门。
+这份文件由 `scripts/route-map.mjs` 从 **HEAD 那一版 `app/` 树**推导（摊到 `.agents/route-view/<sha>` 复用），
+`tests/p0/route-manifest.test.mjs` 用同一批函数当闸门。取数口径是"已提交"而不是"工作副本"，
+所以干净检出与共享工作树跑出的是同一份文档；只在某个会话工作副本里的页面不进这张表，
+`npm run lint:routes` 会把它们作为"在途"提示出来，提交时连这份文档一起重跑。
 能推导的（URL、布局链、错误边界、跳转目标、语言可达性）一律不手写；
 推不出来的（谁能进、该不该被索引、哪个接口免会话）写在 `lib/routePolicy.js`，两边对不上就判红。
 
@@ -24,7 +27,7 @@
 | 语言码 | 前缀 | 有独立路由树 | 服务它的目录 | 树内路由数 | 会造出重复 URL 的别名 |
 | --- | --- | --- | --- | --- | --- |
 | `en` | `（无前缀）` | 否 | `app/[locale]/**` | 3 | — |
-| `zh-CN` | `/zh` | 是 | `app/zh/**` | 8 | `/zh-cn` `/zh-CN` |
+| `zh-CN` | `/zh` | 是 | `app/zh/**` | 7 | `/zh-cn` `/zh-CN` |
 | `ja-JP` | `/ja-JP` | 否 | `app/[locale]/**` | 3 | `/ja` |
 | `ko-KR` | `/ko-KR` | 否 | `app/[locale]/**` | 3 | `/ko` |
 | `zh-TW` | `/zh-TW` | 否 | `app/[locale]/**` | 3 | `/zh-tw` |
@@ -35,10 +38,10 @@
 `app/[locale]/[...slug]/page.js` 按这个顺序判定，闸门拿同一批表求差：
 1. 别名/非规范码（`ja`、`zh-CN`、`es-ES`…）→ **308** 到规范前缀（正常由中间件先做掉，页面层留一条给 matcher 之外的入口）；
 2. 该前缀下真建了树（或由 `app/[locale]/**` 服务：`studio`）→ 就地渲染，永不走到这里；
-3. 顶层段能 GET 到 → **307** 回无前缀（语言由 cookie 承载）：`account` `admin` `agents` `assets` `assistant` `benefits` `call-api` `community` `content-policy` `creations` `credits` `design-system` `login` `onboarding` `pricing` `privacy` `refund` `studio` `subscription` `terms` `u` `workflow`；
+3. 顶层段能 GET 到 → **307** 回无前缀（语言由 cookie 承载）：`account` `admin` `agents` `assets` `assistant` `call-api` `community` `content-policy` `creations` `credits` `design-system` `login` `onboarding` `pricing` `privacy` `refund` `studio` `subscription` `terms` `u` `workflow`；
 4. 都不满足 → **404**（品牌化 404 页，按 `x-locale` 出文案）。
 
-已本地化的前缀与子路径：`/zh` → `assistant` `benefits` `call-api` `credits` `pricing` `studio` `subscription`
+已本地化的前缀与子路径：`/zh` → `assistant` `call-api` `credits` `pricing` `studio` `subscription`
 
 ## 页面路由
 
@@ -56,13 +59,11 @@
 | `/admin/coupons` | `app/admin/coupons/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/credits` | `app/admin/credits/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/email` | `app/admin/email/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
-| `/admin/feedback` | `app/admin/feedback/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/forbidden` | `app/admin/forbidden/page.js` | **public** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/generations` | `app/admin/generations/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/generations/failures` | `app/admin/generations/failures/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/health` | `app/admin/health/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/i18n` | `app/admin/i18n/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
-| `/admin/login` | `app/admin/login/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
 | `/admin/models` | `app/admin/models/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
 | `/admin/models/catalog` | `app/admin/models/catalog/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
 | `/admin/models/cost-center` | `app/admin/models/cost-center/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
@@ -79,8 +80,8 @@
 | `/admin/providers/email` | `app/admin/providers/email/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | `/admin/email` |
 | `/admin/providers/models` | `app/admin/providers/models/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | `/admin/models` |
 | `/admin/providers/payments` | `app/admin/providers/payments/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
-| `/admin/providers/sms` | `app/admin/providers/sms/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | `/admin/login?category=sms` |
-| `/admin/providers/social` | `app/admin/providers/social/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | `/admin/login?category=social` |
+| `/admin/providers/sms` | `app/admin/providers/sms/page.js` | **admin** | noindex | force-dynamic | 2 | `admin` | 有 | — |
+| `/admin/providers/social` | `app/admin/providers/social/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/security/sessions` | `app/admin/security/sessions/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/settings` | `app/admin/settings/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
 | `/admin/subscription-faq` | `app/admin/subscription-faq/page.js` | **admin** | noindex | — | 2 | `admin` | 有 | — |
@@ -95,7 +96,6 @@
 | `/agents/{*}/{*}` | `app/agents/[agent_id]/[conversation_id]/page.js` | **redirect** | **该 noindex，源码未写** | — | 2 | `（根）` | 有 | `/studio/agents/${encodeURIComponent(agent_id)}/${encodeURIComponent(conversation_id)}` |
 | `/assets` | `app/assets/page.js` | **redirect** | **该 noindex，源码未写** | — | 1 | `（根）` | 有 | `${config.rootPath}/studio` |
 | `/assistant` | `app/assistant/page.js` | **redirect** | **该 noindex，源码未写** | — | 1 | `（根）` | 有 | `/studio` |
-| `/benefits` | `app/benefits/page.js` | **client** | index | — | 1 | `（根）` | 有 | — |
 | `/call-api` | `app/call-api/page.jsx` | **public** | noindex | — | 1 | `（根）` | 有 | — |
 | `/community` | `app/community/page.js` | **public** | index | — | 1 | `（根）` | 有 | — |
 | `/community/{*}` | `app/community/[id]/page.js` | **public** | index | — | 1 | `（根）` | 有 | — |
@@ -107,7 +107,7 @@
 | `/pricing` | `app/pricing/page.js` | **public** | index | — | 1 | `（根）` | 有 | — |
 | `/privacy` | `app/privacy/page.js` | **public** | index | — | 1 | `（根）` | 有 | — |
 | `/refund` | `app/refund/page.js` | **public** | index | — | 1 | `（根）` | 有 | — |
-| `/studio/{**}` | `app/studio/[[...slug]]/page.js` | **onboarding** | index | — | 1 | `studio/[[...slug]]` | 有 | `${config.rootPath}/studio${slugPath}` |
+| `/studio/{**}` | `app/studio/[[...slug]]/page.js` | **onboarding** | index | — | 1 | `（根）` | 有 | `${config.rootPath}/studio${slugPath}` |
 | `/subscription` | `app/subscription/page.js` | **redirect** | **该 noindex，源码未写** | force-dynamic | 1 | `（根）` | 有 | `/pricing${action}` |
 | `/terms` | `app/terms/page.js` | **public** | index | — | 1 | `（根）` | 有 | — |
 | `/u/{*}` | `app/u/[id]/page.js` | **public** | index | force-dynamic | 1 | `（根）` | 有 | — |
@@ -115,7 +115,6 @@
 | `/workflow/{*}/{*}` | `app/workflow/[id]/[tab]/page.js` | **client** | noindex | force-dynamic | 1 | `（根）` | 有 | — |
 | `/:loc` | `app/zh/page.js` | **redirect** | index | — | 1 | `（根）` | 有 | `/zh/studio` |
 | `/:loc/assistant` | `app/zh/assistant/page.js` | **redirect** | **该 noindex，源码未写** | — | 1 | `（根）` | 有 | `/zh/studio` |
-| `/:loc/benefits` | `app/zh/benefits/page.js` | **client** | index | — | 1 | `（根）` | 有 | — |
 | `/:loc/call-api` | `app/zh/call-api/page.jsx` | **public** | noindex | — | 1 | `（根）` | 有 | — |
 | `/:loc/credits` | `app/zh/credits/page.js` | **client** | index | — | 1 | `（根）` | 有 | — |
 | `/:loc/pricing` | `app/zh/pricing/page.js` | **public** | index | — | 1 | `（根）` | 有 | — |
@@ -162,16 +161,16 @@
 ## 特殊文件
 
 - 布局：`app/layout.js` `app/admin/layout.js` `app/agents/layout.js` `app/design-system/layout.js`
-- 错误边界：`app/error.js` `app/admin/error.js` `app/studio/[[...slug]]/error.js` `app/global-error.js`
+- 错误边界：`app/error.js` `app/admin/error.js` `app/global-error.js`
 - 404 页：`app/not-found.js` `app/admin/not-found.js`
 
 ## API 路由
 
-- 处理器总数：154（其中 `/api/**` 150，`/api/admin/**` 66 个全部经 `requirePermission`）
+- 处理器总数：150（其中 `/api/**` 146，`/api/admin/**` 63 个全部经 `requirePermission`）
 - 免会话：`/api/auth/login` `/api/auth/register` `/api/auth/logout` `/api/auth/me` `/api/auth/social-options` `/api/auth/oauth/[provider]` `/api/auth/oauth/[provider]/callback` `/api/auth/phone/send-code` `/api/auth/phone/verify` `/api/billing/plans` `/api/billing/credit-packs` `/api/site/branding` `/api/site/content-config` `/api/site/subscription-faq` `/api/i18n` `/api/models/active` `/api/health` `/api/live` `/api/ready` `/api/analytics/track` `/api/analytics/banner-event`
 - 带签名校验（对端服务器直接 POST，所以不走同源检查）：`/api/billing/webhooks/stripe` `/api/billing/webhooks/alipay` `/api/billing/webhooks/wechat` `/api/generations/[id]/callback`
 - 遗留代理（迁移目标是收敛到 `POST /api/generations`）：`/api/api/v1/*` `/api/v1/*` `/api/v1/creative-agent/*` `/api/agents/*` `/api/app/*` `/api/workflow/*`
-- 变更型但缺 `guardMutation`：无
+- 变更型但缺 `guardMutation`：`app/api/community/posts/[id]/coin/route.js` `app/api/financial/currency/daily-login/route.js`
 
 ## 存量债务（棘轮，只许降不许升）
 
@@ -180,13 +179,14 @@
 | 规则 | 基线 | 当前 |
 | --- | --- | --- |
 | `locale-param-in-redirect` | 0 | 0 |
-| `unhit-route-policy` | 0 | 0 |
+| `unhit-route-policy` | 1 | 1 |
 | `noindex-required-missing` | 0 | 0 |
 | `missing-root-not-found` | 0 | 0 |
-| `api-mutation-without-guard` | 0 | 0 |
-| `api-mutation-without-rate-limit` | 48 | 48 |
+| `stale-declared-path` | 2 | 2 |
+| `api-mutation-without-guard` | 2 | 2 |
+| `api-mutation-without-rate-limit` | 49 | 49 |
 | `api-spoofed-client-user-id` | 0 | 0 |
-| `raw-unprefixed-href` | 107 | 107 |
+| `raw-unprefixed-href` | 98 | 98 |
 | `locale-zh-branch-outside-onboarding` | 5 | 5 |
 
 ## 服务器 A 边缘层

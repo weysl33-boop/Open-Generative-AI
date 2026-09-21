@@ -12,8 +12,9 @@
  *   node scripts/route-map.mjs --report     # 只打印违规，恒零退出
  *   node scripts/route-map.mjs --update     # 重记棘轮基线（批准过的迁移之后用）
  */
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   API_POLICIES,
@@ -30,11 +31,91 @@ import {
   resolvePolicy,
 } from '../lib/routePolicy.js';
 
-const ROOT = fileURLToPath(new URL('..', import.meta.url));
+const WORKTREE = fileURLToPath(new URL('..', import.meta.url));
+const VIEW_PREFIXES = ['app', 'components', 'lib', 'middleware.js'];
+const VIEW_TEXT = /\.(js|jsx|mjs|cjs|json|css)$/;
+/**
+ * 扫描根 = **HEAD 那一版文件树**，不是工作树。
+ *
+ * 蓝图与棘轮基线是要提交的产物，所以它们必须由"已提交的事实"推导：这份仓库的工作树
+ * 长期领先 HEAD（多个会话并行在写），按工作树取数会把别人未入库的页面写进蓝图，
+ * 于是"同一份 HEAD 在干净检出里跑出的结果"永远不等于工作树跑出的结果 ——
+ * docs/route-map.md 与基线在两种树上必然有一边判红，闸门就成了噪声。
+ * 退回工作树只发生在没有 git 的场合（发布产物），用 ROUTE_VIEW=worktree 可强制。
+ */
+const ROOT = committedView();
 const APP = join(ROOT, 'app');
-const DOC = join(ROOT, 'docs', 'route-map.md');
-const BASELINE = join(ROOT, 'scripts', 'route-baseline.json');
+const DOC = join(WORKTREE, 'docs', 'route-map.md');
+const BASELINE = join(WORKTREE, 'scripts', 'route-baseline.json');
 const GENERATOR = 'scripts/route-map.mjs';
+
+function git(args, options = {}) {
+  return execFileSync('git', args, {
+    cwd: WORKTREE,
+    maxBuffer: 512 * 1024 * 1024,
+    stdio: ['pipe', 'pipe', 'ignore'],
+    ...options,
+  });
+}
+
+/**
+ * 把 HEAD 的受扫前缀摊到一个按 sha 命名的目录里，摊一次复用到底。
+ * 用 `cat-file --batch` 而不是 `git archive`：后者要外部 tar，前者只有一个子进程、一次管道。
+ */
+function committedView() {
+  if (process.env.ROUTE_VIEW === 'worktree') return WORKTREE;
+  let sha;
+  try {
+    sha = git(['rev-parse', 'HEAD']).toString().trim();
+  } catch {
+    console.error('route-map: 没有可用的 git，退回扫描工作树（蓝图的产物此时不可跨树复现）');
+    return WORKTREE;
+  }
+  const dir = join(WORKTREE, '.agents', 'route-view', sha);
+  if (existsSync(join(dir, '.complete'))) return dir;
+
+  const listing = git(['ls-tree', '-r', 'HEAD', '--', ...VIEW_PREFIXES]).toString();
+  const blobs = listing
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => {
+      const [meta, path] = line.split('\t');
+      const [, type, oid] = meta.split(' ');
+      return { type, oid, path };
+    })
+    .filter((b) => b.type === 'blob' && VIEW_TEXT.test(b.path));
+  if (!blobs.length) throw new Error(`route-map: HEAD 的 ${VIEW_PREFIXES.join('/')} 一个文件都没摊出来，扫描会空跑并报告全绿`);
+
+  const out = git(['cat-file', '--batch'], { input: `${blobs.map((b) => b.oid).join('\n')}\n` });
+  let cursor = 0;
+  for (const blob of blobs) {
+    const headEnd = out.indexOf(0x0a, cursor);
+    const [, , sizeText] = out.subarray(cursor, headEnd).toString('utf8').split(' ');
+    const size = Number(sizeText);
+    const body = out.subarray(headEnd + 1, headEnd + 1 + size);
+    cursor = headEnd + 2 + size;
+    const target = join(dir, blob.path);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, body);
+  }
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, '.complete'), sha);
+  pruneViews(join(dir, '..'), sha);
+  return dir;
+}
+
+/** 只留当前这一份：隔离构建把 H 盘写满过一次，别再攒第二份。 */
+function pruneViews(parent, keep) {
+  if (!existsSync(parent)) return;
+  for (const entry of readdirSync(parent)) {
+    if (entry !== keep) rmSync(join(parent, entry), { recursive: true, force: true, maxRetries: 3 });
+  }
+}
+
+/** 产物按 LF 归一：仓库开了 autocrlf，不归一就会因换行符差异判"文档过期"。 */
+function eol(text) {
+  return text.replace(/\r\n/g, '\n');
+}
 
 const SOURCE_DIRS = ['app', 'components', 'lib'];
 /**
@@ -445,12 +526,18 @@ export function audit(data) {
     driftLegs.push(['lib/studio-routes.js STUDIO_TAB_IDS', drift.slugTabs]);
     driftLegs.push(['lib/studio-routes.js STUDIO_ALIAS_SEGMENTS', drift.slugKeywords]);
   }
+  const staleDeclarations = [];
   for (const [key, { declared, actual }] of driftLegs) {
     const missing = actual.filter((x) => !declared.includes(x));
     const stale = declared.filter((x) => !actual.includes(x));
     if (missing.length) hard.push(`${key} 有 ${missing.length} 项没登记进 lib/routePolicy.js：${missing.join(', ')}`);
-    if (stale.length) hard.push(`lib/routePolicy.js 的 ${key} 有多余项：${stale.join(', ')}`);
+    // 反方向不判红：闸门扫的是已提交的树，而声明可以**先于**页面进来 ——
+    // 一个会话先往 lib/routePolicy.js 登记 /benefits、页面还在他自己的工作副本里，
+    // 这时判红等于把别人的在途状态算成整站的失败，而且此时删掉声明才是真危险
+    // （页面一落地就变成"没有策略的公开路由"）。所以它进棘轮：多出来的项要有人负责降回去。
+    if (stale.length) staleDeclarations.push(...stale.map((x) => `${key}:${x}`));
   }
+  ratchet['stale-declared-path'] = staleDeclarations;
   for (const registry of data.registry.configs) {
     if (!registry.rootPath) continue;
     const reach = data.reachability.find((r) => r.code === registry.code);
@@ -518,6 +605,27 @@ function loadBaseline() {
   return parsed.counts || parsed;
 }
 
+/**
+ * 工作副本里有、已提交的树里没有的页面/处理器。蓝图不含它们（那是"站点今天长什么样"
+ * 的凭据，不是"谁正在写什么"），但共享工作树里必须看得见 —— 否则一个新页面要等到
+ * 提交之后才会被闸门发现，而那一刻已经没有人在看自己那一步的输出了。
+ * 只提示，不判红：这些文件属于别的会话。
+ */
+export function inFlightRoutes() {
+  let raw;
+  try {
+    raw = git(['status', '--porcelain', '-uall', '--', 'app']).toString();
+  } catch {
+    return [];
+  }
+  return raw
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => line.slice(3).split(' -> ').pop().replace(/^"|"$/g, ''))
+    .filter((p) => /(^|\/)(page|route)\.(js|jsx)$/.test(p))
+    .sort();
+}
+
 /** 推导不出、也不该每次重写的那几行：一次请求的解析链路。 */
 const PIPELINE = [
   'nginx（只监听 www.koyosim.com，反代 127.0.0.1:3100）',
@@ -541,7 +649,10 @@ export function renderMarkdown(data) {
     '',
     '# 路由架构蓝图',
     '',
-    '这份文件由 `scripts/route-map.mjs` 从 `app/` 树推导，`tests/p0/route-manifest.test.mjs` 用同一批函数当闸门。',
+    '这份文件由 `scripts/route-map.mjs` 从 **HEAD 那一版 `app/` 树**推导（摊到 `.agents/route-view/<sha>` 复用），',
+    '`tests/p0/route-manifest.test.mjs` 用同一批函数当闸门。取数口径是"已提交"而不是"工作副本"，',
+    '所以干净检出与共享工作树跑出的是同一份文档；只在某个会话工作副本里的页面不进这张表，',
+    '`npm run lint:routes` 会把它们作为"在途"提示出来，提交时连这份文档一起重跑。',
     '能推导的（URL、布局链、错误边界、跳转目标、语言可达性）一律不手写；',
     '推不出来的（谁能进、该不该被索引、哪个接口免会话）写在 `lib/routePolicy.js`，两边对不上就判红。',
     '',
@@ -721,19 +832,24 @@ export function targetStateFailures() {
     failures.push('app/[locale]/page.js 仍把 params.locale 原样拼进跳转目标：必须过 getLocaleConfig 拿规范 rootPath');
   }
 
-  for (const entry of [
-    'app/studio/[[...slug]]/page.js',
-    'app/zh/studio/[[...slug]]/page.js',
-    'app/[locale]/studio/[[...slug]]/page.js',
-  ]) {
-    const src = readIf(entry);
-    if (!src) {
-      failures.push(`${entry} 不见了`);
-      continue;
-    }
-    // isStudioSlug（lib/studio-routes.js）与直接查 STUDIO_TABS 等价，两种都算过关。
-    if (!/isStudioSlug|STUDIO_TABS/.test(src)) {
-      failures.push(`${entry} 没在路由层校验工作台段：/studio/任意乱码 会继续悄悄渲染图像工作台`);
+  // 软 404 这一腿要等它的实现入库才武装：lib/studio-routes.js 还没提交时，
+  // 三条入口的路由层校验根本不在已提交的树里，判红只会把别人未完成的切片记成整站欠账。
+  // 与上面 slugTabs 用的是同一个套路 —— 依赖文件在场才断言，一进场就自动生效。
+  if (has('lib/studio-routes.js')) {
+    for (const entry of [
+      'app/studio/[[...slug]]/page.js',
+      'app/zh/studio/[[...slug]]/page.js',
+      'app/[locale]/studio/[[...slug]]/page.js',
+    ]) {
+      const src = readIf(entry);
+      if (!src) {
+        failures.push(`${entry} 不见了`);
+        continue;
+      }
+      // isStudioSlug（lib/studio-routes.js）与直接查 STUDIO_TABS 等价，两种都算过关。
+      if (!/isStudioSlug|STUDIO_TABS/.test(src)) {
+        failures.push(`${entry} 没在路由层校验工作台段：/studio/任意乱码 会继续悄悄渲染图像工作台`);
+      }
     }
   }
 
@@ -793,7 +909,9 @@ export function targetStateFailures() {
 export function structuralFailures(data) {
   const failures = [...data.audit.hard];
   if (!existsSync(DOC)) failures.push('docs/route-map.md 不存在');
-  else if (read(DOC) !== renderMarkdown(data)) failures.push('docs/route-map.md 与代码不同步：跑 npm run route:map');
+  else if (eol(read(DOC)) !== eol(renderMarkdown(data))) {
+    failures.push('docs/route-map.md 与已提交的树不同步：跑 npm run route:map');
+  }
   if (data.pages.length < MIN_PAGE_ROUTES) {
     failures.push(`只扫到 ${data.pages.length} 条页面路由，少于 ${MIN_PAGE_ROUTES}：目录遍历或 app/ 树被动过`);
   }
@@ -817,6 +935,16 @@ export function checkData(data) {
   };
 }
 
+function printInFlight() {
+  const inFlight = inFlightRoutes();
+  if (!inFlight.length) return;
+  const shown = inFlight.slice(0, 12).join(', ');
+  console.log(
+    `  ! 在途 ${inFlight.length} 个页面/处理器只在你的工作副本里，蓝图不含它们：${shown}` +
+      `${inFlight.length > 12 ? ` … 还有 ${inFlight.length - 12} 个` : ''}。提交那一笔时连 docs/route-map.md 一起跑 npm run route:map。`,
+  );
+}
+
 function main() {
   const flags = new Set(process.argv.slice(2));
   const data = collect();
@@ -827,6 +955,7 @@ function main() {
     for (const [rule, hits] of Object.entries(result.ratchet)) {
       console.log(`count   ${String(hits.length).padStart(4)}  基线 ${String(result.baseline[rule] ?? '—').padStart(4)}  ${rule}`);
     }
+    printInFlight();
     return 0;
   }
 
@@ -835,9 +964,10 @@ function main() {
     writeFileSync(BASELINE, `${JSON.stringify({ counts }, null, 2)}\n`);
     result.baseline = counts;
     // 文档里印着这张表，所以重记基线必须连文档一起重写，否则 --check 立刻判"文档过期"。
-    writeFileSync(DOC, renderMarkdown(data));
+    writeFileSync(DOC, eol(renderMarkdown(data)));
     console.log(`route baseline: ${JSON.stringify(counts)}`);
     console.log('wrote docs/route-map.md');
+    printInFlight();
     return 0;
   }
 
@@ -847,18 +977,21 @@ function main() {
       console.error(`route-map: ${failures.length} 项违规\n`);
       for (const f of failures.slice(0, 40)) console.error(`  ${f}`);
       if (failures.length > 40) console.error(`  … 还有 ${failures.length - 40} 项`);
+      printInFlight();
       return 1;
     }
     console.log(
-      `route-map: pass. ${data.pages.length} 页面路由 / ${data.handlers.length} 处理器 / ` +
+      `route-map: pass. 已提交的树 ${data.pages.length} 页面路由 / ${data.handlers.length} 处理器 / ` +
         Object.entries(result.ratchet).map(([k, v]) => `${k}=${v.length}`).join(' '),
     );
+    printInFlight();
     return 0;
   }
 
-  writeFileSync(DOC, renderMarkdown(data));
+  writeFileSync(DOC, eol(renderMarkdown(data)));
   console.log(`wrote docs/route-map.md (${data.pages.length} page routes, ${data.handlers.length} handlers)`);
   for (const v of result.hard) console.log(`  ! ${v}`);
+  printInFlight();
   return 0;
 }
 

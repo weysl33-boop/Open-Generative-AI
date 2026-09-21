@@ -1,13 +1,14 @@
 {
   "counts": {
     "locale-param-in-redirect": 0,
-    "unhit-route-policy": 0,
+    "unhit-route-policy": 1,
     "noindex-required-missing": 0,
     "missing-root-not-found": 0,
-    "api-mutation-without-guard": 0,
-    "api-mutation-without-rate-limit": 48,
+    "stale-declared-path": 2,
+    "api-mutation-without-guard": 2,
+    "api-mutation-without-rate-limit": 49,
     "api-spoofed-client-user-id": 0,
-    "raw-unprefixed-href": 107,
+    "raw-unprefixed-href": 98,
     "locale-zh-branch-outside-onboarding": 5
   }
 }

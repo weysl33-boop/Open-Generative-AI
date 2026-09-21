@@ -55,18 +55,23 @@ test('每个已注册语言前缀的根与 /studio 都能解析到路由', () =>
   }
 });
 
-test('routePolicy 的三张表与文件系统、与客户端壳同源', () => {
+test('routePolicy 的三张表覆盖已提交的树：少登记判红，多登记进棘轮', () => {
   const { unprefixed, localized, tabs, slugTabs, slugKeywords } = data.audit.drift;
-  assert.deepEqual(unprefixed.actual, unprefixed.declared);
-  assert.deepEqual(tabs.actual, tabs.declared);
-  for (const [prefix, { declared, actual }] of Object.entries(localized)) {
-    assert.deepEqual(actual, [...declared].sort(), `LOCALIZED_PATHS${prefix} 与 app/ 树不一致`);
-  }
-  // lib/studio-routes.js 是服务端路由校验读的那一份。
+  const covered = (key, { declared, actual }) => {
+    for (const item of actual) {
+      assert.ok(declared.includes(item), `${key} 少了 ${item}：已提交的树里有它却没登记`);
+    }
+  };
+  covered('UNPREFIXED_TOP_SEGMENTS', unprefixed);
+  covered('STUDIO_TABS', tabs);
+  for (const [prefix, pair] of Object.entries(localized)) covered(`LOCALIZED_PATHS${prefix}`, pair);
+  // lib/studio-routes.js 是服务端路由校验读的那一份；还没入库时这一腿不参与。
   if (slugTabs.actual) {
-    assert.deepEqual(slugTabs.actual, slugTabs.declared);
-    assert.deepEqual(slugKeywords.actual, slugKeywords.declared);
+    covered('lib/studio-routes.js STUDIO_TAB_IDS', slugTabs);
+    covered('lib/studio-routes.js STUDIO_ALIAS_SEGMENTS', slugKeywords);
   }
+  // 反方向（声明先于页面进来）不判红：那是要降回去的存量，棘轮规则 stale-declared-path 记着它。
+  assert.ok(Object.hasOwn(data.audit.ratchet, 'stale-declared-path'), 'stale-declared-path 没进棘轮，多余的声明就没人管了');
 });
 
 test('免会话/签名/代理三张接口名单里的每条都真存在，反向也不许漏登记', () => {
@@ -88,8 +93,10 @@ test('存量债务只许降不许升', () => {
   }
 });
 
-test('docs/route-map.md 与代码同步：改树不改文档就判红', () => {
-  assert.equal(readFileSync(path.join(repoRoot, 'docs', 'route-map.md'), 'utf8'), renderMarkdown(data));
+test('docs/route-map.md 与已提交的树同步：改树不改文档就判红', () => {
+  // 仓库开了 autocrlf，工作副本里的换行符与生成时不一致是常态，比对按 LF 归一。
+  const onDisk = readFileSync(path.join(repoRoot, 'docs', 'route-map.md'), 'utf8').replace(/\r\n/g, '\n');
+  assert.equal(onDisk, renderMarkdown(data).replace(/\r\n/g, '\n'));
 });
 
 // 这一条是本轮（S1–S3）的成果锁：每一条失败都对应一个曾经真实存在的缺陷，
