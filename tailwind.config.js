@@ -215,6 +215,7 @@ module.exports = {
         'elevation-2': 'var(--elevation-2)',
         'elevation-3': 'var(--elevation-3)',
         'elevation-4': 'var(--elevation-4)',
+        'elevation-brand': 'var(--elevation-brand)',
         // Legacy names retained during migration, now glow-free
         subtle: 'var(--elevation-1)',
         card: 'var(--elevation-2)',

@@ -1,32 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Dialog as DialogPrimitive } from 'radix-ui';
 import { AlertCircle, Eye, EyeOff, Layers, X } from 'lucide-react';
 import { DouyinIcon, GoogleIcon, QQIcon, TikTokIcon, WeChatIcon, XIcon } from './SocialIcons';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { IconButton } from 'studio/ui/button';
-import { Label } from 'studio/ui/field';
 import { Alert } from 'studio/ui/feedback';
-import { SegmentedControl } from 'studio/ui/navigation';
 import {
   DIALOG_CLOSE_BUTTON,
-  DIALOG_DESCRIPTION,
-  DIALOG_TITLE,
+  FOCUS_RING,
+  SCRIM,
 } from 'studio/ui/tokens';
 import { cn } from '@/lib/utils';
 import { completePhoneCaptchaChallenge } from '@/lib/auth/phone-captcha-client';
@@ -39,6 +21,55 @@ import {
 } from '@/lib/locales';
 
 const COUNTRY_CODES = ['+86', '+1', '+44', '+49', '+61', '+65', '+81', '+82', '+852', '+853', '+886'];
+
+/**
+ * 登录框的视觉契约：圆角胶囊输入框、居中胶囊分段器、青色渐变主按钮。
+ * 全部由 globals.css 的语义 token 组成，不引入字面色值，避免再被通用
+ * Dialog/Button 原语拉回"灰底方框 + 实色按钮"的另一套长相。
+ */
+const FIELD = cn(
+  'h-11 w-full rounded-lg border border-line-strong bg-well px-4 text-body text-ink',
+  'placeholder:text-ink-subtle',
+  'transition-[border-color,box-shadow] duration-fast ease-standard',
+  FOCUS_RING,
+);
+
+const FIELD_WRAP = cn(
+  'flex h-11 w-full items-center rounded-lg border border-line-strong bg-well px-4',
+  'transition-[border-color,box-shadow] duration-fast ease-standard',
+  'focus-within:border-brand',
+);
+
+const BARE_INPUT =
+  'w-full min-w-0 bg-transparent text-body text-ink placeholder:text-ink-subtle outline-none';
+
+const TAB_PILL = cn(
+  'h-8 shrink-0 grow basis-0 rounded-lg border px-3 text-label font-medium',
+  'transition-[background-color,border-color,color] duration-fast ease-standard',
+  FOCUS_RING,
+);
+
+const SUBMIT = cn(
+  'flex h-11 w-full items-center justify-center rounded-lg text-body font-semibold',
+  'bg-gradient-to-r from-brand to-brand-hover text-ink-on-accent shadow-elevation-brand',
+  'transition-[opacity,filter] duration-fast ease-standard hover:opacity-90',
+  'disabled:cursor-wait disabled:opacity-50',
+  FOCUS_RING,
+);
+
+const SOCIAL_PILL = cn(
+  'flex h-10 min-w-0 items-center justify-center gap-1.5 rounded-lg border border-line bg-well px-2',
+  'text-label font-medium text-ink',
+  'transition-[background-color,border-color] duration-fast ease-standard',
+  'hover:border-line-strong hover:bg-wash-strong',
+  'disabled:cursor-not-allowed disabled:opacity-50',
+  FOCUS_RING,
+);
+
+const TEXT_LINK = cn(
+  'text-caption text-ink-subtle transition-colors duration-fast ease-standard hover:text-ink',
+  FOCUS_RING,
+);
 
 const PROVIDER_CATALOG = {
   wechat: { icon: WeChatIcon, labelKey: 'providerWeChat' },
@@ -351,174 +382,185 @@ export default function AuthModal({
 
   // Radix 用 Title/Description 供给 dialog 的可访问名称，也会给它们注入自己的
   // id；内联变体不是 dialog，就把同样的文案渲染成裸标题。
-  const Heading = isInline ? 'h2' : DialogTitle;
-  const Description = isInline ? 'p' : DialogDescription;
-  const headingClass = isInline ? DIALOG_TITLE : undefined;
-  const descriptionClass = isInline ? DIALOG_DESCRIPTION : undefined;
+  const Heading = isInline ? 'h2' : DialogPrimitive.Title;
+  const Description = isInline ? 'p' : DialogPrimitive.Description;
 
   const panel = (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-col items-center gap-3 px-8 text-center">
-        <span className="flex size-11 items-center justify-center rounded-lg bg-brand text-ink-on-accent shadow-elevation-2">
+    <div className="flex flex-col">
+      <div className="flex flex-col items-center text-center">
+        <span className="flex size-11 items-center justify-center rounded-lg bg-brand text-ink-on-accent shadow-elevation-brand">
           <Layers className="size-5" strokeWidth={2} aria-hidden="true" />
         </span>
-        <div className="space-y-1">
-          <Heading className={headingClass}>{title}</Heading>
-          <Description className={descriptionClass}>{copy.subtitle}</Description>
+        <Heading className="mt-4 text-section-title text-ink">{title}</Heading>
+        <Description className="mt-1 text-body-sm text-ink-muted">{copy.subtitle}</Description>
+      </div>
+
+      <div className="mt-6 flex justify-center">
+        <div
+          role="group"
+          aria-label={copy.modeLabel}
+          className="inline-flex rounded-xl border border-line bg-well p-1"
+        >
+          {[
+            { value: 'email', label: copy.tabEmail },
+            { value: 'phone', label: copy.tabPhone },
+          ].map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={mode === option.value}
+              className={cn(
+                TAB_PILL,
+                mode === option.value
+                  ? 'border-line-accent bg-brand-pressed text-brand'
+                  : 'border-transparent text-ink-muted hover:text-ink',
+              )}
+              onClick={() => {
+                setMode(option.value);
+                setMessage('');
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <SegmentedControl
-        ariaLabel={copy.modeLabel}
-        value={mode}
-        onValueChange={(next) => {
-          setMode(next);
-          setMessage('');
-        }}
-        options={[
-          { value: 'email', label: copy.tabEmail },
-          { value: 'phone', label: copy.tabPhone },
-        ]}
-      />
-
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3">
         {mode === 'phone' ? (
           <>
-            <div className="space-y-1.5">
-              <Label htmlFor="auth-phone" required>
-                {copy.phoneLabel}
-              </Label>
-              <div className="flex items-start gap-2">
-                <div className="w-24 shrink-0">
-                  <Select value={countryCode} onValueChange={(value) => {
-                    setCountryCode(value);
-                    setChallengeId('');
-                    setCaptchaChallenge(null);
-                    setCountdown(0);
-                    if (timerRef.current) clearInterval(timerRef.current);
-                  }}>
-                    <SelectTrigger size="lg" aria-label={copy.countryCodeLabel}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COUNTRY_CODES.map((item) => (
-                        <SelectItem key={item} value={item}>
-                          {item}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Input
-                  id="auth-phone"
-                  type="tel"
-                  required
-                  size="lg"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  className="min-w-0 flex-1"
-                  value={phone}
-                  onChange={(e) => {
-                    setPhone(e.target.value);
-                    setChallengeId('');
-                    setCaptchaChallenge(null);
-                    setCountdown(0);
-                    if (timerRef.current) clearInterval(timerRef.current);
-                  }}
-                  placeholder={copy.phonePlaceholder}
-                />
-              </div>
+            <div className={FIELD_WRAP}>
+              <select
+                value={countryCode}
+                aria-label={copy.countryCodeLabel}
+                className="shrink-0 bg-transparent text-body font-medium text-ink outline-none"
+                onChange={(e) => {
+                  setCountryCode(e.target.value);
+                  setChallengeId('');
+                  setCaptchaChallenge(null);
+                  setCountdown(0);
+                  if (timerRef.current) clearInterval(timerRef.current);
+                }}
+              >
+                {COUNTRY_CODES.map((item) => (
+                  <option key={item} value={item} className="bg-canvas text-ink">
+                    {item}
+                  </option>
+                ))}
+              </select>
+              <span className="mx-3 h-4 w-px shrink-0 bg-line" aria-hidden="true" />
+              <input
+                id="auth-phone"
+                type="tel"
+                required
+                inputMode="tel"
+                autoComplete="tel"
+                aria-label={copy.phoneLabel}
+                className={BARE_INPUT}
+                value={phone}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  setChallengeId('');
+                  setCaptchaChallenge(null);
+                  setCountdown(0);
+                  if (timerRef.current) clearInterval(timerRef.current);
+                }}
+                placeholder={copy.phonePlaceholder}
+              />
             </div>
             <div ref={captchaHostRef} aria-hidden="true" className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0" />
 
-            <div className="space-y-1.5">
-              <Label htmlFor="auth-code" required>
-                {copy.codeLabel}
-              </Label>
-              <div className="flex items-start gap-2">
-                <Input
-                  id="auth-code"
-                  type="text"
-                  required
-                  size="lg"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  pattern="[0-9]*"
-                  maxLength={6}
-                  className="min-w-0 flex-1"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder={copy.codePlaceholder}
-                />
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  className="shrink-0"
-                  disabled={countdown > 0 || busy}
-                  onClick={handleSendCode}
-                >
-                  {countdown > 0 ? copy.resendCode.replace('{seconds}', countdown) : copy.sendCode}
-                </Button>
-              </div>
+            <div className={FIELD_WRAP}>
+              <input
+                id="auth-code"
+                type="text"
+                required
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]*"
+                maxLength={6}
+                aria-label={copy.codeLabel}
+                className={BARE_INPUT}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder={copy.codePlaceholder}
+              />
+              <span className="mx-3 h-4 w-px shrink-0 bg-line" aria-hidden="true" />
+              <button
+                type="button"
+                className={cn(
+                  'shrink-0 text-label font-medium text-brand',
+                  'transition-colors duration-fast ease-standard hover:text-brand-hover',
+                  'disabled:cursor-not-allowed disabled:text-ink-disabled',
+                  FOCUS_RING,
+                )}
+                disabled={countdown > 0 || busy}
+                onClick={handleSendCode}
+              >
+                {countdown > 0 ? copy.resendCode.replace('{seconds}', countdown) : copy.sendCode}
+              </button>
             </div>
           </>
         ) : (
           <>
-            <div className="space-y-1.5">
-              <Label htmlFor="auth-email" required>
-                {copy.emailLabel}
-              </Label>
-              <Input
-                id="auth-email"
-                type="email"
-                required
-                size="lg"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={copy.emailPlaceholder}
-              />
-            </div>
+            <input
+              id="auth-email"
+              type="email"
+              required
+              autoComplete="email"
+              aria-label={copy.emailLabel}
+              className={FIELD}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={copy.emailPlaceholder}
+            />
 
-            <div className="space-y-1.5">
-              <Label htmlFor="auth-password" required>
-                {copy.passwordLabel}
-              </Label>
-              <div className="relative">
-                <Input
-                  id="auth-password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  minLength={8}
-                  size="lg"
-                  className="pr-11"
-                  autoComplete={emailMode === 'register' ? 'new-password' : 'current-password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={
-                    emailMode === 'register' ? copy.passwordNewPlaceholder : copy.passwordPlaceholder
-                  }
-                />
-                <IconButton
-                  icon={showPassword ? EyeOff : Eye}
-                  label={showPassword ? copy.hidePassword : copy.showPassword}
-                  className="absolute right-1 top-1/2 -translate-y-1/2"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                />
-              </div>
+            <div className="relative">
+              <input
+                id="auth-password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                minLength={8}
+                autoComplete={emailMode === 'register' ? 'new-password' : 'current-password'}
+                aria-label={copy.passwordLabel}
+                className={cn(FIELD, 'pr-11')}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={
+                  emailMode === 'register' ? copy.passwordNewPlaceholder : copy.passwordPlaceholder
+                }
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? copy.hidePassword : copy.showPassword}
+                className={cn(
+                  'absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center',
+                  'rounded-md text-ink-subtle',
+                  'transition-[background-color,color] duration-fast ease-standard',
+                  'hover:bg-wash hover:text-ink',
+                  FOCUS_RING,
+                )}
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4" strokeWidth={1.8} aria-hidden="true" />
+                ) : (
+                  <Eye className="size-4" strokeWidth={1.8} aria-hidden="true" />
+                )}
+              </button>
             </div>
 
             <div className="flex justify-end">
-              <Button
-                variant="tertiary"
-                size="xs"
+              <button
+                type="button"
+                className={TEXT_LINK}
                 onClick={() => {
                   setEmailMode(emailMode === 'login' ? 'register' : 'login');
                   setMessage('');
                 }}
               >
                 {emailMode === 'login' ? copy.switchToRegister : copy.switchToLogin}
-              </Button>
+              </button>
             </div>
           </>
         )}
@@ -530,71 +572,76 @@ export default function AuthModal({
           </Alert>
         )}
 
-        <Button type="submit" variant="primary" size="lg" fullWidth loading={busy}>
+        <button type="submit" className={SUBMIT} disabled={busy}>
           {submitLabel}
-        </Button>
+        </button>
       </form>
 
-      <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-line" />
+      <div className="mt-8 flex items-center gap-3">
+        <span className="h-px flex-1 bg-line-subtle" />
         <span className="text-caption text-ink-subtle">{copy.socialDivider}</span>
-        <span className="h-px flex-1 bg-line" />
+        <span className="h-px flex-1 bg-line-subtle" />
       </div>
 
       {socialOptionsError ? (
-        <div className="flex flex-col items-center gap-2 text-center" role="status">
+        <div className="mt-4 flex flex-col items-center gap-2 text-center" role="status">
           <p className="text-caption text-ink-muted">{copy.socialOptionsUnavailable}</p>
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="sm"
+            className={cn(TEXT_LINK, 'font-medium text-brand hover:text-brand-hover')}
             onClick={() => setSocialOptionsRetry((value) => value + 1)}
           >
             {copy.socialOptionsRetry}
-          </Button>
+          </button>
         </div>
       ) : !socialOptions ? (
-        <div className="grid grid-cols-3 gap-2" role="status" aria-label={copy.socialOptionsLoading}>
+        <div className="mt-6 grid grid-cols-3 gap-2" role="status" aria-label={copy.socialOptionsLoading}>
           {Array.from({ length: 3 }, (_, index) => (
-            <div key={index} className="h-10 animate-pulse rounded-md border border-line-subtle bg-wash" />
+            <div key={index} className="h-10 animate-pulse rounded-lg border border-line-subtle bg-well" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-2">
-        {visibleSocialProviders.map(({ id, icon: ProviderIcon, labelKey, available }) => {
-          const isLoading = socialLoading === id;
-          return (
-            <Button
-              key={id}
-              variant="secondary"
-              size="md"
-              className="min-w-0"
-              disabled={Boolean(socialLoading) || busy || !available}
-              loading={isLoading}
-              title={!available ? copy.providerInProgressHint : undefined}
-              aria-label={!available ? `${copy[labelKey]}，${copy.providerInProgress}` : copy[labelKey]}
-              onClick={() => handleSocialLogin(id)}
-            >
-              {/* SocialIcons 只接收 className/size，多余属性会被忽略。 */}
-              {!isLoading && <ProviderIcon size={16} className="size-4" />}
-              <span className="min-w-0 truncate">
-                {isLoading
-                  ? copy.socialConnecting
-                  : available
-                    ? copy[labelKey]
-                    : `${copy[labelKey]} · ${copy.providerInProgress}`}
-              </span>
-            </Button>
-          );
-        })}
+        <div className="mt-6 grid grid-cols-3 gap-2">
+          {visibleSocialProviders.map(({ id, icon: ProviderIcon, labelKey, available }) => {
+            const isLoading = socialLoading === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                className={SOCIAL_PILL}
+                disabled={Boolean(socialLoading) || busy || !available}
+                aria-busy={isLoading || undefined}
+                title={!available ? copy.providerInProgressHint : undefined}
+                aria-label={!available ? `${copy[labelKey]}，${copy.providerInProgress}` : copy[labelKey]}
+                onClick={() => handleSocialLogin(id)}
+              >
+                {/* SocialIcons 只接收 className/size，多余属性会被忽略。 */}
+                {isLoading ? (
+                  <span
+                    className="size-4 shrink-0 animate-spin rounded-full border-2 border-line-strong border-t-brand"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <ProviderIcon size={16} className="size-4 shrink-0" />
+                )}
+                <span className="min-w-0 truncate">
+                  {isLoading
+                    ? copy.socialConnecting
+                    : available
+                      ? copy[labelKey]
+                      : `${copy[labelKey]} · ${copy.providerInProgress}`}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 
       {socialOptions?.region === 'mainland_china' && (
-        <p className="text-center text-caption text-ink-subtle">{copy.socialRegionProviderNotice}</p>
+        <p className="mt-3 text-center text-caption text-ink-subtle">{copy.socialRegionProviderNotice}</p>
       )}
 
-      <p className="text-center text-caption text-ink-subtle">
+      <p className="mt-6 text-center text-caption text-ink-subtle">
         {copy.termsPrefix}{' '}
         <a
           href="/terms"
@@ -626,16 +673,27 @@ export default function AuthModal({
   }
 
   return (
-    <Dialog open onOpenChange={(next) => !next && handleClose()}>
-      <DialogContent size="sm" showClose={false}>
-        {panel}
-        <DialogClose
-          aria-label={copy.close}
-          className={cn(DIALOG_CLOSE_BUTTON, 'absolute right-3 top-3')}
+    <DialogPrimitive.Root open onOpenChange={(next) => !next && handleClose()}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className={SCRIM} />
+        <DialogPrimitive.Content
+          className={cn(
+            'fixed left-1/2 top-1/2 z-modal max-h-modal w-full max-w-md -translate-x-1/2 -translate-y-1/2',
+            'overflow-y-auto rounded-xl border border-line bg-canvas px-8 pb-8 pt-10 text-ink',
+            'shadow-elevation-4 animate-scale-in',
+            'max-md:bottom-0 max-md:left-0 max-md:top-auto max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0',
+            'max-md:max-h-sheet max-md:rounded-b-none max-md:rounded-t-xl max-md:px-5 max-md:pb-6 max-md:pt-8',
+          )}
         >
-          <X className="size-4" strokeWidth={1.8} aria-hidden="true" />
-        </DialogClose>
-      </DialogContent>
-    </Dialog>
+          {panel}
+          <DialogPrimitive.Close
+            aria-label={copy.close}
+            className={cn(DIALOG_CLOSE_BUTTON, 'absolute right-3 top-3')}
+          >
+            <X className="size-4" strokeWidth={1.8} aria-hidden="true" />
+          </DialogPrimitive.Close>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }

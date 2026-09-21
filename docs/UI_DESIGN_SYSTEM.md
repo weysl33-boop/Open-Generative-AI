@@ -174,8 +174,9 @@
 工具类 `.range` 消费这四个值。**任何 `type="range"` 都必须带 `.range`**：`globals.css` 对 range 设了 `appearance:none`，而 `appearance:none` 之后浏览器不再画 thumb —— 不写就是**一根看不见也拖不动的横条**。命中区 24px 靠 `--range-h` 撑，视觉轨道靠伪元素收窄，两者不是一回事。
 原生 `range` 自带键盘（←/→ 以 `step` 步进）与读屏语义，**不要**为了"好看"换成 `div` + `onMouseDown`（`AudioStudio` 迁移前的播放条就是后者，键盘完全不可达）。无可见 label 时必须 `aria-label`。
 
-### 4.6 Elevation（无任何彩色发光）
+### 4.6 Elevation（中性阴影 + 一个品牌发光例外）
 `shadow-elevation-1` `0 1px 2px rgba(0,0,0,.45)` · `-2` `0 4px 12px .50` · `-3` `0 12px 32px .60` · `-4` `0 24px 64px -12px .80`。
+`shadow-elevation-brand` `0 8px 14px -4px var(--accent-glow)` —— 唯一允许的青色发光：登录框的图标块与主按钮落在近黑 canvas 上，中性阴影在那里等于不存在。它带负 spread 与向下 offset，只往下漏 ~12px，因此读作"托起"而不是"光晕一圈"。新增彩色阴影一律先回到 `globals.css` 谈 token，不要在组件里写。
 `tailwind.config.js` 的 `boxShadow` 写在 `theme.extend` 下，所以 Tailwind 自带的 `shadow-sm/md/lg/xl/2xl` **仍然会生成 CSS**（实测产物里有 `.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0/0.25)}`）。它们的问题不是"不生效"，而是**绕过 elevation 阶梯自带一套字面量阴影**——正是本条契约要消灭的东西。业务代码一律写 `shadow-elevation-N`。
 > 存量（09:1x 现测，只算根构建 content 名单内的源文件）：默认阴影阶梯 **91 处 / 22 个文件**（`shadow-sm` 36、`shadow-lg` 29、`shadow-2xl` 13、`shadow-xl` 12、`shadow-md` 1），**大头不在主应用**而在 `packages/Vibe-Workflow/.../workflow-builder/src`（`NodeFlow.jsx` 11、`VideoNode.jsx` 10、`ChatWidget.jsx` 9…），因为该包自己的 tailwind config 是 `extend: {}` —— 它从来就是按默认阶梯写的。这是 §4.6.1 第三行"子包私有体系"的同一种病。
 > 上一版这里写的是"`boxShadow` 整体替换，默认阶梯不生成任何 CSS，属于静默死类"——**该结论不成立**，配置在 `extend` 下，产物可查；本轮由 `scripts/ui-dead-classes.mjs`（对照真实构建产物）纠正。同理，`fontSize` 也在 `extend` 下，`text-xs` 等默认字号照样生成 CSS 并**与语义字号阶梯打架**——实测 `text-(xs|sm|base|lg|xl|2xl…)` 在 `app`/`components`/`packages/studio` 里出现 **1697 次**（`text-xs` 独占 1115），而 `leading-[3-9]` 为 0 次，所以新增守卫规则 `off-system-type-ramp` 把默认字号冻结在基线里。
