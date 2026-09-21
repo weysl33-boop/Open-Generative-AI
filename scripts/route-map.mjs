@@ -34,6 +34,8 @@ import {
 const WORKTREE = fileURLToPath(new URL('..', import.meta.url));
 const VIEW_PREFIXES = ['app', 'components', 'lib', 'middleware.js'];
 const VIEW_TEXT = /\.(js|jsx|mjs|cjs|json|css)$/;
+/** 扫描根是否由本仓库的 HEAD 摊出来 —— 决定 .agents/route-view 缓存与"在途"提示是否成立。 */
+let viewFromOwnHead = false;
 /**
  * 扫描根 = **HEAD 那一版文件树**，不是工作树。
  *
@@ -58,6 +60,12 @@ function git(args, options = {}) {
   });
 }
 
+/** Windows 上 git 给正斜杠、fileURLToPath 给反斜杠，还带尾分隔符与换行 —— 只能归一了再比。 */
+function samePath(a, b) {
+  const norm = (p) => resolve(p).trim().replace(/[\\/]+$/, '').replace(/\\/g, '/').toLowerCase();
+  return norm(a) === norm(b);
+}
+
 /**
  * 把 HEAD 的受扫前缀摊到一个按 sha 命名的目录里，摊一次复用到底。
  * 用 `cat-file --batch` 而不是 `git archive`：后者要外部 tar，前者只有一个子进程、一次管道。
@@ -66,11 +74,16 @@ function committedView() {
   if (process.env.ROUTE_VIEW === 'worktree') return WORKTREE;
   let sha;
   try {
+    // 必须确认 WORKTREE 本身就是被查询的那个仓库：发布产物、以及从仓库内部摊出来的
+    // 临时检出（例如 .agents/head-now）都能对**外层**仓库 rev-parse 成功，
+    // 而 pathspec 是按 cwd 解释的，于是摊出 0 个文件、扫描空跑并报告全绿。
+    if (!samePath(git(['rev-parse', '--show-toplevel']).toString(), WORKTREE)) return WORKTREE;
     sha = git(['rev-parse', 'HEAD']).toString().trim();
   } catch {
     console.error('route-map: 没有可用的 git，退回扫描工作树（蓝图的产物此时不可跨树复现）');
     return WORKTREE;
   }
+  viewFromOwnHead = true;
   const dir = join(WORKTREE, '.agents', 'route-view', sha);
   if (existsSync(join(dir, '.complete'))) return dir;
 
@@ -612,6 +625,7 @@ function loadBaseline() {
  * 只提示，不判红：这些文件属于别的会话。
  */
 export function inFlightRoutes() {
+  if (!viewFromOwnHead) return [];
   let raw;
   try {
     raw = git(['status', '--porcelain', '-uall', '--', 'app']).toString();
