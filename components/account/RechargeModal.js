@@ -44,12 +44,14 @@ export default function RechargeModal({
   initialTab = 'sub',
   initialPlanId = null,
   initialCreditPackId = null,
+  initialBillingCycle = 'monthly',
   onPaySuccess,
 }) {
   const isCreditPack = ['points', 'credits', 'credit_pack'].includes(initialTab);
   const [product, setProduct] = useState(null);
   const [providers, setProviders] = useState({});
   const [payMethod, setPayMethod] = useState(isCreditPack ? 'alipay' : 'wechat');
+  const [billingCycle, setBillingCycle] = useState(initialBillingCycle || 'monthly');
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -59,6 +61,12 @@ export default function RechargeModal({
   const pollTimerRef = useRef(null);
   const countdownTimerRef = useRef(null);
   const paidCallbackRef = useRef(false);
+
+  useEffect(() => {
+    if (initialBillingCycle) {
+      setBillingCycle(initialBillingCycle);
+    }
+  }, [initialBillingCycle]);
 
   const clearTimers = useCallback(() => {
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
@@ -168,7 +176,18 @@ export default function RechargeModal({
 
   if (!isOpen) return null;
 
-  const amountYuan = isCreditPack ? Number(product?.priceCny || 0) : Number(product?.monthlyCny || 0);
+  const getPlanCyclePrice = (prod, cycle) => {
+    if (!prod) return 0;
+    if (cycle === 'yearly') {
+      return Number(prod.yearlyCny || prod.meta?.yearlyCny || (prod.monthlyCny ? Math.round(prod.monthlyCny * 12 * 0.7) : 0));
+    }
+    if (cycle === 'quarterly') {
+      return Number(prod.quarterlyCny || prod.meta?.quarterlyCny || (prod.monthlyCny ? Math.round(prod.monthlyCny * 3 * 0.85) : 0));
+    }
+    return Number(prod.monthlyCny || 0);
+  };
+
+  const amountYuan = isCreditPack ? Number(product?.priceCny || 0) : getPlanCyclePrice(product, billingCycle);
   const creditAmount = isCreditPack
     ? Number(product?.credits || 0)
     : Number(product?.quotaBase || 0) + Number(product?.quotaBonus || 0);
@@ -186,7 +205,7 @@ export default function RechargeModal({
         headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
         body: JSON.stringify(isCreditPack
           ? { productType: 'credit_pack', productId: product.id, provider: payMethod }
-          : { productType: 'subscription', planId: product.id, billingCycle: 'monthly', provider: payMethod }),
+          : { productType: 'subscription', planId: product.id, billingCycle, provider: payMethod }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || '创建支付订单失败，请稍后重试');
@@ -259,7 +278,13 @@ export default function RechargeModal({
             <div className="pr-10">
               <span className="pricing-raised-bg inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-micro font-bold text-ink-muted">
                 {isCreditPack ? <Zap className="size-3 text-warning" /> : <Crown className="size-3 text-warning" />}
-                {isCreditPack ? '一次性算力包' : '月度会员方案'}
+                {isCreditPack
+                  ? '一次性算力包'
+                  : billingCycle === 'yearly'
+                    ? '年度会员方案 · 限时特惠'
+                    : billingCycle === 'quarterly'
+                      ? '季度会员方案 · 季付特惠'
+                      : '月度会员方案'}
               </span>
               <h2 id="checkout-title" className="mt-3 text-xl font-extrabold tracking-tight text-ink">确认购买</h2>
               <p className="mt-1 text-xs text-ink-muted">商品和价格由服务端目录核验；此处只确认支付方式，不会更换套餐。</p>
@@ -269,12 +294,44 @@ export default function RechargeModal({
               {catalogLoading ? (
                 <div className="flex min-h-16 items-center justify-center gap-2 text-xs text-ink-muted"><Loader2 className="size-4 animate-spin" />正在校验商品…</div>
               ) : product ? (
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-ink">{product.name}</p>
-                    <p className="mt-1 text-caption text-ink-muted">{isCreditPack ? '永久通用算力' : '月度会员权益'} · {creditAmount.toLocaleString()} 算力</p>
+                <div>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-ink">{product.name}</p>
+                      <p className="mt-1 text-caption text-ink-muted">
+                        {isCreditPack
+                          ? '永久通用算力'
+                          : billingCycle === 'yearly'
+                            ? '年度会员权益（每月自动发放）'
+                            : billingCycle === 'quarterly'
+                              ? '季度会员权益（每月自动发放）'
+                              : '月度会员权益'} · {creditAmount.toLocaleString()} 算力
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-lg font-black text-ink">¥{amountYuan.toLocaleString('en-US')}</p>
                   </div>
-                  <p className="shrink-0 text-lg font-black text-ink">¥{amountYuan.toLocaleString('en-US')}</p>
+
+                  {!isCreditPack && (
+                    <div className="mt-3 flex items-center justify-between border-t border-line-subtle pt-2.5">
+                      <span className="text-caption text-ink-muted">订阅周期</span>
+                      <div className="inline-flex rounded-lg border border-line bg-base p-0.5">
+                        {[
+                          { id: 'yearly', label: '年付' },
+                          { id: 'quarterly', label: '季付' },
+                          { id: 'monthly', label: '月付' },
+                        ].map((tab) => (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setBillingCycle(tab.id)}
+                            className={`rounded-md px-2.5 py-1 text-caption font-bold transition ${billingCycle === tab.id ? 'bg-ink text-ink-inverse' : 'text-ink-muted hover:text-ink'}`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-xs text-warning">无法校验所选商品。</p>

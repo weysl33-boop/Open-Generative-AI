@@ -32,12 +32,10 @@ test('free plans grant no paid credits and incomplete paid plans fail closed', (
 test('checkout accepts only a billing cycle the current order and renewal path can fulfill', () => {
   assert.equal(normalizeBillingCycle(undefined), 'monthly');
   assert.equal(normalizeBillingCycle('monthly'), 'monthly');
+  assert.equal(normalizeBillingCycle('quarterly'), 'quarterly');
+  assert.equal(normalizeBillingCycle('yearly'), 'yearly');
   assert.throws(
-    () => normalizeBillingCycle('quarterly'),
-    (error) => error.code === 'BILLING_CYCLE_UNAVAILABLE',
-  );
-  assert.throws(
-    () => normalizeBillingCycle('yearly'),
+    () => normalizeBillingCycle('weekly'),
     (error) => error.code === 'BILLING_CYCLE_UNAVAILABLE',
   );
   assert.equal(normalizeBillingCycle('one_time', { productType: 'credit_pack' }), 'one_time');
@@ -97,7 +95,7 @@ test('payment fulfillment uses the immutable server-side order snapshot before c
     (error) => error.code === 'ORDER_PLAN_SNAPSHOT_MISMATCH',
   );
   assert.throws(
-    () => resolveOrderCreditGrantAmount({ order: { plan_id: 'starter', billing_cycle: 'yearly', metadata_json: { planId: 'starter', creditAmount: 2400 } }, plan }),
+    () => resolveOrderCreditGrantAmount({ order: { plan_id: 'starter', billing_cycle: 'invalid_cycle', metadata_json: { planId: 'starter', creditAmount: 2400 } }, plan }),
     (error) => error.code === 'BILLING_CYCLE_UNAVAILABLE',
   );
 });
@@ -130,8 +128,8 @@ test('only the canonical page offers products; unsupported cycles and unavailabl
   assert.match(rechargeModal, /providers\[method\]\?\.enabled/);
   assert.match(rechargeModal, /providers\[payMethod\]\?\.enabled/);
   assert.match(rechargeModal, /\/api\/billing\/credit-packs/);
-  assert.match(pricingClient, /disabled aria-label="季付暂未开放"/);
-  assert.match(pricingClient, /disabled aria-label="年付暂未开放"/);
+  assert.match(pricingClient, /setBillingCycle\('yearly'\)/);
+  assert.match(pricingClient, /setBillingCycle\('quarterly'\)/);
   assert.doesNotMatch(pricingClient, /customerScope|versionTab|个人版\s*\|\s*团队版/);
   assert.match(pricingClient, /\/api\/billing\/plans/);
   assert.match(pricingClient, /\/api\/billing\/credit-packs/);

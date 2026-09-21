@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Briefcase, Check, ChevronDown, CircleUserRound, Crown, CreditCard, Gift, Loader2, ShieldCheck, Sparkles, X, Zap } from 'lucide-react';
+import { ArrowUpRight, Briefcase, Check, ChevronDown, CircleUserRound, Crown, CreditCard, Gift, HelpCircle, Loader2, ShieldCheck, Sparkles, X, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import AuthModal from '@/components/AuthModal';
 import RechargeModal from '@/components/account/RechargeModal';
@@ -14,18 +14,104 @@ const PLAN_CODE_NAMES = {
   pro: 'APEX',
 };
 
-const FAQS = [
+const FAQ_CATEGORIES = [
+  { id: 'all', label: '全部' },
+  { id: 'quota', label: '算力与额度' },
+  { id: 'subscription', label: '订阅与续费' },
+  { id: 'payment', label: '支付与发票' },
+  { id: 'refund_copyright', label: '退款与版权' },
+];
+
+const DEFAULT_FAQS = [
   {
-    question: '订阅额度和通用算力有什么区别？',
-    answer: '订阅方案展示每月随方案发放的额度；通用算力包是一次性购买，到账后进入永久算力余额。余额扣减顺序以账户的实际钱包明细为准。',
+    id: 'faq-1',
+    category: 'quota',
+    question: '什么是订阅制专属额度？与通用算力有何区别？',
+    answer: '订阅额度是每月随会员周期发放的核心资产，享有最高抵扣优先级，当月有效；通用算力永久有效，在月度额度用尽后自动作为备用池抵扣，两者协同保障您的创作不间断。',
   },
   {
-    question: '目前支持哪些订阅周期和付款方式？',
-    answer: '当前可下单周期为月付。季付、年付暂未开放；付款方式仅显示服务端确认可用的渠道，未配置成功的渠道不会生成订单。',
+    id: 'faq-2',
+    category: 'quota',
+    question: '生成失败会扣除我的额度吗？',
+    answer: '绝对不会。系统采用两阶段安全预扣机制，因合规拦截或模型超时等非用户原因未完成时，冻结额度将在 1 秒内 100% 自动解冻返还至您的账户。',
   },
   {
-    question: '付款后额度如何到账？',
-    answer: '支付平台回调核验成功后，系统会在同一数据库事务中记账、更新订单状态并发放算力；重复回调会按订单和流水幂等处理。',
+    id: 'faq-3',
+    category: 'payment',
+    question: '支持哪些支付方式与开票？',
+    answer: '全面支持支付宝扫码、微信支付直付及国际信用卡（Visa / MasterCard）。创作者与企业用户可在个人中心“订单发票”页面随时申请增值税电子发票。',
+  },
+  {
+    id: 'faq-4',
+    category: 'subscription',
+    question: '支持随时变更或取消订阅吗？',
+    answer: '由您完全自主控制。您可以随时在个人中心“会员订阅”中查看当前方案、升级档位或管理续费。取消后，已生效周期的全部权益与算力仍可正常使用直至周期届满。',
+  },
+  {
+    id: 'faq-5',
+    category: 'subscription',
+    question: '订阅后切换套餐，算力及权益会怎么变化？',
+    answer: `KoyoSIM 提供灵活的月度、季度与年度订阅方案，每个方案都包含一定数量的算力，可用于图像生成、视频生成、音乐生成与编辑等功能。注：进行档位升级或延长时，暂不支持补差价升级方式，升级支付档位正常价格。具体分为以下六种情况：
+
+(1) 月付套餐：从低档位升级到高档位
+• 剩余未使用的算力，会继续为您保留（有效期不变）
+• 新的订阅套餐，将从升级付款成功之日起，重新按 31 天计算，算力即刻到账
+
+(2) 季付套餐：从低档位升级到高档位
+• 订阅新升级套餐前已发放的、剩余未使用的算力，会继续为您保留（有效期不变）
+• 新的季付订阅套餐，将从升级付款成功之日起，重新按 93 天计算，首月算力即刻到账
+• 退款处理：原低档位套餐中，尚未发放算力月份对应的费用，我们将为您办理退款（原支付路径返还，5-10 个工作日）
+
+(3) 年付套餐：从低档位升级到高档位
+• 订阅新升级套餐前已发放的、剩余未使用的算力，会继续为您保留（有效期不变）
+• 新的年付订阅套餐，将从升级付款成功之日起，重新按 365 天计算，首月算力即刻到账
+• 退款处理：原低档位套餐中，尚未发放算力月份对应的费用，我们将为您办理退款（原支付路径返还，5-10 个工作日）
+
+(4) 同档位套餐：从月付升级为季付
+• 剩余未使用的算力，会继续为您保留（有效期不变）
+• 新的季付订阅套餐，将从升级付款成功之日起，重新按 93 天计算，算力即刻到账
+
+(5) 同档位套餐：从月付升级为年付
+• 订阅新升级套餐前已发放的、剩余未使用的算力，会继续为您保留（有效期不变）
+• 新的年付订阅套餐，将从升级付款成功之日起，重新按 365 天计算，首月算力即刻到账
+• 退款处理：原低档位套餐中，尚未发放算力月份对应的费用，我们将为您办理退款（原支付路径返还，5-10 个工作日）
+
+(6) 同档位套餐：从季付升级为年付
+• 订阅新升级套餐前已发放的、剩余未使用的算力，会继续为您保留（有效期不变）
+• 新的年付订阅套餐，将从升级付款成功之日起，重新按 365 天计算，首月算力即刻到账
+• 退款处理：原低档位套餐中，尚未发放算力月份对应的费用，我们将为您办理退款（原支付路径返还，5-10 个工作日）
+
+温馨提示：如有疑问可随时通过客服渠道或发送邮件至 support@koyosim.com 联系我们。`,
+  },
+  {
+    id: 'faq-6',
+    category: 'subscription',
+    question: '关于自动续费与取消自动续费？',
+    answer: '如果您开通了周期连续订阅，系统将在每个账期届满前 24 小时向您发送通知或发起续期。您可随时在个人中心“会员订阅”中点击关闭自动续费，关闭后不会影响当前周期的任何特权与可用算力，次期将不再进行任何扣款。',
+  },
+  {
+    id: 'faq-7',
+    category: 'refund_copyright',
+    question: '如何申请退款？',
+    answer: '如果您在最近一次付款后未有任何生成行为、权益使用和算力消耗，可在购买后 7 天内申请全额退款。若因系统故障导致生成失败，系统将自动返还相应算力。如需申请退款，请前往个人中心提交工单或发送邮件（附带您的账号与退款原因）至客服邮箱，审核通过后将在 5-10 个工作日内退回原支付账户。',
+  },
+  {
+    id: 'faq-8',
+    category: 'payment',
+    question: '我们支持下载账单凭证，以及企业用户的开发票服务。',
+    answer: '支持。您可以在个人中心的“订单与发票”板块一键下载所有充值与订阅的电子对账凭据。针对企业团队用户，我们支持开具增值税普通发票及增值税专用发票，后台直接录入开票抬头和企业统一社会信用代码即可申请。',
+  },
+  {
+    id: 'faq-9',
+    category: 'refund_copyright',
+    question: '我在 KoyoSIM 生成的内容归谁所有？',
+    answer: '在法律允许的最大范围内，您拥有在 KoyoSIM 上生成的所有内容的所有权。平台不会对用户创作的作品主张任何版权。这意味着您可以自由地发布、下载、分发和将这些视频及图像用于商业盈利场景。',
+  },
+  {
+    id: 'faq-10',
+    category: 'refund_copyright',
+    question: '免责声明与服务支持',
+    answer: '上述内容仅供参考。KoyoSIM 会根据产品功能迭代与用户体验需要，适时优化功能、价格、订阅方案及算力规则。如出现争议或不一致情况，将以后台系统实际记录与财务账单数据为准，最终解释权归 KoyoSIM 所有。其他相关细则详见《用户协议》与《隐私政策》。',
   },
 ];
 
@@ -72,13 +158,33 @@ async function getJson(url) {
   return payload;
 }
 
-function PlanCard({ plan, onBuy, disabled }) {
+function PlanCard({ plan, billingCycle = 'monthly', onBuy, disabled }) {
   const base = Number(plan.quotaBase || 0);
   const bonus = Number(plan.quotaBonus || 0);
   const total = base + bonus;
   const groups = getPlanFeatureGroups(plan);
   const isPopular = plan.id === 'basic';
   const isFlagship = plan.id === 'pro';
+
+  // 周期价格与副标计算
+  let price = Number(plan.monthlyCny || 0);
+  let originalPrice = null;
+  let cycleLabel = '/ 月';
+  let subText = '按月结算 · 随时取消';
+
+  if (billingCycle === 'yearly') {
+    price = Number(plan.yearlyCny || plan.meta?.yearlyCny || (plan.monthlyCny ? Math.round(plan.monthlyCny * 12 * 0.7) : 0));
+    originalPrice = Number(plan.monthlyCny ? plan.monthlyCny * 12 : 0);
+    cycleLabel = '/ 年';
+    const monthlyAvg = (price / 12).toFixed(1).replace(/\.0$/, '');
+    subText = `折合 ¥${monthlyAvg}/月 · 每年结算`;
+  } else if (billingCycle === 'quarterly') {
+    price = Number(plan.quarterlyCny || plan.meta?.quarterlyCny || (plan.monthlyCny ? Math.round(plan.monthlyCny * 3 * 0.85) : 0));
+    originalPrice = Number(plan.monthlyCny ? plan.monthlyCny * 3 : 0);
+    cycleLabel = '/ 季';
+    const monthlyAvg = (price / 3).toFixed(1).replace(/\.0$/, '');
+    subText = `折合 ¥${monthlyAvg}/月 · 每季结算`;
+  }
 
   return (
     <article
@@ -107,16 +213,19 @@ function PlanCard({ plan, onBuy, disabled }) {
           <h2 className="mt-1 truncate text-body-sm text-ink-muted">{plan.name}</h2>
         </div>
         <span className="shrink-0 rounded-md border border-line bg-well px-2 py-1 text-micro font-bold pricing-lime-text">
-          {plan.badge || '月度会员'}
+          {plan.badge || (billingCycle === 'yearly' ? '年度特惠' : billingCycle === 'quarterly' ? '季度会员' : '月度会员')}
         </span>
       </div>
 
       <div className="mt-5">
-        <div className="flex items-baseline gap-1.5">
-          <span className="text-4xl font-extrabold tracking-tight text-ink">¥{formatNumber(plan.monthlyCny)}</span>
-          <span className="text-xs text-ink-subtle">/ 月</span>
+        <div className="flex items-baseline gap-1.5 flex-wrap">
+          <span className="text-4xl font-extrabold tracking-tight text-ink">¥{formatNumber(price)}</span>
+          <span className="text-caption text-ink-subtle">{cycleLabel}</span>
+          {originalPrice && originalPrice > price && (
+            <span className="text-caption text-ink-subtle line-through ml-1">¥{formatNumber(originalPrice)}</span>
+          )}
         </div>
-        <p className="mt-1 text-caption text-ink-subtle">月度计费 · 暂仅开放月付</p>
+        <p className="mt-1 text-caption text-ink-subtle">{subText}</p>
       </div>
 
       <div className="mt-4 rounded-xl border border-line-subtle pricing-panel-bg p-3">
@@ -129,7 +238,7 @@ function PlanCard({ plan, onBuy, disabled }) {
 
       <button
         type="button"
-        onClick={() => onBuy(plan.id)}
+        onClick={() => onBuy(plan.id, billingCycle)}
         disabled={disabled}
         className={`mt-4 min-h-11 w-full rounded-xl px-3 text-xs font-extrabold tracking-wide transition-[background-color,border-color,color] duration-base active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
           isPopular
@@ -203,14 +312,18 @@ export default function PricingClient() {
   const [selectedPackId, setSelectedPackId] = useState('credit_490');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [checkout, setCheckout] = useState(null);
-  const [openFaq, setOpenFaq] = useState(0);
+  const [billingCycle, setBillingCycle] = useState('monthly');
+  const [faqs, setFaqs] = useState(DEFAULT_FAQS);
+  const [faqCategory, setFaqCategory] = useState('all');
+  const [openFaq, setOpenFaq] = useState(DEFAULT_FAQS[0]?.id || 'faq-1');
   const pendingCheckoutRef = useRef(null);
 
   const loadInitialData = useCallback(async () => {
-    const [accountResult, planResult, packResult] = await Promise.allSettled([
+    const [accountResult, planResult, packResult, faqResult] = await Promise.allSettled([
       getJson('/api/auth/me'),
       getJson('/api/billing/plans'),
       getJson('/api/billing/credit-packs'),
+      getJson('/api/site/subscription-faq'),
     ]);
 
     if (accountResult.status === 'fulfilled') {
@@ -253,6 +366,10 @@ export default function PricingClient() {
     }
     setPacksLoading(false);
 
+    if (faqResult.status === 'fulfilled' && Array.isArray(faqResult.value?.items) && faqResult.value.items.length > 0) {
+      setFaqs(faqResult.value.items);
+    }
+
     return accountResult.status === 'fulfilled' ? accountResult.value : null;
   }, []);
 
@@ -281,13 +398,21 @@ export default function PricingClient() {
   const hasSubscriptionProvider = Object.values(planProviders).some((provider) => provider?.enabled);
   const hasCreditProvider = ['alipay', 'wechat'].some((provider) => creditProviders[provider]?.enabled);
 
-  const startCheckout = (type, id) => {
+  const filteredFaqs = useMemo(() => {
+    if (faqCategory === 'all') return faqs;
+    if (faqCategory === 'refund_copyright') {
+      return faqs.filter((f) => ['refund', 'copyright', 'legal', 'refund_copyright'].includes(f.category));
+    }
+    return faqs.filter((f) => f.category === faqCategory);
+  }, [faqs, faqCategory]);
+
+  const startCheckout = (type, id, cycle = billingCycle) => {
     if (!user) {
-      pendingCheckoutRef.current = { type, id };
+      pendingCheckoutRef.current = { type, id, billingCycle: cycle };
       setShowAuthModal(true);
       return;
     }
-    setCheckout({ type, id });
+    setCheckout({ type, id, billingCycle: cycle });
   };
 
   const handleAuthSuccess = async () => {
@@ -316,19 +441,47 @@ export default function PricingClient() {
 
           <div className="mt-7 grid w-full grid-cols-1 justify-items-center gap-4 sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-0 sm:justify-items-stretch">
             <div className="inline-flex items-center justify-center rounded-full border border-line pricing-card-bg p-1 shadow-elevation-2 sm:col-start-2 sm:min-w-max" aria-label="订阅周期">
-              <span className="rounded-full bg-ink px-5 py-2 text-xs font-bold text-ink-inverse">月付</span>
-              <button type="button" disabled aria-label="季付暂未开放" title="季付暂未开放" className="cursor-not-allowed rounded-full px-5 py-2 text-xs font-semibold text-ink-disabled opacity-70">
-                季付 <span className="ml-1 text-micro">即将开放</span>
+              <button
+                type="button"
+                onClick={() => setBillingCycle('yearly')}
+                className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-caption font-bold transition-[background-color,color] duration-base ${
+                  billingCycle === 'yearly'
+                    ? 'bg-ink text-ink-inverse shadow-elevation-1'
+                    : 'text-ink-muted hover:text-ink'
+                }`}
+              >
+                <span>年付</span>
+                <span className="rounded-full bg-warning px-1.5 py-0.5 text-micro font-extrabold text-ink-inverse">最低41折</span>
               </button>
-              <button type="button" disabled aria-label="年付暂未开放" title="年付暂未开放" className="cursor-not-allowed rounded-full px-5 py-2 text-xs font-semibold text-ink-disabled opacity-70">
-                年付 <span className="ml-1 text-micro">即将开放</span>
+              <button
+                type="button"
+                onClick={() => setBillingCycle('quarterly')}
+                className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-caption font-bold transition-[background-color,color] duration-base ${
+                  billingCycle === 'quarterly'
+                    ? 'bg-ink text-ink-inverse shadow-elevation-1'
+                    : 'text-ink-muted hover:text-ink'
+                }`}
+              >
+                <span>季付</span>
+                <span className="rounded-full bg-well border border-line px-1.5 py-0.5 text-micro font-extrabold pricing-lime-text">最低42折</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingCycle('monthly')}
+                className={`rounded-full px-4 py-2 text-caption font-bold transition-[background-color,color] duration-base ${
+                  billingCycle === 'monthly'
+                    ? 'bg-ink text-ink-inverse shadow-elevation-1'
+                    : 'text-ink-muted hover:text-ink'
+                }`}
+              >
+                月付
               </button>
             </div>
             <Link href="#credit-packs" className="pricing-pink-outline pricing-pink-wash-bg pricing-pink-hover-border inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-4 py-2 text-xs font-bold text-ink transition-[background-color,border-color,color,transform] duration-base hover:-translate-y-0.5 hover:shadow-elevation-3 sm:col-start-3 sm:min-w-menu sm:justify-self-end">
               <Gift className="size-3.5 pricing-pink-text" /> 购买通用算力包 <span className="pricing-pink-bg rounded-full px-2 py-0.5 text-micro font-extrabold text-white">充值特惠</span> <ArrowUpRight className="size-3.5" />
             </Link>
           </div>
-          <p className="mt-2 text-micro text-ink-subtle">季付、年付待支付与周期履约完整接入后开放</p>
+          <p className="mt-2 text-micro text-ink-subtle">年付/季付享超值阶梯优惠 · 随时可升级或调整</p>
         </section>
 
         <section id="plans" aria-label="会员订阅方案" className="scroll-mt-0 mt-8">
@@ -341,7 +494,13 @@ export default function PricingClient() {
           ) : (
             <div className="grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 xl:grid-cols-4">
               {plans.map((plan) => (
-                <PlanCard key={plan.id} plan={plan} disabled={!hasSubscriptionProvider} onBuy={(id) => startCheckout('subscription', id)} />
+                <PlanCard
+                  key={plan.id}
+                  plan={plan}
+                  billingCycle={billingCycle}
+                  disabled={!hasSubscriptionProvider}
+                  onBuy={(id, cycle) => startCheckout('subscription', id, cycle)}
+                />
               ))}
             </div>
           )}
@@ -412,17 +571,99 @@ export default function PricingClient() {
           </div>
         </section>
 
-        <section className="mx-auto mt-16 max-w-4xl">
-          <h2 className="mb-3 text-center text-lg font-extrabold text-ink">订阅与算力常见问题</h2>
-          <div className="pricing-card-bg divide-y divide-line-subtle rounded-2xl border border-line px-4 sm:px-6">
-            {FAQS.map((item, index) => (
-              <div key={item.question} className="py-4">
-                <button type="button" onClick={() => setOpenFaq(openFaq === index ? -1 : index)} className="flex w-full items-center justify-between gap-4 text-left text-xs font-bold text-ink">
-                  <span>{item.question}</span><ChevronDown className={`size-4 shrink-0 transition-transform ${openFaq === index ? 'rotate-180' : ''}`} />
+        <section className="mx-auto mt-20 max-w-4xl">
+          <div className="text-center">
+            <span className="pricing-lime-soft-bg inline-flex items-center gap-1.5 rounded-full border pricing-lime-border px-3.5 py-1 text-micro font-bold pricing-lime-text">
+              <HelpCircle className="size-3.5" /> 常见问题
+            </span>
+            <h2 className="mt-3 text-2xl font-black tracking-tight text-ink sm:text-3xl">订阅与权益常见问题</h2>
+            <p className="mt-2 text-xs text-ink-muted">了解更多关于套餐、计费、算力机制及退款政策的详细解答</p>
+          </div>
+
+          {/* 分类 Tabs */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            {FAQ_CATEGORIES.map((cat) => {
+              const active = faqCategory === cat.id;
+              const count = cat.id === 'all'
+                ? faqs.length
+                : faqs.filter((f) => f.category === cat.id || (cat.id === 'refund_copyright' && ['refund', 'copyright', 'legal', 'refund_copyright'].includes(f.category))).length;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setFaqCategory(cat.id)}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-caption font-bold transition-[background-color,border-color,color] duration-base ${
+                    active
+                      ? 'bg-ink text-ink-inverse shadow-elevation-2'
+                      : 'border border-line pricing-card-bg text-ink-muted hover:border-line-strong hover:text-ink'
+                  }`}
+                >
+                  <span>{cat.label}</span>
+                  <span className={`text-micro rounded-full px-1.5 py-0.2 ${active ? 'bg-white/20 text-white' : 'bg-well text-ink-subtle'}`}>
+                    {count}
+                  </span>
                 </button>
-                {openFaq === index && <p className="mt-3 max-w-3xl text-xs leading-6 text-ink-muted">{item.answer}</p>}
-              </div>
-            ))}
+              );
+            })}
+          </div>
+
+          {/* 手风琴列表 */}
+          <div className="mt-6 space-y-3">
+            {filteredFaqs.map((item, index) => {
+              const isOpen = openFaq === item.id;
+              return (
+                <div
+                  key={item.id || index}
+                  className={`overflow-hidden rounded-2xl border transition-[background-color,border-color,box-shadow] duration-base ${
+                    isOpen
+                      ? 'border-brand-line pricing-raised-bg shadow-elevation-2'
+                      : 'border-line pricing-card-bg hover:border-line-strong'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? null : item.id)}
+                    className="flex w-full items-center justify-between gap-4 p-5 text-left text-body-sm font-bold text-ink transition-colors"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-well text-micro font-black text-ink-muted">
+                        {index + 1}
+                      </span>
+                      <span>{item.question}</span>
+                    </span>
+                    <ChevronDown
+                      className={`size-4 shrink-0 transition-transform duration-300 ease-in-out ${
+                        isOpen ? 'rotate-180 text-brand' : 'text-ink-muted'
+                      }`}
+                    />
+                  </button>
+
+                  <div
+                    className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                      isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="border-t border-line-subtle px-5 pb-5 pt-3">
+                        <p className="text-body-sm leading-6 text-ink-muted whitespace-pre-line">
+                          {item.answer}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 rounded-2xl border border-line-subtle pricing-panel-bg p-4 text-center sm:p-5">
+            <p className="text-caption text-ink-muted">
+              没有找到您需要的解答？欢迎联系我们：
+              <a href="mailto:support@koyosim.com" className="ml-1 font-bold pricing-pink-text hover:underline">
+                support@koyosim.com
+              </a>
+              ，我们将在工作日 2 小时内为您答复。
+            </p>
           </div>
         </section>
       </main>
@@ -433,11 +674,12 @@ export default function PricingClient() {
 
       {checkout && (
         <RechargeModal
-          key={`${checkout.type}:${checkout.id}`}
+          key={`${checkout.type}:${checkout.id}:${checkout.billingCycle || billingCycle}`}
           isOpen
           initialTab={checkout.type === 'credit_pack' ? 'points' : 'sub'}
           initialPlanId={checkout.type === 'subscription' ? checkout.id : null}
           initialCreditPackId={checkout.type === 'credit_pack' ? checkout.id : null}
+          initialBillingCycle={checkout.billingCycle || billingCycle}
           onClose={() => setCheckout(null)}
           onPaySuccess={loadInitialData}
         />
