@@ -695,7 +695,7 @@ export default function ProfileTab({
                   <SelectTrigger size="md" aria-label="性别">
                     <SelectValue placeholder="请选择性别" />
                   </SelectTrigger>
-                  <SelectContent className="z-modal">
+                  <SelectContent className="z-modal min-w-menu-anchor">
                     {GENDER_OPTIONS.map((option) => (
                       <SelectItem key={option.code} value={option.code}>{option.label}</SelectItem>
                     ))}
