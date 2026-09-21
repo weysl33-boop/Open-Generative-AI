@@ -6,36 +6,40 @@ import {
   ArrowUpRight,
   BadgeCheck,
   Check,
-  Clock,
   Coins,
-  Gem,
   Gift,
+  Heart,
   History,
   Loader2,
-  ShieldCheck,
+  MessageCircleHeart,
+  MoonStar,
   Sparkles,
   Zap,
 } from 'lucide-react';
 import StudioHeader from '@/components/site/StudioHeader';
 import AuthModal from '@/components/AuthModal';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AVATAR_FRAMES, BENEFITS, BENEFIT_STATUS_LABELS } from '@/lib/benefits/catalog';
+import { AVATAR_FRAMES, BENEFITS, CATEGORY_BY_ID, CATEGORY_TABS, ELEMENTS } from '@/lib/benefits/catalog';
 import { usePathname } from 'next/navigation';
 import { localizedHref } from '@/lib/client/localeSwitch';
 
+/** 流水标签写给本人看，不写系统术语。 */
 const BIZ_LABELS = {
-  DAILY_LOGIN: '每日登录打卡',
-  FEEDBACK_REWARD: '建议 / 报错 / 漏洞被采纳',
-  POST_COIN_TIP: '社区作品投币',
-  BENEFIT_REDEEM: '兑换站内权益',
+  DAILY_LOGIN: '今天来打了个卡',
+  FEEDBACK_REWARD: '你说的建议被采纳了',
+  POST_COIN_TIP: '给喜欢的作品投了币',
+  BENEFIT_REDEEM: '在小铺换了点东西',
   // 硬币兑换算力已于 2026-09-21 下架，历史流水仍要能读出中文标签
   EXCHANGE_CREDITS: '兑换创作算力（已停）',
 };
 
-const KIND_ICONS = {
-  priority: Zap,
-  avatar_frame: BadgeCheck,
+const CATEGORY_ICONS = {
+  coins: Coins,
+  zap: Zap,
+  badge: BadgeCheck,
+  heart: Heart,
+  sparkles: Sparkles,
+  gift: Gift,
 };
 
 function formatTime(value) {
@@ -50,6 +54,24 @@ function remainingHours(until) {
   return diff > 0 ? Math.ceil(diff / 3600000) : 0;
 }
 
+/** 头像框实物预览：一圈描边 + 星座符号。 */
+function FrameSwatch({ def, worn, size = 'size-12' }) {
+  return (
+    <span className="relative inline-flex shrink-0">
+      <span
+        className={`flex ${size} items-center justify-center rounded-full bg-overlay ${def.ringClasses}`}
+      >
+        {def.glyph ? <span className="avatar-frame-glyph">{`${def.glyph}\uFE0E`}</span> : null}
+      </span>
+      {worn && (
+        <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full border border-line bg-surface text-brand">
+          <Check className="size-2.5" />
+        </span>
+      )}
+    </span>
+  );
+}
+
 export default function BenefitsClient() {
   const pathname = usePathname();
   const [user, setUser] = useState(null);
@@ -57,6 +79,7 @@ export default function BenefitsClient() {
   const [ledger, setLedger] = useState([]);
   const [ledgerLoading, setLedgerLoading] = useState(true);
   const [ledgerFilter, setLedgerFilter] = useState('all');
+  const [category, setCategory] = useState('all');
   const [dailyClaimed, setDailyClaimed] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [redeeming, setRedeeming] = useState(null);
@@ -124,17 +147,17 @@ export default function BenefitsClient() {
       const res = await fetch('/api/financial/currency/daily-login', { method: 'POST' });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.amount > 0) {
-        setMessage(`已领取今日登录奖励 ${data.amount} 枚硬币`);
+        setMessage(`叮——今天的 1 枚硬币已经收进口袋`);
         setDailyClaimed(true);
       } else if (res.ok) {
-        setMessage('今日登录奖励已领取，明天再来');
+        setMessage('今天已经打过卡啦，明天再来');
         setDailyClaimed(true);
       } else {
-        setMessage(data.error || '领取失败，请稍后重试');
+        setMessage(data.error || '刚才没领上，稍后再试一次');
       }
       await loadWallet();
     } catch {
-      setMessage('网络异常，领取失败');
+      setMessage('网络不太顺，稍后再试');
     } finally {
       setClaiming(false);
     }
@@ -143,7 +166,7 @@ export default function BenefitsClient() {
   async function redeem(benefit) {
     if (requireAuth() || redeeming) return;
     if (coins < benefit.coins) {
-      setMessage(`硬币不足，本次需要 ${benefit.coins} 枚，当前 ${coins.toFixed(2)} 枚`);
+      setMessage(`这次要 ${benefit.coins} 枚，你手上还有 ${coins.toFixed(2)} 枚`);
       return;
     }
     setRedeeming(benefit.id);
@@ -159,15 +182,15 @@ export default function BenefitsClient() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setMessage(data.error || '兑换失败，请稍后重试');
+        setMessage(data.error || '刚才没换成，稍后再试一次');
       } else if (benefit.kind === 'priority') {
-        setMessage(`加速卡已激活，优先出图有效至 ${formatTime(data.priorityUntil)}`);
+        setMessage(`优先卡已生效，到 ${formatTime(data.priorityUntil)} 前都先轮到你`);
       } else {
-        setMessage(`${AVATAR_FRAMES[benefit.frame]?.label || '头像框'}已永久拥有并佩戴`);
+        setMessage(`${AVATAR_FRAMES[benefit.frame]?.label || '头像框'}已经是你的人了，现在戴着它`);
       }
       await Promise.all([loadWallet(), loadProfile()]);
     } catch {
-      setMessage('网络异常，兑换未完成');
+      setMessage('网络不太顺，这次没有扣币');
     } finally {
       setRedeeming(null);
     }
@@ -183,10 +206,10 @@ export default function BenefitsClient() {
         body: JSON.stringify({ frame }),
       });
       const data = await res.json().catch(() => ({}));
-      setMessage(res.ok ? data.message || '已更新' : data.error || '设置失败');
+      setMessage(res.ok ? data.message || '换好了' : data.error || '刚才没换上，再试一次');
       if (res.ok) await loadProfile();
     } catch {
-      setMessage('网络异常，设置失败');
+      setMessage('网络不太顺，稍后再试');
     } finally {
       setWearing(false);
     }
@@ -197,9 +220,14 @@ export default function BenefitsClient() {
     return ledgerFilter === 'earn' ? item.direction === 'CREDIT' : item.direction === 'DEBIT';
   });
 
+  const shown = category === 'all' ? BENEFITS : BENEFITS.filter((b) => b.category === category);
+  const shownFrames = shown.filter((b) => b.kind === 'avatar_frame');
+  const shownOthers = shown.filter((b) => b.kind !== 'avatar_frame');
+  const openCount = BENEFITS.filter((b) => b.status === 'open').length;
+
   return (
     <div className="min-h-screen bg-canvas text-ink flex flex-col">
-      <StudioHeader title="硬币权益中心" subtitle="兑换优先出图与身份权益，查看硬币的每一笔来处与去处" />
+      <StudioHeader title="硬币小铺" subtitle="攒下的硬币，在这儿换成一点心意" />
 
       <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6">
         {message && (
@@ -212,16 +240,18 @@ export default function BenefitsClient() {
           </div>
         )}
 
-        {/* 余额与唯二获取渠道 */}
+        {/* 口袋 */}
         <section className="rounded-2xl border border-warning-line bg-gradient-to-b from-warning-soft via-well to-base p-6 shadow-elevation-3">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <span className="text-label font-semibold uppercase tracking-widest text-warning">硬币余额</span>
+              <span className="text-label text-ink-muted">你的口袋</span>
               <div className="mt-1 flex items-baseline gap-2">
                 <span className="text-display font-black tracking-tight text-warning font-mono">{coins.toFixed(2)}</span>
                 <span className="text-label text-warning">枚 🪙</span>
               </div>
-              <p className="mt-2 text-label text-ink-muted">硬币不可充值、不可提现、不可在用户间转让，只能靠下面两种方式积累。</p>
+              <p className="mt-2 text-label text-ink-muted leading-relaxed">
+                硬币是社区给你的小心意，不买卖、不转赠，只用来换下面这些。
+              </p>
             </div>
             <Button
               variant="outline"
@@ -233,157 +263,228 @@ export default function BenefitsClient() {
               }`}
             >
               {claiming ? <Loader2 className="size-3.5 animate-spin" /> : <span className="text-body">🪙</span>}
-              <span>{dailyClaimed ? '今日已领' : '今日打卡领 1 枚'}</span>
+              <span>{dailyClaimed ? '今天来过啦' : '今天打个卡'}</span>
             </Button>
           </div>
 
           <div className="mt-5 pt-5 border-t border-line grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-line bg-scrim p-4">
               <div className="flex items-center gap-2 text-label font-bold text-ink">
-                <Gift className="size-4 text-warning" />
-                <span>渠道一 · 每日登录</span>
+                <MoonStar className="size-4 text-warning" />
+                <span>每天来一次</span>
               </div>
               <p className="mt-1.5 text-caption text-ink-muted leading-relaxed">
-                每天登录后来这里点一次打卡，固定到账 1 枚，北京时间 00:00 刷新。
+                回来看看就好，1 枚硬币会自己落进口袋。北京时间零点算新的一天。
               </p>
             </div>
             <div className="rounded-2xl border border-line bg-scrim p-4">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-label font-bold text-ink">
-                  <ShieldCheck className="size-4 text-success" />
-                  <span>渠道二 · 有效提交</span>
+                  <MessageCircleHeart className="size-4 text-success" />
+                  <span>说句真话</span>
                 </div>
                 <Link href={localizedHref('/account?action=feedback', { pathname })} className="text-micro font-semibold text-brand hover:text-brand-hover flex items-center gap-0.5">
-                  去提交 <ArrowUpRight className="size-3" />
+                  去说说 <ArrowUpRight className="size-3" />
                 </Link>
               </div>
               <p className="mt-1.5 text-caption text-ink-muted leading-relaxed">
-                提交网站报错、体验改善建议或安全漏洞，经人工审核采纳后按有效性发放 2–20 枚。
+                遇到 bug、想吐槽、有更好的点子，都可以讲。被采纳的话送 2–20 枚当谢礼。
               </p>
             </div>
           </div>
         </section>
 
-        {/* 加速卡状态 */}
+        {/* 优先卡生效中 */}
         {boostLeft > 0 && (
           <div className="flex items-center justify-between gap-3 rounded-2xl border border-brand-line bg-brand-soft px-5 py-3">
             <div className="flex items-center gap-2 text-label text-ink">
               <Zap className="size-4 text-brand" />
-              <span className="font-semibold">优先出图生效中</span>
-              <span className="text-ink-muted">剩余约 {boostLeft} 小时，期间你的生成任务在出站队列里优先执行。</span>
+              <span className="font-semibold">优先卡生效中</span>
+              <span className="text-ink-muted">还有约 {boostLeft} 小时，这段时间交的任务先出图。</span>
             </div>
             <span className="text-label font-mono text-brand-hover">{formatTime(user?.priorityUntil)}</span>
           </div>
         )}
 
-        {/* 权益兑换 */}
+        {/* 兑换小铺 */}
         <section className="rounded-2xl border border-line bg-scrim p-6 shadow-elevation-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="size-4 text-warning" />
-            <h2 className="text-section-title font-bold text-ink">硬币可以兑换什么</h2>
+          <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="size-4 text-warning" />
+                <h2 className="text-section-title font-bold text-ink">兑换小铺</h2>
+              </div>
+              <p className="mt-1 text-label text-ink-muted">
+                {openCount} 件现在就能换，其余的还在准备中——先给你看看，别着急。
+              </p>
+            </div>
           </div>
-          <p className="text-label text-ink-muted mb-5">下列兑换全部真实生效，点击后立即到账，可在下方明细中核对每一笔消耗。</p>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {BENEFITS.map((benefit) => {
-              const Icon = KIND_ICONS[benefit.kind] || Gem;
-              const alreadyOwned = benefit.kind === 'avatar_frame' && ownedFrames.includes(benefit.frame);
-              const affordable = coins >= benefit.coins;
+          {/* 可切换的分类菜单 */}
+          <div className="flex items-center gap-1 overflow-x-auto rounded-full border border-line bg-well p-1 mb-6">
+            {CATEGORY_TABS.map((tab) => {
+              const Icon = CATEGORY_ICONS[tab.icon] || Sparkles;
+              const active = category === tab.id;
               return (
-                <div
-                  key={benefit.id}
-                  className="relative rounded-2xl border border-line bg-scrim p-5 flex flex-col justify-between gap-4 hover:border-warning-line transition-colors"
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setCategory(tab.id)}
+                  title={tab.blurb}
+                  className={`flex items-center gap-1.5 h-8 shrink-0 rounded-full px-3.5 text-label transition-colors cursor-pointer ${
+                    active ? 'bg-surface-inverse text-ink-inverse font-bold shadow-elevation-1' : 'text-ink-muted hover:text-ink'
+                  }`}
                 >
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="flex size-10 items-center justify-center rounded-xl border border-warning-line bg-warning-soft text-warning">
-                        <Icon className="size-5" />
-                      </span>
-                      <Badge variant="outline" className="text-micro border-line text-ink-muted">
-                        {BENEFIT_STATUS_LABELS[benefit.kind]}
-                      </Badge>
-                    </div>
-                    <h3 className="text-body font-bold text-ink">{benefit.title}</h3>
-                    <p className="mt-1.5 text-caption text-ink-muted leading-relaxed">{benefit.summary}</p>
-                  </div>
-                  <div className="pt-3 border-t border-line-subtle flex items-center justify-between gap-2">
-                    <span className="font-mono text-body font-bold text-warning">🪙 {benefit.coins}</span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={!user || alreadyOwned || !affordable || !!redeeming}
-                      onClick={() => redeem(benefit)}
-                      className="text-caption rounded-xl px-3 border-warning-line text-warning hover:bg-warning-soft cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {redeeming === benefit.id ? (
-                        <Loader2 className="size-3.5 animate-spin" />
-                      ) : alreadyOwned ? (
-                        <span className="flex items-center gap-1"><Check className="size-3" />已拥有</span>
-                      ) : affordable ? (
-                        '立即兑换'
-                      ) : (
-                        '硬币不足'
-                      )}
-                    </Button>
-                  </div>
-                </div>
+                  <Icon className="size-3.5" />
+                  <span>{tab.label}</span>
+                </button>
               );
             })}
           </div>
-        </section>
 
-        {/* 头像框佩戴管理 */}
-        {ownedFrames.length > 0 && (
-          <section className="rounded-2xl border border-line bg-scrim p-6 shadow-elevation-3">
-            <div className="flex items-center gap-2 mb-1">
-              <BadgeCheck className="size-4 text-brand" />
-              <h2 className="text-section-title font-bold text-ink">我的头像框</h2>
+          {CATEGORY_TABS.find((t) => t.id === category)?.blurb && (
+            <p className="-mt-4 mb-5 text-caption text-ink-subtle">
+              {CATEGORY_TABS.find((t) => t.id === category).blurb}
+            </p>
+          )}
+
+          {/* 头像框：直接试戴 */}
+          {shownFrames.length > 0 && (
+            <div className="grid gap-3 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5">
+              {shownFrames.map((benefit) => {
+                const def = AVATAR_FRAMES[benefit.frame] || {};
+                const owned = ownedFrames.includes(benefit.frame);
+                const worn = wornFrame === benefit.frame;
+                const affordable = coins >= benefit.coins;
+                const busy = redeeming === benefit.id;
+                return (
+                  <div
+                    key={benefit.id}
+                    className="flex flex-col items-center gap-2 rounded-2xl border border-line bg-well p-4 text-center hover:border-warning-line transition-colors"
+                  >
+                    <FrameSwatch def={def} worn={worn} />
+                    <div className="min-w-0">
+                      <p className="text-label font-bold text-ink truncate">{def.short || benefit.title}</p>
+                      <p className="text-micro text-ink-subtle mt-0.5 truncate">
+                        {def.dates ? `${def.dates} · ${ELEMENTS[def.element] || ''}` : '常驻描边'}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={!user || (!owned && (!affordable || busy)) || (owned && (worn || wearing))}
+                      onClick={() => (owned ? wear(benefit.frame) : redeem(benefit))}
+                      className={`w-full text-micro h-7 rounded-lg px-2 cursor-pointer disabled:cursor-not-allowed ${
+                        worn
+                          ? 'border-brand-line text-brand bg-brand-soft'
+                          : owned
+                            ? 'border-line text-ink-muted hover:text-ink'
+                            : 'border-warning-line text-warning hover:bg-warning-soft'
+                      }`}
+                    >
+                      {busy ? (
+                        <Loader2 className="size-3 animate-spin" />
+                      ) : worn ? (
+                        <span className="flex items-center gap-1"><Check className="size-3" />戴着呢</span>
+                      ) : owned ? (
+                        '戴上'
+                      ) : affordable ? (
+                        `换 · ${benefit.coins} 枚`
+                      ) : (
+                        `${benefit.coins} 枚`
+                      )}
+                    </Button>
+                  </div>
+                );
+              })}
+              {ownedFrames.length > 0 && wornFrame && (
+                <button
+                  type="button"
+                  disabled={wearing}
+                  onClick={() => wear(null)}
+                  className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line bg-well p-4 text-center text-ink-muted hover:text-ink hover:border-line-strong transition-colors cursor-pointer disabled:cursor-not-allowed"
+                >
+                  <span className="flex size-12 items-center justify-center rounded-full bg-overlay text-body">🙂</span>
+                  <p className="text-label font-semibold">今天不戴</p>
+                </button>
+              )}
             </div>
-            <p className="text-label text-ink-muted mb-4">头像框永久拥有，随时切换佩戴；个人主页、顶栏头像与个人中心侧栏同步生效。</p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                disabled={wearing || !wornFrame}
-                onClick={() => wear(null)}
-                className={`rounded-xl border px-3.5 py-2 text-label font-semibold transition-colors cursor-pointer disabled:cursor-not-allowed ${
-                  !wornFrame ? 'border-brand-ring bg-wash-strong text-ink' : 'border-line bg-wash text-ink-muted hover:text-ink'
+          )}
+
+          {/* 其余权益 */}
+          {shownOthers.map((benefit) => {
+            const soon = benefit.status === 'soon';
+            const Icon = CATEGORY_ICONS[CATEGORY_BY_ID[benefit.category]?.icon] || Sparkles;
+            const affordable = coins >= benefit.coins;
+            const busy = redeeming === benefit.id;
+            return (
+              <div
+                key={benefit.id}
+                className={`mt-3 flex items-center gap-4 rounded-2xl border p-4 transition-colors ${
+                  soon ? 'border-line bg-well opacity-70' : 'border-line bg-well hover:border-warning-line'
                 }`}
               >
-                不佩戴
-              </button>
-              {ownedFrames.map((frame) => (
-                <button
-                  key={frame}
-                  type="button"
-                  disabled={wearing || wornFrame === frame}
-                  onClick={() => wear(frame)}
-                  className={`flex items-center gap-2 rounded-xl border bg-wash px-3.5 py-2 text-label font-semibold transition-colors cursor-pointer disabled:cursor-not-allowed ${
-                    wornFrame === frame ? 'border-brand-ring text-ink bg-wash-strong' : 'border-line text-ink-muted hover:text-ink'
-                  }`}
-                >
-                  <span className={`size-5 rounded-full bg-overlay ${AVATAR_FRAMES[frame]?.ringClasses || ''}`} />
-                  <span>{AVATAR_FRAMES[frame]?.label || frame}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
+                <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl border ${
+                  soon ? 'border-line bg-scrim text-ink-subtle' : 'border-warning-line bg-warning-soft text-warning'
+                }`}>
+                  <Icon className="size-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-body font-bold text-ink">{benefit.title}</h3>
+                    {soon && (
+                      <span className="rounded-full border border-line bg-scrim px-2 py-0.5 text-micro text-ink-subtle">准备中</span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-caption text-ink-muted leading-relaxed">
+                    {benefit.summary}
+                  </p>
+                  {soon && benefit.note && (
+                    <p className="mt-1 text-micro text-ink-subtle leading-relaxed">{benefit.note}</p>
+                  )}
+                </div>
+                <div className="shrink-0 flex flex-col items-end gap-2">
+                  <span className={`font-mono text-label font-bold ${soon ? 'text-ink-subtle' : 'text-warning'}`}>
+                    🪙 {benefit.coins}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={soon || !user || !affordable || !!redeeming}
+                    onClick={() => redeem(benefit)}
+                    className="text-micro h-7 rounded-lg px-3 border-warning-line text-warning hover:bg-warning-soft cursor-pointer disabled:cursor-not-allowed disabled:border-line disabled:text-ink-subtle disabled:hover:bg-transparent"
+                  >
+                    {busy ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : soon ? (
+                      '敬请期待'
+                    ) : affordable ? (
+                      '现在就换'
+                    ) : (
+                      '再攒攒'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </section>
 
-        {/* 硬币获取与消耗明细 */}
+        {/* 硬币日记 */}
         <section className="rounded-2xl border border-line bg-scrim shadow-elevation-3 overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-6 border-b border-line-subtle">
             <div>
               <h2 className="text-section-title font-bold text-ink flex items-center gap-2">
                 <History className="size-4 text-brand" />
-                <span>硬币获取与消耗明细</span>
+                <span>硬币日记</span>
               </h2>
-              <p className="text-label text-ink-subtle mt-0.5">只统计硬币账户自身的进出，按发生时间倒序。</p>
+              <p className="text-label text-ink-subtle mt-0.5">每一枚的来处和去处，都替你记着。</p>
             </div>
             <div className="flex items-center gap-1 bg-well border border-line p-1 rounded-full self-start sm:self-auto">
               {[
                 { id: 'all', label: '全部' },
-                { id: 'earn', label: '获取' },
-                { id: 'spend', label: '消耗' },
+                { id: 'earn', label: '进账' },
+                { id: 'spend', label: '花掉' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -402,13 +503,13 @@ export default function BenefitsClient() {
           {ledgerLoading ? (
             <div className="py-16 text-center text-label text-ink-subtle flex items-center justify-center gap-2">
               <Loader2 className="size-4 animate-spin text-brand" />
-              <span>正在同步硬币明细…</span>
+              <span>正在翻开你的小本本…</span>
             </div>
           ) : !user ? (
-            <p className="py-16 text-center text-label text-ink-subtle">登录后查看你的硬币明细。</p>
+            <p className="py-16 text-center text-label text-ink-subtle">登录后就能看到你自己的那一本。</p>
           ) : filteredLedger.length === 0 ? (
             <p className="py-16 text-center text-label text-ink-subtle">
-              {ledger.length === 0 ? '还没有硬币流水，先完成今日打卡或提交一条建议吧。' : '该筛选下暂无记录。'}
+              {ledger.length === 0 ? '这一页还空着。先去打个卡，或者来聊聊你的想法。' : '这一类暂时没有记录。'}
             </p>
           ) : (
             <ul className="divide-y divide-line-subtle">
@@ -423,7 +524,7 @@ export default function BenefitsClient() {
                         {earned ? '+' : '−'}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-label font-semibold text-ink truncate">{BIZ_LABELS[item.bizType] || item.description || '硬币变动'}</p>
+                        <p className="text-label font-semibold text-ink truncate">{BIZ_LABELS[item.bizType] || item.description || '硬币动了一动'}</p>
                         <p className="text-caption text-ink-subtle font-mono mt-0.5 truncate">
                           {formatTime(item.createdAt)}
                         </p>
@@ -434,7 +535,7 @@ export default function BenefitsClient() {
                         {earned ? '+' : '−'}{Number(item.amount).toFixed(2)} <span className="text-caption font-normal">枚</span>
                       </div>
                       {item.balanceAfter !== null && (
-                        <div className="text-caption text-ink-subtle font-mono">余 {Number(item.balanceAfter).toFixed(2)}</div>
+                        <div className="text-caption text-ink-subtle font-mono">还剩 {Number(item.balanceAfter).toFixed(2)}</div>
                       )}
                     </div>
                   </li>
@@ -444,41 +545,29 @@ export default function BenefitsClient() {
           )}
         </section>
 
-        {/* 规则与去向 */}
-        <section className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-line bg-scrim p-6 shadow-elevation-2">
-            <div className="flex items-center gap-2 text-body font-bold text-ink mb-3">
-              <Coins className="size-4 text-warning" />
-              <span>硬币规则</span>
-            </div>
-            <ul className="space-y-2.5 text-label text-ink-muted leading-relaxed">
-              <li>· 唯二获取：每日登录 1 枚；有效提交经人工审核后发放 2–20 枚。</li>
-              <li>· 不可充值、不可提现、不可在用户间转让；兑换一旦完成不予返还。</li>
-              <li>· 永久有效，不随月度或年度重置清零。</li>
-              <li>· 给社区作品投币属于消耗：投出的硬币不会成为作者的收入，同一作品每人上限 2 枚。</li>
-            </ul>
+        {/* 小铺须知 */}
+        <section className="rounded-2xl border border-line bg-scrim p-6 shadow-elevation-2">
+          <div className="flex items-center gap-2 text-body font-bold text-ink mb-3">
+            <Coins className="size-4 text-warning" />
+            <span>小铺须知</span>
           </div>
-          <div className="rounded-2xl border border-line bg-scrim p-6 shadow-elevation-2">
-            <div className="flex items-center gap-2 text-body font-bold text-ink mb-3">
-              <Clock className="size-4 text-brand" />
-              <span>硬币与算力的分工</span>
-            </div>
-            <p className="text-label text-ink-muted leading-relaxed">
-              生图、生视频消耗的是<span className="text-ink"> 算力积分</span>与订阅额度，只能通过会员套餐和算力包获得，
-              <span className="text-ink">硬币不能兑换算力</span>；硬币只负责优先出图加速卡、永久头像框与社区作品投币。
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Link href={localizedHref('/credits', { pathname })}>
-                <Button variant="outline" size="sm" className="text-caption rounded-xl border-line cursor-pointer">
-                  资产与额度总览
-                </Button>
-              </Link>
-              <Link href={localizedHref('/pricing', { pathname })}>
-                <Button variant="ghost" size="sm" className="text-caption text-brand hover:text-brand-hover cursor-pointer">
-                  会员与算力包 <ArrowUpRight className="size-3.5" />
-                </Button>
-              </Link>
-            </div>
+          <ul className="space-y-2 text-label text-ink-muted leading-relaxed">
+            <li>· 硬币一直在你口袋里，不会按月清零。</li>
+            <li>· 换出去就不退回了，下单前再看一眼价格。</li>
+            <li>· 给喜欢的作品投币也算花掉，投出去不会变成作者的收入，同一作品每人最多 2 枚。</li>
+            <li>· 出图用的算力走会员和算力包，硬币不参与——它只负责这些让人开心的小东西。</li>
+          </ul>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link href={localizedHref('/credits', { pathname })}>
+              <Button variant="outline" size="sm" className="text-caption rounded-xl border-line cursor-pointer">
+                看看我的资产
+              </Button>
+            </Link>
+            <Link href={localizedHref('/pricing', { pathname })}>
+              <Button variant="ghost" size="sm" className="text-caption text-brand hover:text-brand-hover cursor-pointer">
+                会员与算力包 <ArrowUpRight className="size-3.5" />
+              </Button>
+            </Link>
           </div>
         </section>
       </main>

@@ -589,3 +589,46 @@
 .pricing-pink-hover-border:hover { border-color: var(--pricing-pink); }
 .pricing-avatar-bg { background-color: #9c6bf0; }
 .pricing-pink-bg:hover { background-color: #d91a97; }
+
+/* ------------------------------------------------------------
+   Avatar frames — 硬币兑换的星座描边
+   These are wearable content decoration, not UI chrome: the twelve
+   zodiac hues deliberately sit outside the accent palette, and they
+   are only ever reachable through lib/benefits/catalog.js ringClasses.
+   Do not reuse them for buttons, panels or text.
+   ------------------------------------------------------------ */
+.avatar-frame {
+  border-width: 2px;
+  border-style: solid;
+  border-color: var(--frame-hue, var(--border-strong));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--frame-hue, transparent) 28%, transparent),
+    0 0 0 1.5px var(--bg-canvas),
+    0 0 14px -2px color-mix(in srgb, var(--frame-hue, transparent) 55%, transparent);
+}
+
+.avatar-frame--zodiac-aries      { --frame-hue: #f4623a; }.avatar-frame--zodiac-taurus     { --frame-hue: #c08552; }
+.avatar-frame--zodiac-gemini     { --frame-hue: #f5d560; }
+.avatar-frame--zodiac-cancer     { --frame-hue: #45c4b0; }
+.avatar-frame--zodiac-leo        { --frame-hue: #ffab2e; }
+.avatar-frame--zodiac-virgo      { --frame-hue: #7fa650; }
+.avatar-frame--zodiac-libra      { --frame-hue: #f0a6c8; }
+.avatar-frame--zodiac-scorpio    { --frame-hue: #9b5de5; }
+.avatar-frame--zodiac-sagittarius { --frame-hue: #e0457b; }
+.avatar-frame--zodiac-capricorn  { --frame-hue: #6b8f8a; }
+.avatar-frame--zodiac-aquarius   { --frame-hue: #9db4ff; }
+.avatar-frame--zodiac-pisces     { --frame-hue: #4cc9f0; }
+
+/* 两枚常驻款沿用系统语义色，不走 Tailwind 工具类：
+   目录在 lib/ 下，不在 tailwind.config.js 的 content 范围内，
+   写成 border-warning 只会得到 @layer base 的默认描边色。 */
+.avatar-frame--gold { --frame-hue: var(--warning); }
+.avatar-frame--cyan { --frame-hue: var(--accent-primary); }
+
+/* 星座符号要跟描边同色，且必须走文字呈现（VS16），
+   否则 Chromium 会把它换成紫底 emoji 方块，把描边设计整个盖掉。 */
+.avatar-frame-glyph {
+  color: var(--frame-hue, var(--text-primary));
+  font-size: 17px;
+  line-height: 1;
+}

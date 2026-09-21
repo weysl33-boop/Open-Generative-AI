@@ -1,8 +1,8 @@
 import BenefitsClient from '@/components/benefits/BenefitsClient';
 
 export const metadata = {
-  title: '硬币权益中心 — KoyoSIM AI Studio',
-  description: '用每日登录与有效提交攒下的硬币兑换优先出图加速卡与永久头像框，并查看硬币获取与消耗明细。',
+  title: '硬币小铺 — KoyoSIM AI Studio',
+  description: '每天来打个卡、说句真话，攒下的硬币可以换星座头像框和出图优先卡。',
 };
 
 export default function BenefitsPage() {

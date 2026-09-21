@@ -210,6 +210,38 @@ test('优先出图加速卡：兑换后该用户任务先出队，未到期重�
   }
 });
 
+test('兑换库：十二星座框 1 枚即永久拥有，"准备中"的项目即使绕过页面也被服务端拒绝', { skip: !testUrl }, async () => {
+  const userId = await makeUser('zodiac');
+  try {
+    const zodiac = BENEFITS.filter((benefit) => String(benefit.frame || '').startsWith('zodiac-'));
+    assert.equal(zodiac.length, 12, '星座框必须凑齐十二个');
+    assert.ok(zodiac.every((benefit) => benefit.coins === 1), '星座框统一 1 枚');
+    assert.ok(BENEFITS.some((benefit) => benefit.status === 'soon'), '兑换库里要有准备中的项目，菜单才成体系');
+
+    await fundCoins(userId, 3, 'zodiac');
+    const aries = zodiac.find((benefit) => benefit.frame === 'zodiac-aries');
+    const redeemed = await financial.redeemBenefit({
+      userId,
+      benefitId: aries.id,
+      idempotencyKey: `benefit:aries:${suffix}`,
+    });
+    assert.equal(redeemed.result.frame, 'zodiac-aries');
+    assert.equal(await coinBalance(userId), 2);
+    assert.deepEqual((await profileOf(userId)).avatar_frames, ['zodiac-aries']);
+
+    for (const soon of BENEFITS.filter((benefit) => benefit.status === 'soon')) {
+      await assert.rejects(
+        () => financial.redeemBenefit({ userId, benefitId: soon.id, idempotencyKey: `benefit:soon:${soon.id}:${suffix}` }),
+        /准备中/,
+        '页面上的"准备中"不能只是装饰，服务端必须同样放行不了',
+      );
+    }
+    assert.equal(await coinBalance(userId), 2, '被拒的准备中项目一枚都不能扣');
+  } finally {
+    await dropUser(userId);
+  }
+});
+
 test('头像框：一次兑换永久拥有并直接佩戴，重复兑换与未拥有佩戴都被拒绝', { skip: !testUrl }, async () => {
   const userId = await makeUser('frame');
   try {
