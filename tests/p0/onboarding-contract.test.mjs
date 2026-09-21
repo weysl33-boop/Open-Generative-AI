@@ -43,20 +43,29 @@ const ALL_ANSWERS = {
 
 const MIGRATION = 'lib/db/migrations/026_user_profile_onboarding_v2.sql';
 
-test('P0 every persona enum code has a tag that migration 026 actually inserts', () => {
+const {
+  DESC_FIELDS,
+  LABEL_FIELDS,
+  optionDesc,
+  optionLabel,
+  randomNickname,
+} = await import('../../lib/onboarding/copy.js');
+
+const OPTION_LISTS = { OCCUPATIONS, PURPOSES, COMMITMENTS, STYLES, USAGE_INTENTS };
+
+// 注册表是语言码的唯一来源；locales.js 直链 JSON 消息包，纯 node 下 import 不进来，只能按文本抠。
+const registryCodes = () => [...source('lib/locales.js').matchAll(/^ {4}code: '([^']+)',$/gm)].map((m) => m[1]);
+
+test('P0 every persona tag exists in migration 026 and no two options share one', () => {
   const sql = source(MIGRATION);
   const declared = new Set([...sql.matchAll(/\('(tag_[a-z0-9_]+)'/g)].map((match) => match[1]));
-  const referenced = [
-    ...OCCUPATIONS,
-    ...PURPOSES,
-    ...COMMITMENTS,
-    ...STYLES,
-    ...USAGE_INTENTS,
-  ].map((entry) => entry.tagId);
+  // 允许选项不带标签（它就是不进运营口径），但不许两个选项挤进同一条。
+  const referenced = Object.values(OPTION_LISTS).flat().map((entry) => entry.tagId).filter(Boolean);
 
   for (const tagId of referenced) {
     assert.equal(declared.has(tagId), true, `${tagId} is used by the schema but never inserted`);
   }
+  assert.equal(new Set(referenced).size, referenced.length, 'two mutually exclusive answers share one ops tag');
   assert.equal(declared.has('tag_use_training'), true);
 });
 
@@ -206,6 +215,82 @@ test('P0 every copy key the onboarding pages read exists in all six catalogues',
     const shape = Object.keys(block).sort().map((key) => `${key}=${placeholders(block[key])}`).join('|');
     if (!baseline) baseline = shape;
     else assert.equal(shape, baseline, `${dir}: onboarding keys or placeholders diverged from en`);
+  }
+});
+
+test('P0 option copy fields cover every registered locale, and only zh-CN reads the simplified field', () => {
+  const codes = registryCodes();
+  assert.deepEqual(Object.keys(LABEL_FIELDS).sort(), [...codes].sort(), 'LABEL_FIELDS misses a registered locale');
+  assert.deepEqual(Object.keys(DESC_FIELDS).sort(), [...codes].sort(), 'DESC_FIELDS misses a registered locale');
+  assert.equal(LABEL_FIELDS['zh-CN'], 'label');
+  assert.equal(DESC_FIELDS['zh-CN'], 'desc');
+  for (const [code, field] of Object.entries(LABEL_FIELDS)) {
+    if (code !== 'zh-CN') assert.notEqual(field, 'label', `${code} must not point at the simplified label`);
+  }
+  for (const [code, field] of Object.entries(DESC_FIELDS)) {
+    if (code !== 'zh-CN') assert.notEqual(field, 'desc', `${code} must not point at the simplified desc`);
+  }
+});
+
+test('P0 every option resolves its own text in every registered locale', () => {
+  for (const [name, list] of Object.entries(OPTION_LISTS)) {
+    const filled = list.filter((entry) => optionDesc(entry, 'en').trim()).length;
+    assert.ok(filled === 0 || filled === list.length, `${name}: desc must cover the whole list or none of it`);
+    for (const entry of list) {
+      for (const [code, field] of Object.entries(LABEL_FIELDS)) {
+        assert.equal(optionLabel(entry, code), entry[field], `${name}.${entry.code} does not resolve ${code}`);
+        assert.ok(entry[field]?.trim(), `${name}.${entry.code} has no ${code} label`);
+      }
+      for (const [code, field] of Object.entries(DESC_FIELDS)) {
+        assert.equal(optionDesc(entry, code), entry[field] ?? '', `${name}.${entry.code} desc does not resolve ${code}`);
+      }
+    }
+  }
+});
+
+test('P0 a missing locale field falls back to English, never to simplified', () => {
+  const bare = { code: 'x', label: '夜色', labelEn: 'Nightfall', desc: '简体说明', descEn: 'Simplified blurb' };
+  for (const code of registryCodes().filter((entry) => entry !== 'zh-CN' && entry !== 'en')) {
+    assert.equal(optionLabel(bare, code), 'Nightfall', `${code} leaked the simplified label`);
+    assert.equal(optionDesc(bare, code), 'Simplified blurb', `${code} leaked the simplified desc`);
+  }
+  assert.equal(optionLabel(bare, 'zh-CN'), '夜色');
+  assert.equal(optionLabel(bare, 'xx'), 'Nightfall');
+});
+
+test('P0 random nicknames fit the nickname limits in every registered locale', () => {
+  for (const code of registryCodes()) {
+    for (let attempt = 0; attempt < 200; attempt += 1) {
+      const name = randomNickname(code);
+      assert.match(name, /\d{3}$/, `${code}: generated name lost its numeric suffix`);
+      assert.ok(
+        name.length >= NICKNAME_MIN && name.length <= NICKNAME_MAX,
+        `${code}: "${name}" is outside ${NICKNAME_MIN}-${NICKNAME_MAX}`,
+      );
+    }
+  }
+});
+
+test('P0 onboarding surfaces never branch on locale or read one language field directly', () => {
+  const files = [
+    ...fs.readdirSync(path.join(repoRoot, 'components/onboarding')).map((name) => `components/onboarding/${name}`),
+    'app/onboarding/page.js',
+  ];
+  for (const file of files) {
+    const text = source(file);
+    assert.equal(/\bisZh\b/.test(text), false, `${file} still branches on isZh`);
+    assert.equal(/startsWith\(['"]zh/.test(text), false, `${file} still sniffs a zh prefix`);
+    assert.equal(/\.(labelEn|descEn|labelTw|descTw|labelJa|descJa|labelKo|descKo|labelEs|descEs)\b/.test(text), false, `${file} bypasses lib/onboarding/copy`);
+  }
+});
+
+test('P0 step two offers exactly one way back', () => {
+  assert.equal(/\bcopy\.back\b/.test(source('components/onboarding/OnboardingFlow.js')), false, 'the flow footer duplicated the card back button');
+});
+
+test('P0 schema and copy stay dependency-free so client components and node --test can both load them', () => {
+  for (const file of ['lib/onboarding/schema.js', 'lib/onboarding/copy.js']) {
+    assert.equal(/^import\s/m.test(source(file)), false, `${file} must not import anything`);
   }
 });
 

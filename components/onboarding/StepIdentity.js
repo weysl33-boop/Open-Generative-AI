@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { ArrowRight, Camera, Check, Copy, Dice5, Loader2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FOCUS_RING } from 'studio/ui/tokens';
+import { randomNickname } from '@/lib/onboarding/copy';
 import {
   DEFAULT_AVATAR_COUNT,
   NICKNAME_MAX,
@@ -13,27 +14,9 @@ import {
 } from '@/lib/onboarding/schema';
 import { cn } from '@/lib/utils';
 
-const NAME_WORDS = {
-  zh: {
-    a: ['夜色', '青柠', '像素', '浮光', '远山', '半糖', '潮汐', '银灰', '野鹿', '拾光'],
-    b: ['绘者', '放映员', '造物', '实验室', '旅人', '制片厂', '工坊', '观测站'],
-  },
-  en: {
-    a: ['Midnight', 'Pixel', 'Drifting', 'Amber', 'Quiet', 'Neon', 'Paper', 'Solar'],
-    b: ['Studio', 'Frames', 'Lab', 'Foundry', 'Canvas', 'Works', 'Atelier'],
-  },
-};
-
-function randomNickname(isZh) {
-  const bank = isZh ? NAME_WORDS.zh : NAME_WORDS.en;
-  const a = bank.a[Math.floor(Math.random() * bank.a.length)];
-  const b = bank.b[Math.floor(Math.random() * bank.b.length)];
-  return `${a}${isZh ? '' : ' '}${b}${Math.floor(100 + Math.random() * 900)}`;
-}
-
 export default function StepIdentity({
   copy,
-  isZh,
+  localeCode,
   userNumber,
   initialDisplayName,
   initialAvatarUrl,
@@ -212,7 +195,7 @@ export default function StepIdentity({
             variant="secondary"
             size="md"
             className="shrink-0 whitespace-nowrap"
-            onClick={() => setDisplayName(randomNickname(isZh))}
+            onClick={() => setDisplayName(randomNickname(localeCode))}
           >
             <Dice5 className="size-3.5" />
             <span>{copy.nicknameRandom}</span>

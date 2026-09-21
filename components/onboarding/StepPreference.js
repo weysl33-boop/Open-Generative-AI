@@ -13,11 +13,13 @@ import {
   Feather,
   FlaskConical,
   Gamepad2,
+  Gift,
   Mountain,
   Package,
   PenTool,
   Pin,
   Rocket,
+  SkipForward,
   Smile,
   Smartphone,
   Sparkles,
@@ -29,6 +31,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FOCUS_RING } from 'studio/ui/tokens';
+import { optionDesc, optionLabel } from '@/lib/onboarding/copy';
 import {
   COMMITMENTS,
   OCCUPATIONS,
@@ -81,13 +84,13 @@ function Field({ id, title, hint, children }) {
   );
 }
 
-function pick(list, code, isZh) {
+function pick(list, code, localeCode) {
   const item = list.find((entry) => entry.code === code);
   if (!item) return null;
-  return { ...item, label: isZh ? item.label : item.labelEn, blurb: isZh ? (item.desc ?? '') : (item.descEn ?? '') };
+  return { ...item, label: optionLabel(item, localeCode) };
 }
 
-export default function StepPreference({ copy, isZh, busy, onBack, onSubmit }) {
+export default function StepPreference({ copy, localeCode, busy, credits, onBack, onSkip, onSubmit }) {
   const [occupation, setOccupation] = useState('');
   const [purposeCodes, setPurposeCodes] = useState([]);
   const [commitment, setCommitment] = useState('');
@@ -120,10 +123,10 @@ export default function StepPreference({ copy, isZh, busy, onBack, onSubmit }) {
   ].find(Boolean);
 
   const personaPreview = [
-    pick(OCCUPATIONS, occupation, isZh),
-    pick(PURPOSES, purposeCodes[0], isZh),
-    pick(COMMITMENTS, commitment, isZh),
-    pick(STYLES, styleCodes[0], isZh),
+    pick(OCCUPATIONS, occupation, localeCode),
+    pick(PURPOSES, purposeCodes[0], localeCode),
+    pick(COMMITMENTS, commitment, localeCode),
+    pick(STYLES, styleCodes[0], localeCode),
   ].filter(Boolean);
 
   return (
@@ -160,10 +163,10 @@ export default function StepPreference({ copy, isZh, busy, onBack, onSubmit }) {
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block text-body-sm font-medium text-ink">
-                    {isZh ? entry.label : entry.labelEn}
+                    {optionLabel(entry, localeCode)}
                   </span>
                   <span className="mt-0.5 block text-caption text-ink-muted">
-                    {isZh ? entry.desc : entry.descEn}
+                    {optionDesc(entry, localeCode)}
                   </span>
                 </span>
                 {active && <Check className="size-4 shrink-0 text-brand" />}
@@ -201,7 +204,7 @@ export default function StepPreference({ copy, isZh, busy, onBack, onSubmit }) {
                   className={cn('size-3.5 shrink-0', active ? 'text-brand' : 'text-ink-muted')}
                 />
                 <span className="min-w-0 flex-1 truncate text-body-sm text-ink">
-                  {isZh ? entry.label : entry.labelEn}
+                  {optionLabel(entry, localeCode)}
                 </span>
                 {active && (
                   <span className="rounded-full bg-brand px-1.5 text-micro font-medium text-ink-on-accent">
@@ -217,7 +220,7 @@ export default function StepPreference({ copy, isZh, busy, onBack, onSubmit }) {
           <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-line-subtle bg-well px-3 py-2">
             <span className="text-micro text-ink-subtle">{copy.purposePrimary}</span>
             {purposeCodes.map((code, index) => {
-              const entry = pick(PURPOSES, code, isZh);
+              const entry = pick(PURPOSES, code, localeCode);
               return (
                 <span key={code} className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2 py-0.5 text-micro">
                   <span className="font-mono text-ink-subtle">{index + 1}</span>
@@ -262,7 +265,7 @@ export default function StepPreference({ copy, isZh, busy, onBack, onSubmit }) {
                 role="radio"
                 aria-checked={active}
                 onClick={() => setCommitment(entry.code)}
-                title={isZh ? entry.desc : entry.descEn}
+                title={optionDesc(entry, localeCode)}
                 className={cn(
                   'rounded-full border px-3 py-1.5 text-body-sm transition-colors duration-fast ease-standard',
                   FOCUS_RING,
@@ -271,7 +274,7 @@ export default function StepPreference({ copy, isZh, busy, onBack, onSubmit }) {
                     : 'border-line bg-transparent text-ink-muted hover:border-line-strong hover:text-ink',
                 )}
               >
-                {isZh ? entry.label : entry.labelEn}
+                {optionLabel(entry, localeCode)}
               </button>
             );
           })}
@@ -308,7 +311,7 @@ export default function StepPreference({ copy, isZh, busy, onBack, onSubmit }) {
                   name={entry.icon}
                   className={cn('size-3.5 shrink-0', active ? 'text-brand' : 'text-ink-muted')}
                 />
-                <span>{isZh ? entry.label : entry.labelEn}</span>
+                <span>{optionLabel(entry, localeCode)}</span>
               </button>
             );
           })}
@@ -346,8 +349,8 @@ export default function StepPreference({ copy, isZh, busy, onBack, onSubmit }) {
                   aria-hidden="true"
                 />
                 <span className="min-w-0">
-                  <span className="block text-body-sm text-ink">{isZh ? entry.label : entry.labelEn}</span>
-                  <span className="block text-caption text-ink-muted">{isZh ? entry.desc : entry.descEn}</span>
+                  <span className="block text-body-sm text-ink">{optionLabel(entry, localeCode)}</span>
+                  <span className="block text-caption text-ink-muted">{optionDesc(entry, localeCode)}</span>
                 </span>
               </button>
             );
@@ -378,31 +381,46 @@ export default function StepPreference({ copy, isZh, busy, onBack, onSubmit }) {
           <span>{copy.personaPreview}</span>
           <code className="font-mono text-body-sm text-brand">
             {[
-              pick(OCCUPATIONS, occupation, isZh),
-              pick(PURPOSES, purposeCodes[0], isZh),
-              pick(COMMITMENTS, commitment, isZh),
-              pick(STYLES, styleCodes[0], isZh),
+              pick(OCCUPATIONS, occupation, localeCode),
+              pick(PURPOSES, purposeCodes[0], localeCode),
+              pick(COMMITMENTS, commitment, localeCode),
+              pick(STYLES, styleCodes[0], localeCode),
             ].map((entry) => entry.persona).join('-')}
           </code>
         </p>
       )}
 
-      <div className="mt-6 flex items-center justify-between gap-3">
+      <div className="mt-7 flex flex-wrap items-center gap-3">
         <Button variant="secondary" size="md" onClick={onBack} disabled={busy}>
           <span>{copy.back}</span>
         </Button>
-        <Button
-          variant="primary"
-          size="lg"
-          disabled={busy || Boolean(missing)}
-          onClick={() => onSubmit({ occupation, purposeCodes, commitment, styleCodes, usageIntent, allowTraining })}
-        >
-          <span>{busy ? copy.saving : copy.finish}</span>
-          {!busy && <ArrowRight className="size-4" />}
-        </Button>
+        <div className="ml-auto flex items-center gap-2">
+          <Button variant="tertiary" size="md" onClick={onSkip} disabled={busy} title={copy.skipHint}>
+            <SkipForward className="size-3.5" />
+            <span>{copy.skip}</span>
+          </Button>
+          <Button
+            variant="primary"
+            size="lg"
+            disabled={busy || Boolean(missing)}
+            onClick={() => onSubmit({ occupation, purposeCodes, commitment, styleCodes, usageIntent, allowTraining })}
+          >
+            {busy ? (
+              <span>{copy.saving}</span>
+            ) : (
+              <>
+                <Gift className="size-4 text-warning" />
+                <span>{copy.finishWithReward.replace('{credits}', String(credits))}</span>
+                <ArrowRight className="size-4" />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
-      {missing && <p className="mt-2 text-right text-caption text-ink-subtle">{copy.selectRequired.replace('{field}', missing)}</p>}
+      {missing
+        ? <p className="mt-2 text-right text-caption text-ink-subtle">{copy.selectRequired.replace('{field}', missing)}</p>
+        : <p className="mt-2 text-right text-caption text-ink-subtle">{copy.rewardClaimHint}</p>}
     </section>
   );
 }
