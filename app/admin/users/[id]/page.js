@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getUserDetailFull } from '@/lib/services/users';
 import { roleLabel } from '@/lib/admin/permissions';
 import { Card, DataTable, PageHeader, StatusBadge, CopyableId } from '@/components/admin/AdminUi';
+import { UserAvatar } from '@/components/admin/UserAvatar';
 import UserDetailTabs from './UserDetailTabs';
 import { requireAdminPagePermission } from '@/lib/admin/pageAuth';
 import { PERMISSIONS } from '@/lib/admin/permissions';
@@ -37,11 +38,7 @@ export default async function UserDetailPage({ params }) {
         title={
           <span className="flex items-center gap-3">
             <span className="border-line bg-raised text-brand flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border text-body font-bold">
-              {user.avatar_url ? (
-                <img src={user.avatar_url} alt={uid ? `UID ${uid}` : '用户头像'} className="size-full object-cover" />
-              ) : (
-                <span className="select-none">{letter}</span>
-              )}
+              <UserAvatar src={user.avatar_url} alt={uid ? `UID ${uid}` : '用户头像'} letter={letter} className="size-full object-cover" />
             </span>
             <span className="flex items-center gap-2">
               <span className="text-micro shrink-0 rounded border border-line px-1.5 py-0.5 align-middle font-semibold text-ink-subtle">

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CopyableId } from './AdminUi';
+import { UserAvatar } from './UserAvatar';
 
 /**
  * 后台所有"这是哪个用户"的单元格统一走这里：以 canonical UID 为锚点，邮箱作账号说明。
@@ -12,11 +13,7 @@ export function UserSubject({ row, href }) {
   return (
     <div className="flex min-w-0 items-center gap-3">
       <div className="border-line bg-raised text-brand flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border text-label font-bold">
-        {row.avatar_url ? (
-          <img src={row.avatar_url} alt={uid ? `UID ${uid}` : '用户头像'} className="size-full object-cover" />
-        ) : (
-          <span className="select-none">{letter}</span>
-        )}
+        <UserAvatar src={row.avatar_url} alt={uid ? `UID ${uid}` : '用户头像'} letter={letter} />
       </div>
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">
