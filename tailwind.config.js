@@ -172,6 +172,10 @@ module.exports = {
       },
       minWidth: {
         menu: 'var(--menu-min-w)',
+        // Declared after `menu` on purpose: Tailwind emits minWidth keys in
+        // object order, and the studio SelectContent already carries
+        // `min-w-menu`, so only a later rule can out-emit it.
+        'menu-anchor': 'var(--radix-select-trigger-width, var(--menu-min-w))',
         popover: 'var(--popover-min-w)',
       },
       spacing: {

@@ -664,8 +664,11 @@ export default function ProfileTab({
                     <SelectValue placeholder="请选择国家或地区" />
                   </SelectTrigger>
                   {/* 旗帜 emoji 在 Windows 上没有字库承接，只会渲染成「AE」这样的裸码位，
-                      看起来像乱码，所以选项只留中文名；弹层宽度对齐触发器。 */}
-                  <SelectContent className="min-w-72">
+                      看起来像乱码，所以选项只留中文名。
+                      min-w-72 在这里是死类：Studio 的 SelectContent 自带 min-w-menu，
+                      而 .min-w-menu 在产物 CSS 里排在所有间距类之后，只有同一属性上
+                      更晚发射的规则能赢，所以弹层宽度改走锚定触发器的 token。 */}
+                  <SelectContent className="min-w-menu-anchor">
                     {countryOptions.map((option) => (
                       <SelectItem key={option.code} value={option.code}>
                         {option.name}
