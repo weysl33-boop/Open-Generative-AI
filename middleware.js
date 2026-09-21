@@ -8,6 +8,12 @@ import { buildGateResponse } from './lib/security/chinaIpResponse';
  * `/en/studio` 今天都能正常渲染 —— 也就是说同一个页面有多个可收录的 URL。
  * 这些别名会被 `app/[locale]/...` 静态解析掉，永远走不到兜底页，所以收敛必须放在
  * 这一层：308 到注册表的 rootPath，其余部分与查询串原样保留。
+ *
+ * Location 必须是**相对**路径：`NextResponse.redirect()` 会把 `request.nextUrl` 的
+ * origin 拼进去，而 next start 的 origin 是它自己的监听地址（`localhost:3100`），
+ * 既不读 Host 也不读 X-Forwarded-Host —— nginx 又没配 proxy_redirect，于是线上每个
+ * 别名跳转都把用户送进一个打不开的 localhost。3xx 带相对 Location 是 RFC 7231 允许、
+ * 各家浏览器与爬虫都认的写法，换域名/换端口都不用再改一次。
  */
 function canonicalizeLocalePrefix(url) {
     const code = matchPathLocale(url.pathname);
@@ -16,9 +22,9 @@ function canonicalizeLocalePrefix(url) {
     const canonical = getLocaleConfig(code).rootPath;
     if (asserted === canonical) return null;
     const rest = url.pathname.slice(asserted.length);
-    const target = new URL(`${canonical}${rest === '/' ? '' : rest}` || '/', url);
-    target.search = url.search;
-    return NextResponse.redirect(target, 308);
+    const response = new NextResponse(null, { status: 308 });
+    response.headers.set('Location', `${canonical}${rest === '/' ? '' : rest}${url.search}` || '/');
+    return response;
 }
 
 // 只有"内容会随发版变化、又没有扩展名可判别"的两类响应必须禁缓存：HTML 与 /api。

@@ -828,12 +828,21 @@ export function targetStateFailures() {
 
   // 别名收敛的第二条腿：中间件先把前缀规范化，页面层才可能拿到唯一入口。
   // 放在 middleware.js 是因为三条 studio 入口在别的会话里脏着，页面层改不动。
-  need(
+  const mw = need(
     'middleware.js',
     '/ja/studio、/zh-CN/studio、/es-ES/studio 会继续各自产出一个重复 URL',
     /permanentRedirect|308/,
     '没做别名前缀 308 规范化',
   );
+  // NextResponse.redirect() 会把 request.nextUrl 的 origin 拼进 Location，而 next start
+  // 的 origin 是它的监听地址（localhost:3100），既不读 Host 也不读 X-Forwarded-Host。
+  // 2026-09-21 就是这么把线上每个别名跳转送进打不开的 localhost 的。
+  if (/NextResponse\.redirect\(/.test(mw)) {
+    failures.push('middleware.js 用了 NextResponse.redirect()：Location 会被拼成 http://localhost:3100/…，308 要手写相对 Location 头');
+  }
+  if (mw && !/headers\.set\(\s*'Location'/.test(mw)) {
+    failures.push("middleware.js 的 308 没有手写 Location 头：相对跳转只能这么出，绝对 URL 会带上监听地址");
+  }
 
   // 悬空跳：/zh-CN → /zh-CN/studio 这条目标本身不存在，等于把重复 URL 又喂一遍。
   const localeRoot = need(
