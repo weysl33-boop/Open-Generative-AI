@@ -68,9 +68,9 @@ test('SMTP settings live on one page that also shows send statistics and per-mes
 
   assert.match(navigation, /href:\s*'\/admin\/email',\s*label:\s*'邮件发信设置'/);
   assert.match(navigation, /'\/admin\/providers\/email':\s*'\/admin\/email'/);
-  // 邮箱 SMTP 不再挂在登录配置分组下，也不再有独立子页。
-  assert.doesNotMatch(navigation, /href:\s*'\/admin\/providers\/email',\s*label:/);
-  assert.doesNotMatch(navigation, /label:\s*'邮箱登录'/);
+  // 邮箱 SMTP 不再作为登录页的一个分段，也不再有独立子页。
+  assert.doesNotMatch(navigation, /href:\s*'\/admin\/providers\/(social|sms|email)',\s*label:/);
+  assert.doesNotMatch(source('app/admin/login/LoginMethodsClient.js'), /EmailSmtpConfigClient|邮箱登录/);
 
   // 一个页面、一个表单：配置 + 密码 + 检查 + 测试发信全在这里。
   assert.match(form, /保存发信设置/);

@@ -11,6 +11,7 @@ import AgentApiKeyTab from '@/components/account/tabs/AgentApiKeyTab';
 import SettingsTab from '@/components/account/tabs/SettingsTab';
 import InvoicesTab from '@/components/account/tabs/InvoicesTab';
 import WalletTab from '@/components/account/tabs/WalletTab';
+import FeedbackTab from '@/components/account/tabs/FeedbackTab';
 import ProfileTab from '@/components/account/tabs/ProfileTab';
 import UsageTab from '@/components/account/tabs/UsageTab';
 import AuthModal from '@/components/AuthModal';
@@ -278,6 +279,9 @@ function AccountContent({ onClose, initialTabProp, onTabChange: onTabChangeProp 
 
         {/* 设置 */}
         {currentTab === 'settings' && <SettingsTab />}
+
+        {/* 建议 / 报错 / 漏洞提交，审核采纳后发放硬币 */}
+        {currentTab === 'feedback' && <FeedbackTab />}
 
         {/* 订单发票 */}
         {currentTab === 'order-invoices' && <InvoicesTab />}
