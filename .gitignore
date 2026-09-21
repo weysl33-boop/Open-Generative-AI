@@ -73,3 +73,9 @@ test_ping.txt
 audit_screenshots/
 runtime_ui_audit_result.json
 source_ui_audit_result.json
+
+# 快照上线法的本地暂存区（拉线上源码 + 只覆盖自己那一笔的构建沙箱）
+.ship-*/
+.split/
+.srctar/
+.head-probe/
