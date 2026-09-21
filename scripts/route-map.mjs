@@ -837,10 +837,12 @@ export function targetStateFailures() {
   // NextResponse.redirect() 会把 request.nextUrl 的 origin 拼进 Location，而 next start
   // 的 origin 是它的监听地址（localhost:3100），既不读 Host 也不读 X-Forwarded-Host。
   // 2026-09-21 就是这么把线上每个别名跳转送进打不开的 localhost 的。
-  if (/NextResponse\.redirect\(/.test(mw)) {
+  // 先看代码再看注释：解释这条禁令的注释本身就写着那个函数名。
+  const mwCode = mw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  if (/NextResponse\.redirect\(/.test(mwCode)) {
     failures.push('middleware.js 用了 NextResponse.redirect()：Location 会被拼成 http://localhost:3100/…，308 要手写相对 Location 头');
   }
-  if (mw && !/headers\.set\(\s*'Location'/.test(mw)) {
+  if (mw && !/headers\.set\(\s*'Location'/.test(mwCode)) {
     failures.push("middleware.js 的 308 没有手写 Location 头：相对跳转只能这么出，绝对 URL 会带上监听地址");
   }
 
