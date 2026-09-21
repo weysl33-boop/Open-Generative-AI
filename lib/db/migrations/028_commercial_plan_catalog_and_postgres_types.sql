@@ -9,6 +9,23 @@ ALTER TABLE ops_bill.plans_config
   ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
 
+-- 线上这张表的 enabled / is_active 一直是 smallint(0/1)，而新的仓储读路径按
+-- `WHERE enabled = TRUE` 过滤套餐。不先把启用位收敛成 boolean，任何按启用位过滤
+-- 的查询都会报 "operator does not exist: smallint = boolean"，本迁移自己的
+-- UPDATE / INSERT 也会在同一处失败。
+ALTER TABLE ops_bill.plans_config
+  ALTER COLUMN enabled DROP DEFAULT,
+  ALTER COLUMN is_active DROP DEFAULT;
+
+ALTER TABLE ops_bill.plans_config
+  ALTER COLUMN enabled TYPE BOOLEAN USING COALESCE(enabled, 1) = 1,
+  ALTER COLUMN is_active TYPE BOOLEAN USING COALESCE(is_active, 1) = 1;
+
+ALTER TABLE ops_bill.plans_config
+  ALTER COLUMN enabled SET DEFAULT TRUE,
+  ALTER COLUMN enabled SET NOT NULL,
+  ALTER COLUMN is_active SET DEFAULT TRUE;
+
 UPDATE ops_bill.plans_config
 SET price_cny = CASE WHEN price_cny = 0 THEN monthly_cny ELSE price_cny END,
     price_usd = CASE WHEN price_usd = 0 THEN monthly_usd ELSE price_usd END,
