@@ -49,7 +49,7 @@ export default function WalletTab({ credits = 0, points = 120, planName, onOpenR
     <div className="flex flex-col gap-6 w-full">
       <div>
         <h1 className="text-xl font-bold tracking-tight text-ink">你的创作额度</h1>
-        <p className="mt-1 text-xs text-ink-muted">统一管理 K 币、积分与会员权益，保障高并发创作无阻。</p>
+        <p className="mt-1 text-xs text-ink-muted">统一管理算力积分、签到奖励与会员权益，保障高并发创作无阻。</p>
       </div>
 
       <DualCurrencyCards

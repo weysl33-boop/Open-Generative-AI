@@ -9,8 +9,10 @@ export async function GET(request) {
   if (!user) return json({ error: '请先登录' }, { status: 401 });
 
   try {
+    const wanted = Number(new URL(request.url).searchParams.get('limit'));
+    const limit = Number.isFinite(wanted) ? Math.min(50, Math.max(1, Math.trunc(wanted))) : 20;
     const wallet = await getCurrencyWallet(user.id);
-    const ledger = await getCurrencyLedger(user.id, { limit: 15, offset: 0 });
+    const ledger = await getCurrencyLedger(user.id, { limit, offset: 0 });
     return json({
       wallet,
       recentTransactions: ledger,

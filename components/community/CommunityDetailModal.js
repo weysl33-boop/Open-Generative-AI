@@ -66,7 +66,7 @@ export default function CommunityDetailModal({ postId, initialPost = null, onClo
         userTipped: data.userTippedTotal,
       }));
       setPost((prev) => prev ? { ...prev, coins_count: data.totalCoins } : prev);
-      toast(`🪙 成功为作品投出 ${amount} 枚 K 币！`);
+      toast(`🪙 成功为作品投出 ${amount} 枚硬币！`);
       setShowTipMenu(false);
     } catch {
       toast('网络错误，请稍后重试');

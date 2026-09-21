@@ -25,6 +25,7 @@ export default async function UserProfilePage({ params }) {
     userNumber: user.user_number || '000000',
     displayName: user.display_name || `创作者#${user.user_number || '新星'}`,
     avatarUrl: user.avatar_url,
+    avatarFrame: user.avatar_frame || null,
     bio: user.bio || '',
     followersCount: Number(user.followers_count || 0),
     followingCount: Number(user.following_count || 0),

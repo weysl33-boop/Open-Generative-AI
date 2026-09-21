@@ -23,6 +23,7 @@ import {
   KeyRound,
 } from 'lucide-react';
 import { resolveClientLocale } from '@/lib/locales';
+import { avatarFrameClasses } from '@/lib/benefits/catalog';
 import { localizedPathFor, switchLocale as applyLocaleSwitch } from '@/lib/client/localeSwitch';
 import { FOCUS_RING } from 'studio/ui/tokens';
 import { openGlobalAccountModal } from '@/lib/accountEvents';
@@ -63,7 +64,7 @@ export default function UserDropdownMenu({
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [copyFeedback, setCopyFeedback] = useState(false);
-  const [kcoins, setKcoins] = useState(0);
+  const [coinBalance, setCoinBalance] = useState(0);
   const [dailyLoginClaimed, setDailyLoginClaimed] = useState(false);
   const [showCoinPop, setShowCoinPop] = useState(false);
 
@@ -94,6 +95,13 @@ export default function UserDropdownMenu({
     }
   }, [onOpenAccount]);
 
+  // 硬币权益页：/zh 前缀之外没有第二棵树，注册表说了算
+  const handleOpenBenefits = useCallback(() => {
+    setIsMenuOpen(false);
+    setIsNotifOpen(false);
+    router.push(localizedPathFor('/benefits', activeLocale) || '/benefits');
+  }, [activeLocale, router]);
+
   // 加载真实用户通知与未读数 (前后端真实联调)
   const fetchNotifications = useCallback(async () => {
     if (!user) {
@@ -117,10 +125,10 @@ export default function UserDropdownMenu({
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // 加载用户专属 K 币余额与今日登录打卡状态
+  // 加载硬币余额与今日登录打卡状态
   const fetchCoinStatus = useCallback(async () => {
     if (!user) {
-      setKcoins(0);
+      setCoinBalance(0);
       setDailyLoginClaimed(false);
       return;
     }
@@ -128,7 +136,7 @@ export default function UserDropdownMenu({
       const res = await fetch('/api/financial/currency/daily-login', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
-        setKcoins(Number(data.balance || 0));
+        setCoinBalance(Number(data.balance || 0));
         setDailyLoginClaimed(Boolean(data.claimed));
       }
     } catch {}
@@ -138,7 +146,7 @@ export default function UserDropdownMenu({
     fetchCoinStatus();
   }, [fetchCoinStatus]);
 
-  // 点击头像或金币胶囊时，自动检查/触发每日登录 1 枚 K 币奖励 (参考 B 站硬币：当天首次点击头像弹出增加动效)
+  // 点击头像或硬币胶囊时，自动检查/触发每日登录 1 枚硬币奖励 (当天首次点击弹出增加动效)
   const triggerDailyLoginReward = useCallback(async () => {
     if (!user || dailyLoginClaimed) return;
     try {
@@ -149,7 +157,7 @@ export default function UserDropdownMenu({
       if (res.ok) {
         const data = await res.json();
         if (data.isFirstToday) {
-          setKcoins(Number(data.balance || 0));
+          setCoinBalance(Number(data.balance || 0));
           setDailyLoginClaimed(true);
           setShowCoinPop(true);
           setTimeout(() => setShowCoinPop(false), 3000);
@@ -280,6 +288,7 @@ export default function UserDropdownMenu({
   const displayName = user?.displayName || user?.display_name || user?.email?.split('@')[0] || (isZh ? 'AI 创作者' : 'AI Creator');
   const userNumber = user?.userNumber || user?.user_number;
   const avatarUrl = liveAvatar !== null ? liveAvatar : (user?.avatar || user?.avatar_url);
+  const coinFrame = avatarFrameClasses(user?.avatarFrame || user?.avatar_frame);
   const initialLetter = displayName.slice(0, 1).toUpperCase();
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const effectiveCredits = credits !== null ? credits : (user?.credits ?? 0);
@@ -510,22 +519,22 @@ export default function UserDropdownMenu({
         )}
       </div>
 
-      {/* 5. 【🪙 K 币 (专属代币)】余额胶囊 (支持查看规则与打卡) */}
+      {/* 5. 【🪙 硬币】余额胶囊 (点击打卡并进入硬币权益页) */}
       {user && (
         <button
           type="button"
           onClick={() => {
             triggerDailyLoginReward();
-            handleOpenAccountModal('credits');
+            handleOpenBenefits();
           }}
           className="border-warning-line bg-warning-soft text-warning hover:border-warning max-md:hidden flex h-control-sm items-center gap-1.5 rounded-full px-2.5 text-label font-semibold transition-colors duration-fast sm:px-3"
-          title={isZh ? `网站专属货币：${kcoins} K币 (每日登录免费送 · 仅供社区投币互动与兑换)` : `K-Coin: ${kcoins}`}
+          title={isZh ? `硬币 ${coinBalance} 枚：每日登录与有效提交可得，仅用于社区投币与兑换站内权益` : `Coins: ${coinBalance}`}
         >
           <Coins className="size-3.5" strokeWidth={1.8} aria-hidden="true" />
           <span className="text-mono tabular-nums font-semibold">
-            {kcoins}
+            {coinBalance}
           </span>
-          <span className="text-caption hidden font-normal sm:inline">{isZh ? 'K币' : 'K-Coin'}</span>
+          <span className="text-caption hidden font-normal sm:inline">{isZh ? '硬币' : 'Coins'}</span>
         </button>
       )}
 
@@ -542,15 +551,15 @@ export default function UserDropdownMenu({
         </button>
       ) : (
         <div className="relative inline-block text-left" ref={menuRef}>
-          {/* 当天首次点击头像领到 1 K币时的高光升腾浮动动效 */}
+          {/* 当天首次点击头像领到 1 枚硬币时的高光升腾浮动动效 */}
           {showCoinPop && (
             <div className="bg-warning text-ink-on-accent z-toast pointer-events-none absolute -top-10 left-1/2 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-label font-bold shadow-elevation-3">
               <Coins className="size-3.5" strokeWidth={1.8} aria-hidden="true" />
-              <span>{isZh ? '+1 K币已到账!' : '+1 K-Coin credited!'}</span>
+              <span>{isZh ? '+1 硬币已到账!' : '+1 coin credited!'}</span>
             </div>
           )}
 
-          {/* 用户头像圆环触发按钮 (当天首次点击打卡自动领 1 枚 K 币) */}
+          {/* 用户头像圆环触发按钮 (当天首次点击打卡自动领 1 枚硬币) */}
           <button
             type="button"
             onClick={() => {
@@ -569,7 +578,7 @@ export default function UserDropdownMenu({
                   : 'hover:ring-2 hover:ring-line-strong'
             }`}
           >
-            <div className="border-line bg-raised text-brand relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-label font-bold">
+            <div className={`bg-raised text-brand relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-label font-bold ${coinFrame || 'border-line'}`}>
               {avatarUrl ? (
                 <img src={avatarUrl} alt={displayName} className="size-full object-cover" />
               ) : (
@@ -591,7 +600,7 @@ export default function UserDropdownMenu({
               {/* (1) 顶部用户信息卡片 (大头像 + 昵称 + 6位UID + 直达个人主页) */}
               <div className="flex items-center justify-between gap-3 p-1">
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <div className="border-line bg-raised text-brand flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border text-body font-bold">
+                  <div className={`bg-raised text-brand flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-body font-bold ${coinFrame || 'border border-line'}`}>
                     {avatarUrl ? (
                       <img src={avatarUrl} alt={displayName} className="size-full object-cover" />
                     ) : (
@@ -671,7 +680,7 @@ export default function UserDropdownMenu({
                 </div>
               </div>
 
-              {/* (2.2) 专属货币 K 币展示 (不可充值 · 仅供社区互动与奖品兑换) */}
+              {/* (2.2) 硬币展示 (不可充值 · 仅供社区互动与权益兑换) */}
               <div className="border-warning-line bg-warning-soft mb-2 rounded-lg border p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -680,10 +689,10 @@ export default function UserDropdownMenu({
                     </div>
                     <div>
                       <div className="text-caption text-ink-subtle">
-                        {isZh ? '专属互动 K 币' : 'Exclusive K-Coin'}
+                        {isZh ? '我的硬币' : 'My Coins'}
                       </div>
                       <div className="text-mono font-semibold text-warning">
-                        {kcoins}{' '}
+                        {coinBalance}{' '}
                         <span className="text-caption text-ink-subtle">
                           ({dailyLoginClaimed ? (isZh ? '今日已打卡' : 'Checked in') : (isZh ? '点击头像领+1' : 'Click avatar +1')})
                         </span>
@@ -691,13 +700,13 @@ export default function UserDropdownMenu({
                     </div>
                   </div>
 
-                  {/* 规则手册入口 */}
+                  {/* 硬币权益页入口 */}
                   <button
                     type="button"
-                    onClick={() => handleOpenAccountModal('credits')}
+                    onClick={handleOpenBenefits}
                     className={`border-warning-line text-warning hover:border-warning flex items-center gap-1 rounded-md border px-2.5 py-1 text-caption font-semibold transition-colors duration-fast ${FOCUS_RING}`}
                   >
-                    <span>{isZh ? '规则手册' : 'Rules'}</span>
+                    <span>{isZh ? '兑换权益' : 'Redeem'}</span>
                   </button>
                 </div>
               </div>

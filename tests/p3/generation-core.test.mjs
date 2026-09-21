@@ -61,14 +61,9 @@ test('account creation and session event writes use PostgreSQL transaction bound
 
 test('financial wallet mutations lock the balance snapshot before calculating a new balance', () => {
   const currency = fs.readFileSync(new URL('../../lib/financial/currencyService.js', import.meta.url), 'utf8');
-  const exchange = fs.readFileSync(new URL('../../lib/financial/exchangeService.js', import.meta.url), 'utf8');
   const credits = fs.readFileSync(new URL('../../lib/financial/creditService.js', import.meta.url), 'utf8');
 
   assert.match(currency, /return await withTransaction\(async \(tx\) => \{[\s\S]*?currency_wallets WHERE user_id = \$1 FOR UPDATE/);
-  assert.match(currency, /SELECT \* FROM currency_wallets WHERE user_id IN \(\$1, \$2\) ORDER BY user_id FOR UPDATE/);
-  assert.match(exchange, /currency_wallets WHERE user_id = \$1 FOR UPDATE/);
-  assert.match(exchange, /UPDATE users[\s\S]*?daily_free_credits \+ subscription_credits \+ perpetual_credits/);
-  assert.match(exchange, /subscriptionBalanceAfter/);
   assert.match(credits, /SELECT \* FROM credit_wallets WHERE user_id = \$1 FOR UPDATE/);
 });
 

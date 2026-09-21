@@ -135,6 +135,12 @@ test('only the canonical page offers products; unsupported cycles and unavailabl
   assert.doesNotMatch(pricingClient, /customerScope|versionTab|个人版\s*\|\s*团队版/);
   assert.match(pricingClient, /\/api\/billing\/plans/);
   assert.match(pricingClient, /\/api\/billing\/credit-packs/);
-  assert.ok(userMenu.includes("isZh ? '/zh/pricing' : '/pricing'"));
+  // 两种写法都接受：手写的 /zh 三元，或走 localeSwitch 注册表派生前缀。
+  // 断言的性质是"入口必须落在 /pricing 这棵唯一的树上"，不是某一种拼写。
+  assert.ok(
+    userMenu.includes("isZh ? '/zh/pricing' : '/pricing'")
+      || /localizedPathFor\(\s*['"]\/pricing['"]/.test(userMenu),
+    'account menu must route to the canonical /pricing page'
+  );
   assert.doesNotMatch(userMenu, /SubscriptionModal/);
 });

@@ -3,13 +3,12 @@ import { execute, nowIso, randomId } from '../lib/db/index.js';
 import { assertSandboxDatabase } from './require-sandbox-db.mjs';
 import { createSession } from '../lib/services/auth.js';
 import { getEntitlements } from '../lib/services/billing.js';
-import { rechargeCurrency } from '../lib/financial/index.js';
+import { CURRENCY, grantFeedbackRewardCoins, grantPerpetualCredits, getCurrencyWallet, getCreditWallet } from '../lib/financial/index.js';
 
 // 动态导入所有 API Handler
 import { GET as getCurrencyWalletRoute } from '../app/api/financial/currency/wallet/route.js';
-import { POST as setPayPasswordRoute } from '../app/api/financial/currency/password/route.js';
-import { POST as transferCurrencyRoute } from '../app/api/financial/currency/transfer/route.js';
-import { POST as exchangeCurrencyRoute } from '../app/api/financial/currency/exchange/route.js';
+import { POST as dailyLoginRoute } from '../app/api/financial/currency/daily-login/route.js';
+import { POST as benefitRedeemRoute } from '../app/api/financial/currency/benefits/route.js';
 
 import { GET as getCreditWalletRoute } from '../app/api/financial/credits/wallet/route.js';
 import { POST as checkinCreditRoute } from '../app/api/financial/credits/checkin/route.js';
@@ -40,28 +39,25 @@ async function main() {
   await assertSandboxDatabase();
   const now = nowIso();
   const user1 = `usr_api_1_${Date.now()}`;
-  const user2 = `usr_api_2_${Date.now()}`;
 
-  // 创建两个用户
   await execute(`
     INSERT INTO users (id, email, display_name, password_hash, password_salt, role, credits, status, created_at)
-    VALUES ($1, $2, 'API测试用户1', 'hash', 'salt', 'user', 0, 'active', $3),
-           ($4, $5, 'API测试用户2', 'hash', 'salt', 'user', 0, 'active', $6)
-  `, [user1, `${user1}@test.com`, now, user2, `${user2}@test.com`, now]);
+    VALUES ($1, $2, 'API测试用户1', 'hash', 'salt', 'user', 0, 'active', $3)
+  `, [user1, `${user1}@test.com`, now]);
 
   const session1 = await createSession(user1);
-  const session2 = await createSession(user2);
   const token1 = session1.token;
-  const token2 = session2.token;
 
-  // 为用户 1 预充值 100 元 = 1000 K币
-  await rechargeCurrency({
+  // 硬币无充值入口，用审核发币通道给用户 1 铺底 1000 枚
+  await grantFeedbackRewardCoins({
     userId: user1,
-    amountCny: 100,
-    channel: 'wechat',
-    providerOrderId: `wx_${Date.now()}`,
-    idempotencyKey: `rec_${randomId()}`,
+    feedbackId: `fb_seed_${randomId()}`,
+    amount: 1000,
+    note: '测试种子额度',
   });
+  // 算力与硬币已解耦，测试用算力只能由发放通道铺底
+  const seedCredits = 100;
+  await grantPerpetualCredits(user1, seedCredits, 'API 测试算力种子');
 
   console.log('\n1. 测试 GET /api/financial/currency/wallet 接口...');
   const reqWallet = createMockRequest({ token: token1 });
@@ -69,48 +65,53 @@ async function main() {
   const dataWallet = await resWallet.json();
   assert.strictEqual(resWallet.status, 200);
   assert.strictEqual(dataWallet.wallet.availableBalance, 1000);
-  console.log(`   ✓ 成功获取 K 币钱包信息: 可用余额 ${dataWallet.wallet.availableBalance} 币，近期流水 ${dataWallet.recentTransactions.length} 条`);
+  console.log(`   ✓ 成功获取硬币钱包信息: 可用余额 ${dataWallet.wallet.availableBalance} 币，近期流水 ${dataWallet.recentTransactions.length} 条`);
 
-  console.log('\n2. 测试 POST /api/financial/currency/password 接口 (设置支付密码)...');
-  const reqPwd = createMockRequest({
+  console.log(`\n2. 测试 POST /api/financial/currency/daily-login 接口 (每日登录领 ${CURRENCY.DAILY_LOGIN_REWARD} 枚硬币)...`);
+  const reqLogin = createMockRequest({ token: token1, method: 'POST' });
+  const resLogin = await dailyLoginRoute(reqLogin);
+  const dataLogin = await resLogin.json();
+  assert.strictEqual(resLogin.status, 200);
+  assert.strictEqual(dataLogin.amount, CURRENCY.DAILY_LOGIN_REWARD);
+  console.log(`   ✓ 领取成功！余额 ${dataLogin.balance} 币`);
+
+  console.log('\n3. 测试每日登录重复领取必须幂等 (不增发)...');
+  const resLoginAgain = await dailyLoginRoute(createMockRequest({ token: token1, method: 'POST' }));
+  const dataLoginAgain = await resLoginAgain.json();
+  assert.strictEqual(resLoginAgain.status, 200);
+  assert.strictEqual(dataLoginAgain.amount, 0);
+  assert.strictEqual(dataLoginAgain.balance, dataLogin.balance);
+  console.log(`   ✓ 二次领取被拦截，余额保持 ${dataLoginAgain.balance} 币`);
+
+  console.log('\n4. 测试 POST /api/financial/currency/benefits 接口 (硬币兑换站内权益)...');
+  const reqBenefit = createMockRequest({
     token: token1,
     method: 'POST',
-    body: { password: 'safe_pin_888' },
+    body: { benefitId: 'boost_24h' },
+    headers: { 'x-idempotency-key': `idem_api_ben_${randomId()}` },
   });
-  const resPwd = await setPayPasswordRoute(reqPwd);
-  const dataPwd = await resPwd.json();
-  assert.strictEqual(resPwd.status, 200);
-  assert.strictEqual(dataPwd.success, true);
-  console.log('   ✓ 成功通过 API 设置 6 位以上安全支付密码');
+  const resBenefit = await benefitRedeemRoute(reqBenefit);
+  const dataBenefit = await resBenefit.json();
+  assert.strictEqual(resBenefit.status, 200);
+  assert.strictEqual(dataBenefit.benefitId, 'boost_24h');
+  assert.strictEqual(dataBenefit.balanceAfter, 998);
+  assert.ok(dataBenefit.priorityUntil, '加速卡必须返回生效截止时间');
+  console.log(`   ✓ 加速卡消耗 3 枚硬币，余额 ${dataBenefit.balanceAfter} 币，优先至 ${dataBenefit.priorityUntil}`);
 
-  console.log('\n3. 测试 POST /api/financial/currency/transfer 接口 (转账 200 币给用户2)...');
-  const reqTf = createMockRequest({
+  console.log('\n4b. 验证硬币兑换算力通道已下架...');
+  const creditsBefore = (await getCreditWallet(user1)).perpetualCredits;
+  const resGone = await benefitRedeemRoute(createMockRequest({
     token: token1,
     method: 'POST',
-    body: {
-      receiverId: user2,
-      amount: 200,
-      payPassword: 'safe_pin_888',
-    },
-  });
-  const resTf = await transferCurrencyRoute(reqTf);
-  const dataTf = await resTf.json();
-  assert.strictEqual(resTf.status, 200);
-  assert.strictEqual(dataTf.amount, 200);
-  assert.strictEqual(dataTf.fee, 2); // 1% 手续费 = 2 币
-  console.log(`   ✓ 转账成功！转出 200 币，手续费 2 币，用户1余额: ${dataTf.senderBalanceAfter} 币`);
-
-  console.log('\n4. 测试 POST /api/financial/currency/exchange 接口 (K币兑换算力积分)...');
-  const reqEx = createMockRequest({
-    token: token1,
-    method: 'POST',
-    body: { type: 'credits', coinAmount: 100 },
-  });
-  const resEx = await exchangeCurrencyRoute(reqEx);
-  const dataEx = await resEx.json();
-  assert.strictEqual(resEx.status, 200);
-  assert.strictEqual(dataEx.creditsGained, 1000); // 100币 = 1000 积分
-  console.log(`   ✓ 兑换成功！消耗 100 K币，获得 1000 永久算力点，当前积分: ${dataEx.creditBalanceAfter}`);
+    body: { benefitId: 'credits_5' },
+    headers: { 'x-idempotency-key': `idem_api_gone_${randomId()}` },
+  }));
+  const dataGone = await resGone.json();
+  assert.strictEqual(resGone.status, 400);
+  assert.match(dataGone.error, /已下架/);
+  assert.strictEqual((await getCurrencyWallet(user1)).availableBalance, 998, '被拒绝的兑换不能扣币');
+  assert.strictEqual((await getCreditWallet(user1)).perpetualCredits, creditsBefore, '被拒绝的兑换不能到账算力');
+  console.log(`   ✓ 历史算力项目返回 400「${dataGone.error}」，硬币与算力之间不再有换算通道`);
 
   console.log('\n5. 测试 POST /api/financial/credits/checkin 接口 (每日签到)...');
   const reqCheckin = createMockRequest({ token: token1, method: 'POST' });
@@ -126,8 +127,8 @@ async function main() {
   const dataCredWallet = await resCredWallet.json();
   assert.strictEqual(resCredWallet.status, 200);
   assert.strictEqual(dataCredWallet.wallet.dailyFree, 10);
-  assert.strictEqual(dataCredWallet.wallet.perpetualCredits, 1000);
-  assert.strictEqual(dataCredWallet.wallet.totalAvailable, 1010);
+  assert.strictEqual(dataCredWallet.wallet.perpetualCredits, seedCredits);
+  assert.strictEqual(dataCredWallet.wallet.totalAvailable, 10 + seedCredits);
   assert.strictEqual(dataCredWallet.wallet.isCheckedInToday, true);
   console.log(`   ✓ 多桶积分状态核验正确：每日 ${dataCredWallet.wallet.dailyFree} + 永久 ${dataCredWallet.wallet.perpetualCredits} = 总可用 ${dataCredWallet.wallet.totalAvailable}`);
 
@@ -177,9 +178,9 @@ async function main() {
   assert.ok(entitlements.creditBuckets);
   assert.ok(entitlements.currencyWallet);
   assert.strictEqual(entitlements.credits, entitlements.creditBuckets.totalAvailable);
-  console.log(`   ✓ 全局权益包含完整多桶结构与 K 币钱包：`);
+  console.log(`   ✓ 全局权益包含完整多桶结构与硬币钱包：`);
   console.log(`     - 算力积分总计: ${entitlements.credits}`);
-  console.log(`     - K 币钱包可用: ${entitlements.currencyWallet.availableBalance}`);
+  console.log(`     - 硬币钱包可用: ${entitlements.currencyWallet.availableBalance}`);
 
   console.log('\n=== [全部 9 项金融级 API 路由端到端测试 100% 成功！] ===\n');
   process.exit(0);

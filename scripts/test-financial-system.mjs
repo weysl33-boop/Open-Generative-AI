@@ -1,19 +1,19 @@
 import assert from 'node:assert';
 import {
-  rechargeCurrency,
   getCurrencyWallet,
-  setPayPassword,
-  transferCurrency,
+  grantFeedbackRewardCoins,
+  claimDailyLoginCoin,
   getCreditWallet,
   dailyCheckIn,
   reserveCredits,
   commitCredits,
   voidCredits,
-  exchangeCoinToCredits,
+  redeemBenefit,
   runDailyReconciliation,
-  grantPerpetualCredits
+  grantPerpetualCredits,
+  CURRENCY
 } from '../lib/financial/index.js';
-import { query, queryOne, execute, nowIso, randomId } from '../lib/db/index.js';
+import { execute, nowIso, randomId } from '../lib/db/index.js';
 import { assertSandboxDatabase } from './require-sandbox-db.mjs';
 
 console.log('=== [开始金融级系统核心测试套件] ===');
@@ -22,81 +22,61 @@ async function main() {
   await assertSandboxDatabase();
   const now = nowIso();
   const userA = `usr_test_a_${Date.now()}`;
-  const userB = `usr_test_b_${Date.now()}`;
 
-  // 创建两个测试用户
+  // 创建一个测试用户
   await execute(`
     INSERT INTO users (id, email, display_name, password_hash, password_salt, role, credits, status, created_at)
-    VALUES ($1, $2, '测试用户A', 'fakehash', 'fakesalt', 'user', 0, 'active', $3),
-           ($4, $5, '测试用户B', 'fakehash', 'fakesalt', 'user', 0, 'active', $6)
-  `, [userA, `${userA}@test.com`, now, userB, `${userB}@test.com`, now]);
+    VALUES ($1, $2, '测试用户A', 'fakehash', 'fakesalt', 'user', 0, 'active', $3)
+  `, [userA, `${userA}@test.com`, now]);
 
-  console.log(`\n1. 测试平台货币充值 (法币购买 K-Coin) 与复式分录...`);
-  const rechargeRes = await rechargeCurrency({
+  console.log(`\n1. 测试审核发币通道 (复式分录) 与幂等防双发...`);
+  const feedbackId = `fb_test_${randomId()}`;
+  const grantRes = await grantFeedbackRewardCoins({
     userId: userA,
-    amountCny: 50, // 50元 = 500 K币
-    channel: 'alipay',
-    providerOrderId: `ali_${Date.now()}`,
-    idempotencyKey: `idem_rec_${randomId()}`,
+    feedbackId,
+    amount: 500,
+    note: '测试采纳发放',
   });
-  assert.strictEqual(rechargeRes.coinAmount, 500);
+  assert.strictEqual(grantRes.amount, 500);
 
   const walletA = await getCurrencyWallet(userA);
   assert.strictEqual(walletA.availableBalance, 500);
-  console.log(`   ✓ 充值 50 元成功，K 币到账: ${walletA.availableBalance} 币`);
 
-  console.log(`\n2. 测试安全支付密码与转账风控...`);
-  // 未设密码转账拦截
-  let errorCaught = false;
-  try {
-    await transferCurrency({
-      senderId: userA,
-      receiverId: userB,
-      amount: 100,
-      payPassword: 'wrongpassword',
-    });
-  } catch (e) {
-    errorCaught = true;
-    console.log(`   ✓ 未设密码转账拦截正确: ${e.message}`);
-  }
-  assert.ok(errorCaught);
+  // 同一笔建议重复发放必须命中幂等键，不铸造第二笔
+  const grantAgain = await grantFeedbackRewardCoins({ userId: userA, feedbackId, amount: 500 });
+  assert.strictEqual(grantAgain.idempotent, true);
+  assert.strictEqual((await getCurrencyWallet(userA)).availableBalance, 500);
+  console.log(`   ✓ 发放 500 枚硬币成功，重复发放已被幂等拦截，余额仍为 ${walletA.availableBalance} 枚`);
 
-  // 设置安全支付密码
-  await setPayPassword(userA, '123456');
-  console.log(`   ✓ 成功为用户 A 设置 6 位支付密码`);
+  console.log(`\n2. 测试每日登录领取 ${CURRENCY.DAILY_LOGIN_REWARD} 枚硬币与当日判重...`);
+  const loginRes = await claimDailyLoginCoin(userA);
+  assert.strictEqual(loginRes.amount, CURRENCY.DAILY_LOGIN_REWARD);
+  const loginAgain = await claimDailyLoginCoin(userA);
+  assert.strictEqual(loginAgain.amount, 0);
+  const walletAfterLogin = await getCurrencyWallet(userA);
+  assert.strictEqual(walletAfterLogin.availableBalance, 501);
+  console.log(`   ✓ 首次登录入账 ${CURRENCY.DAILY_LOGIN_REWARD} 枚，二次领取归零，余额 ${walletAfterLogin.availableBalance} 枚`);
 
-  // 正常转账 100 币给 B (手续费 1% = 1 币，A 扣 101 币，B 到 100 币)
-  const transferRes = await transferCurrency({
-    senderId: userA,
-    receiverId: userB,
-    amount: 100,
-    payPassword: '123456',
-    idempotencyKey: `idem_tf_${randomId()}`,
-  });
-  assert.strictEqual(transferRes.amount, 100);
-  assert.strictEqual(transferRes.fee, 1);
+  console.log(`\n3. 测试硬币兑换站内权益，且不触碰算力账户...`);
+  const baseCredits = 50;
+  await grantPerpetualCredits(userA, baseCredits, '测试算力种子额度');
 
-  const walletAAfterTf = await getCurrencyWallet(userA);
-  const walletBAfterTf = await getCurrencyWallet(userB);
-  assert.strictEqual(walletAAfterTf.availableBalance, 399);
-  assert.strictEqual(walletBAfterTf.availableBalance, 100);
-  console.log(`   ✓ 转账成功！用户 A 余额: ${walletAAfterTf.availableBalance} 币 (扣除 100 + 1手续费)，用户 B 余额: ${walletBAfterTf.availableBalance} 币`);
-
-  console.log(`\n3. 测试通用货币 K 币兑换 AI 算力积分...`);
-  // 用户 A 使用 50 K 币兑换 500 永久算力点 (1:10)
-  const exchangeRes = await exchangeCoinToCredits({
+  const redeemRes = await redeemBenefit({
     userId: userA,
-    coinAmount: 50,
-    idempotencyKey: `idem_ex_${randomId()}`,
+    benefitId: 'boost_24h',
+    idempotencyKey: `ben_${randomId()}`,
   });
-  assert.strictEqual(exchangeRes.spentCoins, 50);
-  assert.strictEqual(exchangeRes.creditsGained, 500);
+  assert.strictEqual(redeemRes.result.balanceAfter, 448);
+  assert.strictEqual((await getCreditWallet(userA)).perpetualCredits, baseCredits, '权益兑换不得改动算力余额');
+  console.log(`   ✓ 加速卡消耗 3 枚硬币，算力余额仍为 ${baseCredits} 点`);
 
-  const walletAAfterEx = await getCurrencyWallet(userA);
-  const creditsAAfterEx = await getCreditWallet(userA);
-  assert.strictEqual(walletAAfterEx.availableBalance, 349);
-  assert.strictEqual(creditsAAfterEx.perpetualCredits, 500);
-  console.log(`   ✓ 兑换成功！消耗 50 K币，获得 500 永久算力点，当前算力总可用: ${creditsAAfterEx.totalAvailable}`);
+  await assert.rejects(
+    () => redeemBenefit({ userId: userA, benefitId: 'credits_5', idempotencyKey: `ben_${randomId()}` }),
+    /已下架/,
+    '硬币兑换算力通道必须已下架'
+  );
+  assert.strictEqual((await getCurrencyWallet(userA)).availableBalance, 448, '被拒绝的下架项目不能扣币');
+  console.log(`   ✓ 历史算力兑换项目已被拒绝，硬币与算力之间不再有任何换算通道`);
 
   console.log(`\n4. 测试每日签到与多桶 FIFO 优先级扣除...`);
   // 每日签到获得 10 每日点数
@@ -104,8 +84,8 @@ async function main() {
   assert.strictEqual(checkinRes.rewardCredits, 10);
   const creditsAAfterCheckin = await getCreditWallet(userA);
   assert.strictEqual(creditsAAfterCheckin.dailyFree, 10);
-  assert.strictEqual(creditsAAfterCheckin.perpetualCredits, 500);
-  assert.strictEqual(creditsAAfterCheckin.totalAvailable, 510);
+  assert.strictEqual(creditsAAfterCheckin.perpetualCredits, baseCredits);
+  assert.strictEqual(creditsAAfterCheckin.totalAvailable, baseCredits + 10);
   console.log(`   ✓ 每日签到成功，当前每日积分: ${creditsAAfterCheckin.dailyFree}，永久积分: ${creditsAAfterCheckin.perpetualCredits}`);
 
   console.log(`\n5. 测试 AI 算力两阶段预冻结与撤销回滚 (Reserve -> Void)...`);
@@ -121,7 +101,7 @@ async function main() {
 
   const walletDuringReserve1 = await getCreditWallet(userA);
   assert.strictEqual(walletDuringReserve1.dailyFree, 0);
-  assert.strictEqual(walletDuringReserve1.perpetualCredits, 495);
+  assert.strictEqual(walletDuringReserve1.perpetualCredits, baseCredits - 5);
   assert.strictEqual(walletDuringReserve1.frozenCredits, 15);
   console.log(`   ✓ Phase 1: 预冻结 15 积分成功！冻结金额: ${walletDuringReserve1.frozenCredits}，可用剩余: ${walletDuringReserve1.totalAvailable}`);
 
@@ -134,9 +114,9 @@ async function main() {
 
   const walletAfterVoid = await getCreditWallet(userA);
   assert.strictEqual(walletAfterVoid.dailyFree, 10);
-  assert.strictEqual(walletAfterVoid.perpetualCredits, 500);
+  assert.strictEqual(walletAfterVoid.perpetualCredits, baseCredits);
   assert.strictEqual(walletAfterVoid.frozenCredits, 0);
-  console.log(`   ✓ Phase 2B: 任务失败原路全额解冻成功！每日积分复原为 10，永久积分复原为 500，冻结归 0`);
+  console.log(`   ✓ Phase 2B: 任务失败原路全额解冻成功！每日积分复原为 10，永久积分复原为 ${baseCredits}，冻结归 0`);
 
   console.log(`\n6. 测试 AI 算力两阶段预扣与确认结算 (Reserve -> Commit)...`);
   const reserve2 = await reserveCredits({
@@ -153,7 +133,7 @@ async function main() {
 
   const walletAfterCommit = await getCreditWallet(userA);
   assert.strictEqual(walletAfterCommit.dailyFree, 0);
-  assert.strictEqual(walletAfterCommit.perpetualCredits, 498);
+  assert.strictEqual(walletAfterCommit.perpetualCredits, baseCredits - 2);
   assert.strictEqual(walletAfterCommit.frozenCredits, 0);
   console.log(`   ✓ Phase 2A: 任务生成成功确认结算，正式核销扣除！剩余总可用: ${walletAfterCommit.totalAvailable}`);
 
