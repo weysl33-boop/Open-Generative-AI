@@ -117,6 +117,115 @@ test('篡改查单：签名后改金额会被拒', async () => {
  * 断言打在 error.cause 上，因为 provider 外层统一包成 PaymentProviderError，
  * 支付宝原话只留在 cause 里。
  */
+/**
+ * 建单二维码：qr_code 只能原样来自支付宝。
+ *
+ * 本地/线上都拿不到真实 precreate 成功响应（商户号未签约「当面付」，固定回
+ * 40004 / ACQ.ACCESS_FORBIDDEN），所以把支付宝的 10000 应答复刻成签名响应，
+ * 验证 provider 不改内容、不自拼 URL、缺字段时不伪造。
+ */
+const PRECREATE_OK = {
+  code: '10000',
+  msg: 'Success',
+  out_trade_no: 'order_test_0001',
+  qr_code: 'https://qr.alipay.com/bax00000000000000000000',
+};
+const CHECKOUT_ARGS = {
+  order: { id: 'order_test_0001', amount_minor: 35000, currency: 'USD' },
+  user: { id: 'usr_test_0001' },
+  plan: { id: 'plan_creator', name: '创作者套餐', monthlyUsd: 350 },
+};
+
+test('建单：支付宝签发的 qr_code 原样透传，不加工不拼接', async () => {
+  const restore = stubFetch(rawResponse('alipay.trade.precreate', PRECREATE_OK, merchant.privateKey));
+  try {
+    const checkout = await providerWith(merchant.publicKey).createCheckout(CHECKOUT_ARGS);
+    assert.equal(checkout.qr_code, PRECREATE_OK.qr_code);
+    assert.equal(checkout.url, PRECREATE_OK.qr_code);
+    assert.equal(checkout.isPagePay, undefined);
+    assert.equal(checkout.id, 'order_test_0001');
+    const ttl = new Date(checkout.expiresAt).getTime() - Date.now();
+    assert.ok(ttl > 29 * 60 * 1000 && ttl <= 30 * 60 * 1000, `expiresAt 偏移异常: ${ttl}`);
+  } finally {
+    restore();
+  }
+});
+
+test('建单：外来私钥签的 10000 不得产出任何二维码', async () => {
+  const restore = stubFetch(rawResponse('alipay.trade.precreate', PRECREATE_OK, attacker.privateKey));
+  try {
+    await assert.rejects(
+      () => providerWith(merchant.publicKey).createCheckout(CHECKOUT_ARGS),
+      (error) => {
+        assert.equal(error.code, 'RESPONSE_SIGNATURE_INVALID');
+        assert.ok(!String(error.message).includes('qr.alipay.com'));
+        return true;
+      }
+    );
+  } finally {
+    restore();
+  }
+});
+
+test('建单：回 10000 但缺 qr_code 时硬失败，不回退自建链接', async () => {
+  const noQr = { code: '10000', msg: 'Success', out_trade_no: 'order_test_0001' };
+  const restore = stubFetch(rawResponse('alipay.trade.precreate', noQr, merchant.privateKey));
+  try {
+    await assert.rejects(
+      () => providerWith(merchant.publicKey).createCheckout(CHECKOUT_ARGS),
+      (error) => error.code === 'ALIPAY_QR_MISSING'
+    );
+  } finally {
+    restore();
+  }
+});
+
+/**
+ * 桥接是限定单点的临时措施，不是通用兜底：只有 ACQ.ACCESS_FORBIDDEN 才改投
+ * 电脑网站支付，其他失败必须照原样抛错，否则任何网关异常都会静默变成
+ * 一条自拼的收银台链接。
+ */
+test('建单：仅未签约「当面付」走桥接，其他失败一律硬报错', async () => {
+  const forbidden = {
+    code: '40004',
+    msg: 'Business Failed',
+    sub_code: 'ACQ.ACCESS_FORBIDDEN',
+    sub_msg: 'ACCESS_FORBIDDEN',
+  };
+  const restoreForbidden = stubFetch(rawResponse('alipay.trade.precreate', forbidden, merchant.privateKey));
+  let bridged = null;
+  try {
+    bridged = await providerWith(merchant.publicKey).createCheckout(CHECKOUT_ARGS);
+  } finally {
+    restoreForbidden();
+  }
+  assert.equal(bridged.isPagePay, true);
+  assert.ok(bridged.qr_code.startsWith('https://openapi.alipay.com/gateway.do?'));
+  assert.match(bridged.qr_code, /method=alipay\.trade\.page\.pay/);
+  assert.match(bridged.qr_code, /sign=/);
+  assert.ok(!bridged.qr_code.includes('PRIVATE KEY'));
+
+  const invalid = {
+    code: '40002',
+    msg: 'Invalid Arguments',
+    sub_code: 'ACQ.INVALID_PARAMETER',
+    sub_msg: '参数无效',
+  };
+  const restoreInvalid = stubFetch(rawResponse('alipay.trade.precreate', invalid, merchant.privateKey));
+  try {
+    await assert.rejects(
+      () => providerWith(merchant.publicKey).createCheckout(CHECKOUT_ARGS),
+      (error) => {
+        assert.notEqual(error.code, 'ACQ.ACCESS_FORBIDDEN');
+        assert.equal(error.cause.alipaySubCode, 'ACQ.INVALID_PARAMETER');
+        return true;
+      }
+    );
+  } finally {
+    restoreInvalid();
+  }
+});
+
 test('业务失败响应：验签不过也照原样抛支付宝原话，不吞掉排障信息', async () => {
   const notExist = {
     code: '40004',
