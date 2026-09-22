@@ -57,7 +57,7 @@ export default function RechargeModal({
   const [error, setError] = useState('');
   const [checkoutData, setCheckoutData] = useState(null);
   const [pollStatus, setPollStatus] = useState('waiting');
-  const [countdown, setCountdown] = useState(900);
+  const [countdown, setCountdown] = useState(0);
   const pollTimerRef = useRef(null);
   const countdownTimerRef = useRef(null);
   const paidCallbackRef = useRef(false);
@@ -139,16 +139,22 @@ export default function RechargeModal({
 
   useEffect(() => {
     if (!checkoutData?.orderId || pollStatus === 'paid' || pollStatus === 'expired') return undefined;
-    setCountdown(900);
+    // 有效时间读服务端订单的 expiresAt（与支付宝 timeout_express 同源）。页面自己数 900 秒
+    // 会在厂商收单还开着的时候先把二维码判死，用户扫了也付不进。
+    const expiresAtMs = Date.parse(checkoutData.expiresAt);
+    if (!Number.isFinite(expiresAtMs)) {
+      setPollStatus('expired');
+      return undefined;
+    }
+    const remainingSeconds = () => Math.max(0, Math.ceil((expiresAtMs - Date.now()) / 1000));
+    setCountdown(remainingSeconds());
     countdownTimerRef.current = setInterval(() => {
-      setCountdown((remaining) => {
-        if (remaining <= 1) {
-          clearTimers();
-          setPollStatus('expired');
-          return 0;
-        }
-        return remaining - 1;
-      });
+      const remaining = remainingSeconds();
+      setCountdown(remaining);
+      if (remaining <= 0) {
+        clearTimers();
+        setPollStatus('expired');
+      }
     }, 1000);
     pollTimerRef.current = setInterval(async () => {
       try {
@@ -166,6 +172,11 @@ export default function RechargeModal({
             orderId: checkoutData.orderId,
           });
           window.dispatchEvent(new CustomEvent('koyosim:credits-updated', { detail: { orderId: checkoutData.orderId } }));
+        }
+        // 服务端已把订单判死（过期/关闭）时，本地别再举着一张扫不掉的二维码。
+        if (payload.status === 'expired' || payload.status === 'cancelled') {
+          clearTimers();
+          setPollStatus('expired');
         }
       } catch {
         // 状态查询失败时保留二维码，并在下一轮继续查。
@@ -214,6 +225,7 @@ export default function RechargeModal({
         return;
       }
       if (!payload.qrCodeUrl) throw new Error(payload.error || '支付平台没有返回有效二维码，请勿继续支付');
+      if (!payload.expiresAt) throw new Error('订单未返回有效期，请勿继续支付');
       const confirmedAmount = Number(payload.creditAmount);
       if (!Number.isSafeInteger(confirmedAmount) || confirmedAmount !== creditAmount || confirmedAmount <= 0) {
         throw new Error('订单返回的算力与商品目录不一致，请勿继续支付。');
@@ -225,6 +237,7 @@ export default function RechargeModal({
         provider: payMethod,
         planName: product.name,
         creditAmount: confirmedAmount,
+        expiresAt: payload.expiresAt,
       });
       paidCallbackRef.current = false;
       setPollStatus('waiting');
@@ -258,7 +271,13 @@ export default function RechargeModal({
             ) : pollStatus === 'expired' ? (
               <div className="mt-6 rounded-2xl border border-warning-line bg-warning-soft p-6 text-center">
                 <p className="text-sm font-semibold text-warning">二维码已过期，本订单不会自动重试。</p>
-                <Button type="button" variant="secondary" className="mt-4" onClick={() => { setCheckoutData(null); setPollStatus('waiting'); }}>返回重新发起</Button>
+                <p className="mt-1 text-caption text-ink-muted">重新生成会向支付平台下一笔新订单，旧码立即作废。</p>
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                  <Button type="button" variant="primary" onClick={handleCreateOrder} disabled={loading || !product}>
+                    {loading ? '正在创建新订单…' : '重新生成支付二维码'}
+                  </Button>
+                  <Button type="button" variant="secondary" onClick={() => { setCheckoutData(null); setPollStatus('waiting'); }}>返回商品确认</Button>
+                </div>
               </div>
             ) : (
               <div className="pricing-paid-bg mt-6 flex flex-col items-center rounded-2xl border border-line p-5 text-center">

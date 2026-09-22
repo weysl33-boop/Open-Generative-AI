@@ -1,3 +1,4 @@
+import { logPaymentEvent } from '@/lib/payments/paymentLog';
 import { paymentNotificationOutcome } from '@/lib/payments/provider';
 import { resolveAlipayProvider } from '@/lib/payments/providerCredentials';
 import { dispatchPaymentWebhook } from '@/lib/services/webhookDispatcher';
@@ -26,7 +27,33 @@ export async function POST(request) {
   let error = null;
   try {
     const alipay = await resolveAlipayProvider();
+    logPaymentEvent('payment.alipay.notify.received', {
+      provider: 'alipay',
+      orderId: params.out_trade_no,
+      outTradeNo: params.out_trade_no,
+      alipayTradeNo: params.trade_no,
+      status: params.trade_status,
+    });
+    // 验签串会剔除 sign_type，所以算法本身必须单独钉住：RSA 之外的算法一律不认。
+    if (String(params.sign_type || '').toUpperCase() !== 'RSA2') {
+      throw Object.assign(new Error('支付宝通知签名算法不受支持'), { code: 'WEBHOOK_SIGNATURE_INVALID' });
+    }
     const verified = alipay.verifyWebhookSignature(params);
+    logPaymentEvent('payment.alipay.signature.valid', {
+      provider: 'alipay',
+      orderId: verified.out_trade_no,
+      outTradeNo: verified.out_trade_no,
+      alipayTradeNo: verified.trade_no,
+      status: verified.trade_status,
+    });
+    // 验签只证明「这条通知由支付宝签发」，不证明「签给本商户」。公私钥模式下同一把
+    // 平台公钥给所有商户用，缺了 app_id 绑定就能拿别家商户的支付通知给我们订单入账。
+    if (!alipay.appId || verified.app_id !== alipay.appId) {
+      throw Object.assign(new Error('支付宝通知 app_id 与商户配置不一致'), { code: 'ALIPAY_APP_ID_MISMATCH' });
+    }
+    if (alipay.sellerId && verified.seller_id && verified.seller_id !== alipay.sellerId) {
+      throw Object.assign(new Error('支付宝通知 seller_id 与商户配置不一致'), { code: 'ALIPAY_SELLER_ID_MISMATCH' });
+    }
     const outTradeNo = verified.out_trade_no;
     const tradeNo = verified.trade_no;
     const totalMinor = Math.round(Number(verified.total_amount || 0) * 100);
@@ -74,6 +101,16 @@ export async function POST(request) {
   const outcome = paymentNotificationOutcome({ error, result });
   if (outcome === 'ack') return respond('success', 200);
   if (outcome === 'reject') {
+    if (error?.code === 'WEBHOOK_SIGNATURE_INVALID') {
+      logPaymentEvent('payment.alipay.signature.invalid', {
+        provider: 'alipay',
+        orderId: params.out_trade_no,
+        outTradeNo: params.out_trade_no,
+        alipayTradeNo: params.trade_no,
+        status: 'rejected',
+        code: error.code,
+      });
+    }
     console.error('[webhook/alipay/reject]', { code: String(error?.code || result?.action || 'WEBHOOK_REJECTED') });
     return respond('failure', 400);
   }
