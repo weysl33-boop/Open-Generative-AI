@@ -131,12 +131,32 @@ test('paid one-time credit-pack order is persisted, fulfilled once, and never cr
     });
     assert.equal(duplicate.duplicate, true);
     assert.equal(Number((await db.queryOne('SELECT perpetual_credits FROM credit_wallets WHERE user_id = $1', [userId])).perpetual_credits), pack.credits);
+
+    // 支付宝重试会带来一个不同的通知 id：去重不能只挂在 event_id 上，
+    // 必须落到订单状态与订单级幂等键上，否则一次支付会重复发钱。
+    const crossIdReplay = await dispatchPaymentWebhook({
+      provider: 'alipay',
+      event: {
+        id: `${eventId}_retry`,
+        kind: 'payment',
+        type: 'TRADE_SUCCESS',
+        out_trade_no: orderId,
+        trade_no: `trade_${suffix}`,
+        amount_total: pack.priceCny * 100,
+        currency: 'CNY',
+      },
+    });
+    assert.equal(crossIdReplay.success, true);
+    assert.equal(crossIdReplay.action, 'already_paid');
+    assert.equal(Number((await db.queryOne('SELECT perpetual_credits FROM credit_wallets WHERE user_id = $1', [userId])).perpetual_credits), pack.credits);
+    assert.equal(Number((await db.queryOne('SELECT count(*) AS count FROM payment_ledger WHERE order_id = $1', [orderId])).count), 1);
+    assert.equal(Number((await db.queryOne('SELECT count(*) AS count FROM credit_ledger_v2 WHERE user_id = $1', [userId])).count), 1);
   } finally {
     if (orderId) {
       await db.execute('DELETE FROM payment_ledger WHERE order_id = $1', [orderId]).catch(() => {});
       await db.execute('DELETE FROM orders WHERE id = $1', [orderId]).catch(() => {});
     }
-    await db.execute('DELETE FROM webhook_events WHERE provider = $1 AND event_id = $2', ['alipay', eventId]).catch(() => {});
+    await db.execute('DELETE FROM webhook_events WHERE provider = $1 AND event_id LIKE $2', ['alipay', `${eventId}%`]).catch(() => {});
     await db.execute('DELETE FROM subscriptions WHERE user_id = $1', [userId]).catch(() => {});
     await db.execute('DELETE FROM credit_ledger_v2 WHERE user_id = $1', [userId]).catch(() => {});
     await db.execute('DELETE FROM credit_wallets WHERE user_id = $1', [userId]).catch(() => {});
