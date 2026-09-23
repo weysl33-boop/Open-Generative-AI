@@ -121,21 +121,21 @@ export default function SocialLoginPanel({ regions, diagnostics, canWrite }) {
       />
 
       <div className="flex flex-col gap-4">
-        <div className="rounded-xl border border-line bg-well px-4 py-3">
-          <h3 className="text-label text-ink">{active?.label}渠道</h3>
-          <p className="mt-1 text-body-sm text-ink-muted">{active?.description}</p>
+        <div className="rounded-xl border border-line-subtle bg-well px-4 py-3">
+          <h3 className="text-body-sm font-semibold text-ink">{active?.label}渠道</h3>
+          <p className="mt-1 text-body-xs text-ink-muted">{active?.description}</p>
         </div>
 
         {active?.channels.map((channel) => {
           const visible = Boolean(enabled[channel.id]) && channel.configured;
           return (
             <div key={channel.id} className="flex flex-col gap-3">
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-base px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line-subtle bg-surface px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 text-label text-ink">
+                  <label className="flex items-center gap-2 text-body-sm font-medium text-ink cursor-pointer select-none">
                     <input
                       type="checkbox"
-                      className="size-4 rounded border-line-strong bg-scrim text-brand focus:ring-brand"
+                      className="size-4 rounded border-line-strong bg-well text-brand focus-visible:ring-1 focus-visible:ring-brand-ring"
                       checked={Boolean(enabled[channel.id])}
                       disabled={!canWrite}
                       onChange={(event) =>
@@ -148,7 +148,7 @@ export default function SocialLoginPanel({ regions, diagnostics, canWrite }) {
                   {channel.configured && !enabled[channel.id] && <StatusBadge tone="neutral">已隐藏</StatusBadge>}
                   {visible && <StatusBadge tone="good">对该分区可见</StatusBadge>}
                 </div>
-                <span className="text-caption text-ink-subtle">
+                <span className="text-micro text-ink-subtle">
                   {channel.provider?.mode || 'OAuth 2.0'}
                 </span>
               </div>
@@ -165,19 +165,19 @@ export default function SocialLoginPanel({ regions, diagnostics, canWrite }) {
       </div>
 
       {canWrite && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-well px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line-subtle bg-well px-4 py-3">
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-body-sm text-ink-muted">
               {dirty ? '存在未保存的分区展示变更' : '分区展示与线上一致'}
             </span>
-            {notice && <span className="text-body-sm text-success">{notice}</span>}
+            {notice && <span className="text-body-sm text-good">{notice}</span>}
             {message && <span className="text-body-sm text-danger">{message}</span>}
           </div>
           <button
             type="button"
             onClick={save}
             disabled={busy || !dirty}
-            className="h-9 rounded-lg bg-brand px-4 text-label text-ink-on-accent hover:bg-brand-hover disabled:opacity-50"
+            className="h-control-md rounded-md bg-brand hover:bg-brand-hover active:bg-brand-active px-4 text-body-sm font-semibold text-ink-on-accent disabled:opacity-50 transition-colors"
           >
             {busy ? '保存中…' : '保存分区设置'}
           </button>

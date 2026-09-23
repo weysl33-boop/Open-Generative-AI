@@ -51,11 +51,11 @@ export default function ExportButton({ type, label }) {
         type="button"
         onClick={startExport}
         disabled={state === 'working'}
-        className="rounded-xl border border-line bg-wash px-4 py-2 text-xs font-semibold text-ink-muted hover:bg-wash-press transition disabled:cursor-wait disabled:opacity-50"
+        className="h-control-sm inline-flex items-center rounded-md border border-line-subtle bg-raised px-3 text-label font-medium text-ink-muted transition-[background-color,border-color,color] duration-fast hover:border-line hover:bg-overlay hover:text-ink disabled:cursor-wait disabled:opacity-50"
       >
         {state === 'working' ? '⏳ 处理中…' : `⬇ ${label}`}
       </button>
-      {message && <span className="max-w-[220px] text-[11px] text-ink-subtle">{message}</span>}
+      {message && <span className="max-w-[220px] text-caption text-ink-subtle">{message}</span>}
     </div>
   );
 }

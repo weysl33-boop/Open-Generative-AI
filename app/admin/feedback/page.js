@@ -127,7 +127,7 @@ export default async function FeedbackPage({ searchParams }) {
           <select
             name="status"
             defaultValue={params.get('status') || ''}
-            className="rounded-xl border border-line bg-canvas px-4 py-2.5 text-label text-ink-muted outline-none focus:border-brand-ring"
+            className="h-control-md rounded-md border border-line-subtle bg-well px-3 text-body-sm text-ink outline-none transition focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand-ring"
           >
             <option value="">全部状态</option>
             <option value="pending">待审核</option>
@@ -137,7 +137,7 @@ export default async function FeedbackPage({ searchParams }) {
           <select
             name="kind"
             defaultValue={params.get('kind') || ''}
-            className="rounded-xl border border-line bg-canvas px-4 py-2.5 text-label text-ink-muted outline-none focus:border-brand-ring"
+            className="h-control-md rounded-md border border-line-subtle bg-well px-3 text-body-sm text-ink outline-none transition focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand-ring"
           >
             <option value="">全部类型</option>
             {FEEDBACK_KINDS.map((kind) => (
@@ -148,7 +148,7 @@ export default async function FeedbackPage({ searchParams }) {
           </select>
           <button
             type="submit"
-            className="rounded-xl bg-brand px-5 py-2.5 text-label font-bold text-ink-on-accent hover:bg-brand-hover"
+            className="h-control-md rounded-md bg-brand px-5 text-body-sm font-medium text-ink-on-accent transition hover:bg-brand-hover active:bg-brand-active"
           >
             筛选队列
           </button>

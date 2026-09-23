@@ -30,19 +30,19 @@ export default function LiveLogViewer() {
   }, [logType]);
 
   return (
-    <Card className="mt-6">
+    <Card className="mt-6 border-line-subtle bg-surface">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-subtle pb-4 mb-4">
         <div>
-          <h2 className="text-sm font-bold text-ink">服务端实时运行与异常日志 (Tail 100)</h2>
-          <p className="mt-1 text-xs text-ink-subtle font-mono">{logSource || 'PM2 Daemon Logs'}</p>
+          <h2 className="text-body-sm font-bold text-ink">服务端实时运行与异常日志 (Tail 100)</h2>
+          <p className="mt-1 text-body-xs text-ink-subtle font-mono">{logSource || 'PM2 Daemon Logs'}</p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-lg bg-scrim p-1 text-xs">
+          <div className="flex rounded-lg bg-well p-0.5 border border-line-subtle text-body-xs">
             <button
               type="button"
               onClick={() => setLogType('out')}
-              className={`rounded px-3 py-1 font-semibold transition ${
-                logType === 'out' ? 'bg-cyan-300/20 text-cyan-200' : 'text-ink-subtle hover:text-ink'
+              className={`h-control-xs rounded px-3 font-medium transition-colors ${
+                logType === 'out' ? 'bg-raised text-label shadow-elevation-1' : 'text-ink-subtle hover:text-ink'
               }`}
             >
               标准输出 (Out)
@@ -50,8 +50,8 @@ export default function LiveLogViewer() {
             <button
               type="button"
               onClick={() => setLogType('error')}
-              className={`rounded px-3 py-1 font-semibold transition ${
-                logType === 'error' ? 'bg-red-400/20 text-red-300' : 'text-ink-subtle hover:text-ink'
+              className={`h-control-xs rounded px-3 font-medium transition-colors ${
+                logType === 'error' ? 'bg-danger-soft text-danger border border-danger-line' : 'text-ink-subtle hover:text-ink'
               }`}
             >
               异常报错 (Error)
@@ -61,14 +61,14 @@ export default function LiveLogViewer() {
             type="button"
             disabled={loading}
             onClick={() => fetchLogs()}
-            className="rounded-lg border border-line bg-wash px-3 py-1.5 text-xs text-ink-muted hover:bg-wash-press transition"
+            className="h-control-sm rounded-md border border-line-subtle bg-raised hover:bg-raised-hover text-label px-3 text-body-xs transition-colors"
           >
             {loading ? '刷新中…' : '🔄 刷新'}
           </button>
         </div>
       </div>
 
-      <div className="max-h-[380px] overflow-y-auto rounded-xl border border-line bg-canvas p-4 font-mono text-xs text-success leading-relaxed custom-scrollbar whitespace-pre-wrap">
+      <div className="max-h-[380px] overflow-y-auto rounded-xl border border-line-subtle bg-canvas p-4 font-mono text-body-xs text-good leading-relaxed scrollbar-rail whitespace-pre-wrap">
         {logs || '暂无日志'}
       </div>
     </Card>

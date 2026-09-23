@@ -194,19 +194,19 @@ export default function SocialProviderCard({ provider }) {
   const consoleLink = CONSOLE_LINKS[provider.id];
 
   return (
-    <Card className="flex flex-col justify-between relative overflow-hidden border-line bg-base/90 backdrop-blur-md hover:border-brand-line hover:shadow-brand-soft transition-all duration-base shadow-elevation-3 shadow-black/40">
+    <Card className="flex flex-col justify-between relative overflow-hidden border-line-subtle bg-surface hover:border-line transition-colors shadow-elevation-1">
       <div>
         {/* 卡片顶栏：图标、名称与状态 */}
-        <div className="flex items-start justify-between border-b border-line pb-3.5 mb-4">
+        <div className="flex items-start justify-between border-b border-line-subtle pb-3.5 mb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-wash border border-line text-ink">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-well border border-line-subtle text-ink">
               <ProviderIcon size={22} />
             </div>
             <div>
-              <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-brand">
+              <span className="font-mono text-micro font-semibold uppercase tracking-[0.08em] text-brand">
                 SOCIAL AUTH GATEWAY
               </span>
-              <h3 className="text-base font-semibold text-ink tracking-[-0.01em] leading-6">{provider.name}</h3>
+              <h3 className="text-body-md font-semibold text-ink tracking-[-0.01em] leading-6">{provider.name}</h3>
             </div>
           </div>
           <StatusBadge tone={provider.configured ? 'good' : 'warn'}>
@@ -215,10 +215,10 @@ export default function SocialProviderCard({ provider }) {
         </div>
 
         {/* 渠道描述 */}
-        <p className="text-xs text-ink-muted mb-4 leading-5 tracking-[-0.005em]">{provider.description}</p>
+        <p className="text-body-xs text-ink-muted mb-4 leading-5 tracking-[-0.005em]">{provider.description}</p>
 
         {/* 规范属性面板 */}
-        <div className="space-y-2.5 rounded-xl border border-line-subtle bg-canvas/70 p-3.5 text-xs">
+        <div className="space-y-2.5 rounded-xl border border-line-subtle bg-well p-3.5 text-body-xs">
           <div className="flex justify-between items-center">
             <span className="text-ink-muted tracking-[0.01em]">授权规范</span>
             <span className="font-mono text-ink">{provider.mode}</span>
@@ -239,12 +239,12 @@ export default function SocialProviderCard({ provider }) {
               <button
                 type="button"
                 onClick={handleCopyUri}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand hover:text-brand-hover transition"
+                className="inline-flex items-center gap-1 text-micro font-semibold text-brand hover:text-brand-hover transition-colors"
               >
                 {copied ? (
                   <>
-                    <Check className="size-3 text-success" />
-                    <span className="text-success">已复制</span>
+                    <Check className="size-3 text-good" />
+                    <span className="text-good">已复制</span>
                   </>
                 ) : (
                   <>
@@ -254,11 +254,11 @@ export default function SocialProviderCard({ provider }) {
                 )}
               </button>
             </div>
-            <div className="rounded-lg bg-canvas px-2.5 py-1.5 font-mono text-[11px] text-ink truncate select-all border border-line-subtle">
+            <div className="rounded-md bg-well px-2.5 py-1.5 font-mono text-micro text-ink truncate select-all border border-line-subtle">
               {fullRedirectUri}
             </div>
             {provider.callbackHint && (
-              <p className="mt-1.5 text-[11px] leading-4 text-ink-subtle">{provider.callbackHint}</p>
+              <p className="mt-1.5 text-micro leading-4 text-ink-subtle">{provider.callbackHint}</p>
             )}
           </div>
 
@@ -270,7 +270,7 @@ export default function SocialProviderCard({ provider }) {
                 href={consoleLink.url}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-ink-muted hover:text-brand-hover transition"
+                className="inline-flex items-center gap-1 text-body-xs text-ink-muted hover:text-brand-hover transition-colors"
               >
                 <span>{consoleLink.label}</span>
                 <ExternalLink className="size-3 text-ink-subtle" />
@@ -283,18 +283,18 @@ export default function SocialProviderCard({ provider }) {
             <div className="flex justify-between items-center border-t border-line-subtle pt-2">
               <span className="text-ink-muted tracking-[0.01em]">最近健康探针</span>
               {testResult.status === 'healthy' ? (
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success">
-                  <span className="size-1.5 rounded-full bg-success" />
+                <span className="inline-flex items-center gap-1.5 text-body-xs font-semibold text-good">
+                  <span className="size-1.5 rounded-full bg-good" />
                   正常在线 ({testResult.latency_ms || testResult.latencyMs || 0}ms)
                 </span>
               ) : testResult.status === 'unconfigured' ? (
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-warning">
-                  <span className="size-1.5 rounded-full bg-warning" />
+                <span className="inline-flex items-center gap-1.5 text-body-xs font-medium text-warn">
+                  <span className="size-1.5 rounded-full bg-warn" />
                   待录入凭证
                 </span>
               ) : testResult.status === 'degraded' ? (
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-orange-300">
-                  <span className="size-1.5 rounded-full bg-orange-400" />
+                <span className="inline-flex items-center gap-1.5 text-body-xs font-medium text-warn">
+                  <span className="size-1.5 rounded-full bg-warn" />
                   响应稍慢 ({testResult.latency_ms || testResult.latencyMs || 0}ms)
                 </span>
               ) : (
@@ -309,9 +309,9 @@ export default function SocialProviderCard({ provider }) {
 
         {/* 密钥配置折叠表单 */}
         {showRotate && (
-          <form onSubmit={handleSaveSecrets} className="mt-4 rounded-xl border border-line bg-canvas/80 p-4 space-y-3.5 backdrop-blur-sm animate-fade-in">
+          <form onSubmit={handleSaveSecrets} className="mt-4 rounded-xl border border-line-subtle bg-well p-4 space-y-3.5 backdrop-blur-sm animate-fade-in">
             <div className="flex items-center justify-between border-b border-line-subtle pb-2">
-              <p className="text-xs font-semibold text-brand-hover tracking-[-0.005em]">凭证托管录入（安全加密存盘）</p>
+              <p className="text-body-xs font-semibold text-brand-hover tracking-[-0.005em]">凭证托管录入（安全加密存盘）</p>
               <span className="text-micro text-ink-subtle font-mono">Vault Encrypted</span>
             </div>
 
@@ -327,11 +327,11 @@ export default function SocialProviderCard({ provider }) {
               return (
                 <div key={keyDef.name} className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs text-ink-muted font-medium tracking-[0.01em]">
+                    <label className="block text-body-xs text-ink-muted font-medium tracking-[0.01em]">
                       {keyDef.label}
                     </label>
                     {hasConfigured && (
-                      <span className="inline-flex items-center gap-1 text-micro font-mono text-success bg-success-soft px-1.5 py-0.5 rounded border border-success-soft">
+                      <span className="inline-flex items-center gap-1 text-micro font-mono text-good bg-good-soft px-1.5 py-0.5 rounded border border-good-line">
                         <CheckCircle2 className="size-2.5" />
                         已托管存盘
                       </span>
@@ -348,7 +348,7 @@ export default function SocialProviderCard({ provider }) {
                           ? (isSecret ? '•••••••••••••••• (留空保持现有凭证，输入新值覆盖)' : keyDef.placeholder || '输入新值覆盖')
                           : (keyDef.placeholder || '请输入凭证明文…')
                       }
-                      className="h-[38px] w-full rounded-lg border border-line bg-canvas px-3 pr-9 text-xs text-ink font-mono placeholder:text-ink-subtle focus:border-brand focus:ring-2 focus:ring-brand-soft outline-none transition-all"
+                      className="h-control-md w-full rounded-md border border-line-subtle bg-well px-3 pr-9 text-body-xs text-ink font-mono placeholder:text-ink-subtle focus-visible:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring transition-colors"
                     />
                     {isSecret && (
                       <button
@@ -378,21 +378,21 @@ export default function SocialProviderCard({ provider }) {
                   setShowRotate(false);
                   setMessage('');
                 }}
-                className="h-8 rounded-lg border border-line bg-transparent px-3 text-xs font-medium text-ink-muted hover:bg-wash-strong hover:text-ink transition active:scale-[0.98]"
+                className="h-control-sm rounded-md border border-line-subtle bg-transparent px-3 text-body-xs font-medium text-ink-muted hover:bg-well hover:text-ink transition-colors"
               >
                 取消
               </button>
               <button
                 type="submit"
                 disabled={busy}
-                className="h-8 rounded-lg bg-brand-active hover:bg-brand px-4 text-xs font-semibold text-ink-on-accent active:scale-[0.98] transition disabled:opacity-50"
+                className="h-control-sm rounded-md bg-brand hover:bg-brand-hover active:bg-brand-active px-4 text-body-xs font-semibold text-ink-on-accent transition-colors disabled:opacity-50"
               >
                 {busy ? '正在加密保存…' : '安全提交凭证'}
               </button>
             </div>
 
             {message && (
-              <div className={`text-xs p-2.5 rounded-lg text-center font-medium ${isSuccess ? 'bg-success-soft text-success border border-success-soft' : 'bg-danger-soft text-danger border border-danger-soft'}`}>
+              <div className={`text-body-xs p-2.5 rounded-md text-center font-medium ${isSuccess ? 'bg-good-soft text-good border border-good-line' : 'bg-danger-soft text-danger border border-danger-line'}`}>
                 {message}
               </div>
             )}
@@ -406,7 +406,7 @@ export default function SocialProviderCard({ provider }) {
           type="button"
           disabled={testing}
           onClick={runTest}
-          className="inline-flex h-[38px] items-center gap-1.5 rounded-lg border border-line bg-wash px-3.5 text-xs font-medium text-ink hover:bg-wash-strong hover:text-ink transition active:scale-[0.98] disabled:opacity-50 tracking-[-0.005em]"
+          className="inline-flex h-control-md items-center gap-1.5 rounded-md border border-line-subtle bg-raised hover:bg-raised-hover px-3.5 text-body-xs font-medium text-label transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`size-3.5 ${testing ? 'animate-spin text-brand' : ''}`} />
           {testing ? '探针探测中…' : '测试连接 / 网关可达性探针'}
@@ -418,7 +418,7 @@ export default function SocialProviderCard({ provider }) {
             setShowRotate(!showRotate);
             setMessage('');
           }}
-          className="inline-flex h-[38px] items-center rounded-lg border border-brand-line bg-brand-soft px-4 text-xs font-semibold text-brand-hover hover:bg-brand-pressed active:scale-[0.98] transition tracking-[-0.005em]"
+          className="inline-flex h-control-md items-center rounded-md border border-brand-line bg-brand-soft px-4 text-body-xs font-semibold text-brand-hover hover:bg-brand-pressed transition-colors"
         >
           {showRotate ? '收起面板' : '配置密钥 / 轮换 ⚙'}
         </button>

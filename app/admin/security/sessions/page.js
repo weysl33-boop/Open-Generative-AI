@@ -81,11 +81,11 @@ export default async function SessionsPage({ searchParams }) {
             name="q"
             defaultValue={params.get('q') || ''}
             placeholder="搜索用户 UID、邮箱或内部记录 ID…"
-            className="min-w-[240px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
+            className="min-w-[240px] flex-1 rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
           />
           <button
             type="submit"
-            className="rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-ink-on-accent hover:bg-brand"
+            className="h-control-md rounded-md bg-brand px-5 text-body-sm font-semibold text-ink-on-accent transition-colors duration-fast hover:bg-brand-hover"
           >
             查询会话
           </button>

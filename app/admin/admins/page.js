@@ -26,8 +26,8 @@ export default async function AdminsPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <Card>
-          <div className="flex items-center justify-between border-b border-line pb-4 mb-4">
-            <h2 className="text-sm font-semibold text-ink">当前后台管理员名单</h2>
+          <div className="flex items-center justify-between border-b border-line-subtle pb-4 mb-4">
+            <h2 className="text-card-title font-semibold text-ink">当前后台管理员名单</h2>
             <StatusBadge tone="info">{admins.length} 位团队成员</StatusBadge>
           </div>
 
@@ -35,14 +35,14 @@ export default async function AdminsPage() {
             {admins.map((admin) => (
               <div
                 key={admin.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-base p-4 transition-all hover:border-line-strong"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line-subtle bg-raised p-4 transition-[border-color,background-color] duration-fast hover:border-line hover:bg-overlay"
               >
                 <div>
                   <UserSubject row={admin} href={`/admin/users/${admin.id}`} />
-                  <div className="mt-1 flex items-center gap-2">
+                  <div className="mt-1.5 flex items-center gap-2 text-caption">
                     <CopyableId id={admin.id} label="内部记录 ID" />
                     <span className="text-ink-subtle">·</span>
-                    <span className="text-xs text-ink-muted">创建于 {formatDate(admin.created_at)}</span>
+                    <span className="text-ink-muted">创建于 {formatDate(admin.created_at)}</span>
                   </div>
                 </div>
 
@@ -61,8 +61,8 @@ export default async function AdminsPage() {
 
         {/* 角色调整客户端面板 */}
         <Card>
-          <h2 className="text-sm font-semibold text-ink mb-1.5">调整管理员角色</h2>
-          <p className="text-xs text-ink-muted mb-4">
+          <h2 className="text-card-title font-semibold text-ink mb-1.5">调整管理员角色</h2>
+          <p className="text-body-sm text-ink-muted mb-4">
             分配内置 RBAC 权限。若选择“普通用户”，将即时解除该用户的全部后台管理权限。
           </p>
           <AdminRoleModifier />

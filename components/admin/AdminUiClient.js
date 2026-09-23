@@ -21,8 +21,8 @@ export function CopyableId({ id, label, strong = false }) {
       type="button"
       onClick={copy}
       title="点击复制完整 ID"
-      className={`group inline-flex items-center gap-1 font-mono transition hover:text-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring rounded ${
-        strong ? 'text-sm font-semibold text-ink' : 'text-xs text-ink-muted'
+      className={`group inline-flex items-center gap-1.5 font-mono text-mono transition-colors duration-fast hover:text-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring rounded-xs ${
+        strong ? 'font-semibold text-ink' : 'text-ink-muted'
       }`}
     >
       <span>{display}</span>
@@ -63,17 +63,17 @@ export function ConfirmActionDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-md"
+      className="fixed inset-0 z-modal flex items-center justify-center bg-scrim p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-md rounded-2xl border border-line bg-raised p-6 shadow-elevation-4">
-        <h3 className="text-lg font-semibold text-ink">{title}</h3>
-        <p className="mt-2 text-xs leading-relaxed text-ink-muted">{description}</p>
+      <div className="w-full max-w-md rounded-xl border border-line bg-surface p-6 shadow-elevation-4">
+        <h3 className="text-section-title font-semibold text-ink">{title}</h3>
+        <p className="mt-2 text-body-sm leading-relaxed text-ink-muted">{description}</p>
 
         {requirePassword && (
           <div className="mt-4">
-            <label className="block text-xs font-medium text-ink mb-1.5">
+            <label className="block text-label font-medium text-ink mb-1.5">
               管理员二次验证密码
             </label>
             <Input
@@ -87,12 +87,12 @@ export function ConfirmActionDialog({
         )}
 
         {error && (
-          <div className="mt-3 rounded-lg border border-danger-line bg-danger-soft p-2.5 text-xs text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft p-2.5 text-caption text-danger">
             {error}
           </div>
         )}
 
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="mt-6 flex justify-end gap-2.5">
           <Button
             type="button"
             variant="secondary"

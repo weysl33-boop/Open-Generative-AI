@@ -10,8 +10,8 @@ export default async function AdminForbiddenPage({ searchParams }) {
 
   return (
     <div className="flex min-h-96 items-center justify-center">
-      <div className="w-full max-w-md rounded-2xl border border-danger-line bg-base p-8 text-center shadow-elevation-4 backdrop-blur-md">
-        <div className="mx-auto flex size-14 items-center justify-center rounded-xl border border-danger-line bg-danger-soft text-danger">
+      <div className="w-full max-w-md rounded-xl border border-danger-line bg-surface p-8 text-center shadow-elevation-4 backdrop-blur-md">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-lg border border-danger-line bg-danger-soft text-danger">
           <ShieldX className="size-7" />
         </div>
         <p className="mt-5 text-caption font-semibold uppercase tracking-widest text-danger">403 · 无权限访问</p>
@@ -19,7 +19,7 @@ export default async function AdminForbiddenPage({ searchParams }) {
         <p className="mt-2.5 text-body-sm leading-6 text-ink-muted">
           该功能需要权限
           {permission ? (
-            <span className="mx-1 rounded border border-line bg-wash px-1.5 py-0.5 font-mono text-label text-ink">
+            <span className="mx-1 rounded-sm border border-line-subtle bg-wash px-1.5 py-0.5 font-mono text-label text-ink">
               {permission}
             </span>
           ) : null}
@@ -28,7 +28,7 @@ export default async function AdminForbiddenPage({ searchParams }) {
         <div className="mt-6 flex justify-center gap-3">
           <Link
             href="/admin"
-            className="inline-flex h-control-md items-center gap-1.5 rounded-lg bg-brand px-4 text-label font-semibold text-ink-on-accent transition-colors duration-base hover:bg-brand-hover active:scale-95"
+            className="inline-flex h-control-md items-center gap-1.5 rounded-md bg-brand px-4 text-label font-semibold text-ink-on-accent transition-colors duration-fast hover:bg-brand-hover"
           >
             <ArrowLeft className="size-3.5" />
             返回运营概览

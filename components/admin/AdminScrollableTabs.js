@@ -169,7 +169,7 @@ export default function AdminScrollableTabs({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className={`no-scrollbar flex w-full items-center gap-1.5 overflow-x-auto select-none py-1 transition-all ${
+        className={`scrollbar-rail flex w-full items-center gap-1.5 overflow-x-auto select-none py-1 transition-[cursor] ${
           isDragging ? 'cursor-grabbing' : 'cursor-default'
         }`}
         style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
@@ -182,21 +182,21 @@ export default function AdminScrollableTabs({
               ref={isActive ? activeTabRef : null}
               type="button"
               onClick={(e) => handleTabClick(t.id, e)}
-              className={`shrink-0 rounded-xl px-4 py-2 text-xs font-semibold tracking-wide transition-all duration-base active:scale-[0.98] ${
+              className={`shrink-0 rounded-md px-3.5 py-1.5 text-label font-medium transition-[background-color,border-color,color] duration-fast ${
                 isActive
-                  ? 'border border-brand-ring bg-gradient-to-r from-brand-soft via-brand-soft to-brand-soft text-brand-hover shadow-elevation-2'
-                  : 'border border-transparent text-ink-muted hover:border-line hover:bg-wash-strong hover:text-ink'
+                  ? 'border border-brand-line bg-brand-soft text-brand shadow-elevation-1'
+                  : 'border border-transparent text-ink-muted hover:border-line-subtle hover:bg-wash hover:text-ink'
               } ${tabClassName}`}
             >
               <div className="flex items-center gap-1.5 whitespace-nowrap">
-                {t.icon && <span className="text-sm">{t.icon}</span>}
+                {t.icon && <span className="text-body-sm">{t.icon}</span>}
                 <span>{t.label}</span>
                 {t.badge !== undefined && (
                   <span
-                    className={`ml-1 rounded-full px-1.5 py-0.2 text-micro font-mono ${
+                    className={`ml-1 rounded-full px-1.5 py-0.5 text-micro font-mono ${
                       isActive
-                        ? 'bg-brand-pressed text-brand-hover'
-                        : 'bg-wash-press text-ink-subtle'
+                        ? 'bg-brand-pressed text-brand'
+                        : 'bg-wash-strong text-ink-muted'
                     }`}
                   >
                     {t.badge}

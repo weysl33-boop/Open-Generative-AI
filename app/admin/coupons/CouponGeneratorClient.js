@@ -45,31 +45,31 @@ export default function CouponGeneratorClient() {
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="rounded-xl bg-brand-soft border border-brand-line px-4 py-2 text-xs font-semibold text-brand-hover hover:bg-brand-pressed transition"
+          className="h-control-sm inline-flex items-center rounded-md border border-brand-line bg-brand-soft px-3.5 text-label font-medium text-brand hover:bg-brand-pressed transition-[background-color,border-color,color] duration-fast"
         >
           {open ? '收起卡密生成器' : '＋ 批量生成卡密兑换码'}
         </button>
       </div>
 
       {open && (
-        <form onSubmit={handleGenerate} className="mt-4 rounded-2xl border border-line bg-wash p-5 backdrop-blur-xl">
-          <h3 className="text-sm font-bold text-ink mb-4">卡密兑换码批量生成</h3>
+        <form onSubmit={handleGenerate} className="mt-4 rounded-xl border border-line-subtle bg-surface p-5 shadow-elevation-1">
+          <h3 className="text-card-title font-semibold text-ink mb-4">卡密兑换码批量生成</h3>
 
           <div className="grid gap-4 sm:grid-cols-4">
             <div>
-              <label className="block text-[11px] text-ink-subtle mb-1">生成数量</label>
+              <label className="block text-label font-medium text-ink-muted mb-1.5">生成数量</label>
               <input
                 type="number"
                 min="1"
                 max="100"
                 value={count}
                 onChange={(e) => setCount(Number(e.target.value))}
-                className="w-full rounded-xl border border-line bg-scrim px-3 py-2 text-xs text-ink outline-none focus:border-brand"
+                className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] text-ink-subtle mb-1">权益类型</label>
+              <label className="block text-label font-medium text-ink-muted mb-1.5">权益类型</label>
               <select
                 value={type}
                 onChange={(e) => {
@@ -77,7 +77,7 @@ export default function CouponGeneratorClient() {
                   if (e.target.value === 'plan') setValue('pro');
                   else setValue('50');
                 }}
-                className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-xs text-ink outline-none focus:border-brand"
+                className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
               >
                 <option value="credits">算力额度 (Credits)</option>
                 <option value="plan">套餐方案 (Plan)</option>
@@ -85,7 +85,7 @@ export default function CouponGeneratorClient() {
             </div>
 
             <div>
-              <label className="block text-[11px] text-ink-subtle mb-1">
+              <label className="block text-label font-medium text-ink-muted mb-1.5">
                 {type === 'credits' ? '赠送额度数值' : '开通套餐 ID'}
               </label>
               <input
@@ -93,45 +93,45 @@ export default function CouponGeneratorClient() {
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 placeholder={type === 'credits' ? '如 100' : '如 pro 或 team'}
-                className="w-full rounded-xl border border-line bg-scrim px-3 py-2 text-xs text-ink outline-none focus:border-brand"
+                className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] text-ink-subtle mb-1">单码可用次数</label>
+              <label className="block text-label font-medium text-ink-muted mb-1.5">单码可用次数</label>
               <input
                 type="number"
                 min="1"
                 max="10000"
                 value={maxUses}
                 onChange={(e) => setMaxUses(Number(e.target.value))}
-                className="w-full rounded-xl border border-line bg-scrim px-3 py-2 text-xs text-ink outline-none focus:border-brand"
+                className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
               />
             </div>
           </div>
 
           <div className="mt-5 flex items-center justify-between">
             {feedback ? (
-              <span className="text-xs text-brand-hover">{feedback}</span>
+              <span className="text-body-sm text-brand">{feedback}</span>
             ) : <span />}
 
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-brand px-5 py-2 text-xs font-bold text-ink-on-accent hover:bg-brand transition disabled:opacity-50"
+              className="h-control-md rounded-md bg-brand px-5 text-body-sm font-semibold text-ink-on-accent transition-colors duration-fast hover:bg-brand-hover disabled:opacity-50"
             >
               {loading ? '正在生成…' : '确认生成卡密'}
             </button>
           </div>
 
           {resultCodes.length > 0 && (
-            <div className="mt-4 rounded-xl border border-brand-soft bg-scrim p-4">
-              <p className="text-xs font-bold text-brand-hover mb-2">本次生成的卡密代码（可直接复制分发）：</p>
+            <div className="mt-4 rounded-lg border border-brand-line bg-well p-4">
+              <p className="text-body-sm font-semibold text-brand mb-2">本次生成的卡密代码（可直接复制分发）：</p>
               <textarea
                 readOnly
                 rows={Math.min(6, resultCodes.length)}
                 value={resultCodes.join('\n')}
-                className="w-full rounded-lg bg-transparent font-mono text-xs text-ink select-all"
+                className="w-full rounded-md border border-line-subtle bg-surface p-2.5 font-mono text-mono text-ink select-all outline-none"
               />
             </div>
           )}

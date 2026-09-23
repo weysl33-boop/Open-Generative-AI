@@ -59,7 +59,7 @@ export default async function UserDetailPage({ params }) {
       >
         <Link
           href="/admin/users"
-          className="rounded-xl border border-line bg-wash px-4 py-2 text-xs font-semibold text-ink-muted hover:bg-wash-press"
+          className="h-control-md inline-flex items-center rounded-md border border-line-subtle bg-raised px-3.5 text-body-sm font-medium text-ink-muted transition-[background-color,border-color,color] duration-fast hover:border-line hover:bg-overlay hover:text-ink"
         >
           ← 返回用户列表
         </Link>
@@ -68,7 +68,7 @@ export default async function UserDetailPage({ params }) {
       {/* 顶部身份卡片 */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>
-          <p className="text-xs text-ink-subtle">账户状态</p>
+          <p className="text-caption font-medium uppercase tracking-wider text-ink-muted">账户状态</p>
           <div className="mt-2 flex items-center gap-2">
             <StatusBadge tone={user.status === 'suspended' ? 'danger' : 'good'}>
               {user.status === 'suspended' ? '已封禁' : '正常'}
@@ -80,21 +80,21 @@ export default async function UserDetailPage({ params }) {
         </Card>
 
         <Card>
-          <p className="text-xs text-ink-subtle">可用模型额度</p>
-          <p className="mt-2 text-3xl font-extrabold text-brand-hover">{user.credits}</p>
-          <p className="mt-1 text-[11px] text-ink-subtle">可直接用于 AI 图像/视频生成</p>
+          <p className="text-caption font-medium uppercase tracking-wider text-ink-muted">可用模型额度</p>
+          <p className="mt-2 text-2xl font-semibold text-brand tabular-nums">{user.credits}</p>
+          <p className="mt-1 text-caption text-ink-subtle">可直接用于 AI 图像/视频生成</p>
         </Card>
 
         <Card>
-          <p className="text-xs text-ink-subtle">活跃会话数</p>
-          <p className="mt-2 text-2xl font-bold text-ink">{detail.sessions.length}</p>
-          <p className="mt-1 text-[11px] text-ink-subtle">未过期的合法 HttpOnly 凭据</p>
+          <p className="text-caption font-medium uppercase tracking-wider text-ink-muted">活跃会话数</p>
+          <p className="mt-2 text-2xl font-semibold text-ink tabular-nums">{detail.sessions.length}</p>
+          <p className="mt-1 text-caption text-ink-subtle">未过期的合法 HttpOnly 凭据</p>
         </Card>
 
         <Card>
-          <p className="text-xs text-ink-subtle">生成记录总计</p>
-          <p className="mt-2 text-2xl font-bold text-ink">{detail.creations.length}</p>
-          <p className="mt-1 text-[11px] text-ink-subtle">涵盖所有 Studio 模块</p>
+          <p className="text-caption font-medium uppercase tracking-wider text-ink-muted">生成记录总计</p>
+          <p className="mt-2 text-2xl font-semibold text-ink tabular-nums">{detail.creations.length}</p>
+          <p className="mt-1 text-caption text-ink-subtle">涵盖所有 Studio 模块</p>
         </Card>
       </div>
 

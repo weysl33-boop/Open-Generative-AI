@@ -17,25 +17,25 @@ function formatDate(value) {
 
 function renderProviderBadges(providers = []) {
   if (!providers || providers.length === 0) {
-    return <span className="text-ink-subtle text-xs">—</span>;
+    return <span className="text-ink-subtle text-caption">—</span>;
   }
   const iconMap = {
     phone: { label: '手机', icon: <PhoneIcon className="size-3 text-success" />, color: 'bg-success-soft text-success border-success-line' },
     email: { label: '邮箱', icon: <MailIcon className="size-3 text-info" />, color: 'bg-info-soft text-info border-info-line' },
-    google: { label: 'Google', icon: <GoogleIcon className="size-3" />, color: 'bg-sky-500/15 text-sky-300 border-sky-500/30' },
-    wechat: { label: '微信', icon: <WeChatIcon className="size-3" />, color: 'bg-success-soft text-success border-success-line' },
-    tiktok: { label: 'TikTok', icon: <TikTokIcon className="size-3 text-pink-400" />, color: 'bg-pink-500/15 text-pink-300 border-pink-500/30' },
-    x: { label: 'X', icon: <XIcon className="size-2.5 text-ink" />, color: 'bg-wash-press text-ink border-line-strong' },
+    google: { label: 'Google', icon: <GoogleIcon className="size-3" />, color: 'bg-brand-soft text-brand border-brand-line' },
+    wechat: { label: '微信', icon: <WeChatIcon className="size-3 text-success" />, color: 'bg-success-soft text-success border-success-line' },
+    tiktok: { label: 'TikTok', icon: <TikTokIcon className="size-3" />, color: 'bg-wash-strong text-ink border-line' },
+    x: { label: 'X', icon: <XIcon className="size-2.5 text-ink" />, color: 'bg-wash-strong text-ink border-line' },
   };
 
   return (
     <div className="flex flex-wrap gap-1">
       {providers.map((p) => {
-        const item = iconMap[p] || { label: p, icon: <span className="text-micro">🔗</span>, color: 'bg-wash-press text-ink border-line-strong' };
+        const item = iconMap[p] || { label: p, icon: <span className="text-micro">🔗</span>, color: 'bg-wash text-ink-muted border-line-subtle' };
         return (
           <span
             key={p}
-            className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium ${item.color}`}
+            className={`inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-micro font-medium ${item.color}`}
           >
             <span className="flex items-center shrink-0">{item.icon}</span>
             <span>{item.label}</span>
@@ -48,17 +48,17 @@ function renderProviderBadges(providers = []) {
 
 function renderTagBadges(tags = []) {
   if (!tags || tags.length === 0) {
-    return <span className="text-ink-subtle text-xs">无标签</span>;
+    return <span className="text-ink-subtle text-caption">无标签</span>;
   }
   return (
     <div className="flex flex-wrap gap-1">
       {tags.map((t) => (
         <span
           key={t.id}
-          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold text-ink shadow-elevation-1"
+          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-micro font-medium text-ink shadow-elevation-1"
           style={{ backgroundColor: `${t.color}25`, borderColor: `${t.color}50`, borderWidth: 1 }}
         >
-          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: t.color }} />
+          <span className="size-1.5 rounded-full" style={{ backgroundColor: t.color }} />
           <span>{t.name}</span>
         </span>
       ))}
@@ -109,16 +109,16 @@ export default async function UsersPage({ searchParams }) {
       key: 'credits',
       label: '模型额度',
       render: (row) => (
-        <span className="font-mono font-bold text-brand-hover">{row.credits}</span>
+        <span className="font-mono font-semibold text-brand tabular-nums">{row.credits}</span>
       ),
     },
     {
       key: 'created_at',
       label: '注册 / 最近登录',
       render: (row) => (
-        <div className="text-xs">
+        <div className="text-body-sm">
           <p className="text-ink-muted">{formatDate(row.created_at)}</p>
-          <p className="text-ink-subtle text-[11px] mt-0.5">
+          <p className="text-ink-subtle text-caption mt-0.5">
             最近: {formatDate(row.last_login_at)}
           </p>
         </div>
@@ -130,7 +130,7 @@ export default async function UsersPage({ searchParams }) {
       render: (row) => (
         <Link
           href={`/admin/users/${row.id}`}
-          className="rounded-lg border border-line bg-wash px-3 py-1 text-xs font-semibold text-brand-hover transition hover:bg-brand-soft hover:text-brand-hover"
+          className="h-control-xs inline-flex items-center rounded-sm border border-line-subtle bg-raised px-2.5 text-micro font-medium text-brand transition-[background-color,border-color,color] duration-fast hover:border-brand-line hover:bg-brand-soft"
         >
           查看画像与运营 →
         </Link>
@@ -155,14 +155,14 @@ export default async function UsersPage({ searchParams }) {
             name="q"
             defaultValue={params.get('q') || ''}
             placeholder="搜索用户 UID、邮箱、手机号或昵称…"
-            className="min-w-[240px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
+            className="min-w-[240px] flex-1 rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
           />
 
           {/* 登录渠道筛选 */}
           <select
             name="provider"
             defaultValue={params.get('provider') || ''}
-            className="rounded-xl border border-line bg-canvas px-3 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
+            className="rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
           >
             <option value="">全部登录方式</option>
             <option value="phone">📱 手机短信</option>
@@ -177,7 +177,7 @@ export default async function UsersPage({ searchParams }) {
           <select
             name="tag"
             defaultValue={params.get('tag') || ''}
-            className="rounded-xl border border-line bg-canvas px-3 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
+            className="rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
           >
             <option value="">全部运营标签</option>
             <option value="tag_new">🟢 新用户</option>
@@ -192,7 +192,7 @@ export default async function UsersPage({ searchParams }) {
           <select
             name="role"
             defaultValue={params.get('role') || ''}
-            className="rounded-xl border border-line bg-canvas px-3 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
+            className="rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
           >
             <option value="">全部角色</option>
             <option value="user">普通用户</option>
@@ -207,7 +207,7 @@ export default async function UsersPage({ searchParams }) {
           <select
             name="status"
             defaultValue={params.get('status') || ''}
-            className="rounded-xl border border-line bg-canvas px-3 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
+            className="rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
           >
             <option value="">全部状态</option>
             <option value="active">正常</option>
@@ -216,7 +216,7 @@ export default async function UsersPage({ searchParams }) {
 
           <button
             type="submit"
-            className="rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-ink-on-accent transition hover:bg-brand"
+            className="h-control-md rounded-md bg-brand px-5 text-body-sm font-semibold text-ink-on-accent transition-colors duration-fast hover:bg-brand-hover"
           >
             筛选
           </button>
@@ -224,7 +224,7 @@ export default async function UsersPage({ searchParams }) {
           {Array.from(params.keys()).length > 0 && (
             <Link
               href="/admin/users"
-              className="rounded-xl border border-line px-3 py-2.5 text-xs text-ink-subtle hover:bg-wash hover:text-ink"
+              className="h-control-md inline-flex items-center rounded-md border border-line-subtle bg-raised px-3 text-body-sm text-ink-muted transition-[border-color,background-color,color] duration-fast hover:border-line hover:bg-overlay hover:text-ink"
             >
               重置
             </Link>

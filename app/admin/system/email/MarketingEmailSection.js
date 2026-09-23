@@ -132,12 +132,12 @@ export default function MarketingEmailSection({ canWrite }) {
   };
 
   return (
-    <Card className="overflow-hidden border border-line bg-canvas">
+    <Card className="overflow-hidden">
       {/* 头部导航与模板选择 */}
-      <div className="flex flex-col gap-4 border-b border-line pb-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4 border-b border-line-subtle pb-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-card-title font-bold text-ink">邮箱营销与模板管理</h2>
+            <h2 className="text-card-title text-ink">邮箱营销与模板管理</h2>
             <StatusBadge tone="good">完整就绪</StatusBadge>
           </div>
           <p className="mt-1 text-body-sm text-ink-muted">
@@ -146,7 +146,7 @@ export default function MarketingEmailSection({ canWrite }) {
         </div>
 
         {/* 模板快捷切换 Tab */}
-        <div className="flex flex-wrap gap-1.5 rounded-xl border border-line bg-wash p-1">
+        <div className="flex flex-wrap gap-1.5 rounded-lg border border-line-subtle bg-wash p-1">
           {TEMPLATE_KEYS.map((key) => {
             const tmpl = MARKETING_TEMPLATES[key];
             const isSelected = selectedKey === key;
@@ -158,9 +158,9 @@ export default function MarketingEmailSection({ canWrite }) {
                   setSelectedKey(key);
                   setSendResult(null);
                 }}
-                className={`rounded-lg px-3 py-1.5 text-label font-medium transition ${
+                className={`h-control-sm rounded-md px-3 text-body-xs font-medium transition ${
                   isSelected
-                    ? 'bg-brand text-ink-on-accent shadow-sm'
+                    ? 'bg-brand text-ink-on-accent shadow-elevation-1'
                     : 'text-ink-muted hover:bg-wash-press hover:text-ink'
                 }`}
               >
@@ -172,7 +172,7 @@ export default function MarketingEmailSection({ canWrite }) {
       </div>
 
       {/* 模板描述与操作栏 */}
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-wash px-4 py-3 text-caption text-ink-muted">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line-subtle bg-wash px-4 py-2.5 text-body-xs text-ink-muted">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-ink">类型：{currentTemplate.category}</span>
           <span>·</span>
@@ -182,7 +182,7 @@ export default function MarketingEmailSection({ canWrite }) {
           <button
             type="button"
             onClick={resetToDefault}
-            className="text-label text-ink-muted hover:text-brand underline"
+            className="text-body-xs text-ink-muted hover:text-brand underline"
           >
             恢复默认模板
           </button>
@@ -191,7 +191,7 @@ export default function MarketingEmailSection({ canWrite }) {
 
       {/* 邮件主题编辑 */}
       <div className="mt-5">
-        <label className="mb-1.5 block text-label font-semibold text-ink">
+        <label className="mb-1.5 block text-body-xs font-medium text-ink">
           邮件主题 (Subject)
           <span className="ml-2 font-normal text-ink-subtle">支持使用动态变量插值</span>
         </label>
@@ -201,10 +201,10 @@ export default function MarketingEmailSection({ canWrite }) {
             value={currentSubject}
             onChange={(e) => handleSubjectChange(e.target.value)}
             disabled={!canWrite}
-            className="flex-1 rounded-xl border border-line bg-canvas px-3.5 py-2 text-body text-ink outline-none focus:border-brand-ring"
+            className="h-control-md flex-1 rounded-md border border-line-subtle bg-well px-3 text-body-sm text-ink outline-none transition focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand-ring placeholder:text-ink-subtle"
             placeholder="邮件标题..."
           />
-          <div className="flex items-center rounded-xl border border-line bg-wash px-3 text-caption text-ink-muted">
+          <div className="flex h-control-md items-center rounded-md border border-line-subtle bg-well px-3 text-body-xs text-ink-muted">
             <span className="font-mono text-ink-subtle">实际渲染：</span>
             <span className="ml-1 font-medium text-ink truncate max-w-xs">{compiledSubject}</span>
           </div>
@@ -216,12 +216,12 @@ export default function MarketingEmailSection({ canWrite }) {
         {/* 左侧编辑区域 (5 列) */}
         <div className="flex flex-col gap-3 lg:col-span-6">
           <div className="flex items-center justify-between">
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <button
                 type="button"
                 onClick={() => setActiveTab('code')}
-                className={`px-3 py-1 text-label rounded-lg transition ${
-                  activeTab === 'code' ? 'bg-brand text-ink-on-accent font-semibold' : 'text-ink-muted hover:text-ink'
+                className={`h-control-xs px-3 text-body-xs rounded-md transition font-medium ${
+                  activeTab === 'code' ? 'bg-brand text-ink-on-accent' : 'text-ink-muted hover:bg-wash hover:text-ink'
                 }`}
               >
                 HTML 源码
@@ -229,8 +229,8 @@ export default function MarketingEmailSection({ canWrite }) {
               <button
                 type="button"
                 onClick={() => setActiveTab('variables')}
-                className={`px-3 py-1 text-label rounded-lg transition ${
-                  activeTab === 'variables' ? 'bg-brand text-ink-on-accent font-semibold' : 'text-ink-muted hover:text-ink'
+                className={`h-control-xs px-3 text-body-xs rounded-md transition font-medium ${
+                  activeTab === 'variables' ? 'bg-brand text-ink-on-accent' : 'text-ink-muted hover:bg-wash hover:text-ink'
                 }`}
               >
                 测试变量调试 ({Object.keys(currentVars).length})
@@ -260,19 +260,19 @@ export default function MarketingEmailSection({ canWrite }) {
                 onChange={(e) => handleHtmlChange(e.target.value)}
                 disabled={!canWrite}
                 rows={22}
-                className="w-full rounded-xl border border-line bg-wash p-3.5 font-mono text-caption text-ink outline-none focus:border-brand-ring leading-relaxed"
+                className="w-full rounded-md border border-line-subtle bg-well p-3.5 font-mono text-body-xs text-ink outline-none transition focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand-ring leading-relaxed scrollbar-rail"
                 spellCheck={false}
               />
             </div>
           ) : (
-            <div className="rounded-xl border border-line bg-wash p-4">
+            <div className="rounded-lg border border-line-subtle bg-surface p-4">
               <p className="mb-3 text-body-sm text-ink-muted">
                 修改变量值以实时模拟右侧预览效果，测试发信时将使用此组变量：
               </p>
-              <div className="grid gap-3 max-h-96 overflow-y-auto pr-1">
+              <div className="grid gap-3 max-h-96 overflow-y-auto pr-1 scrollbar-rail">
                 {currentTemplate.supportedVariables?.map((v) => (
                   <div key={v.key} className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between text-label">
+                    <div className="flex items-center justify-between text-body-xs">
                       <span className="font-mono text-ink font-semibold">{`{{${v.key}}}`}</span>
                       <span className="text-caption text-ink-subtle">{v.label}</span>
                     </div>
@@ -280,7 +280,7 @@ export default function MarketingEmailSection({ canWrite }) {
                       type="text"
                       value={currentVars[v.key] ?? ''}
                       onChange={(e) => handleVariableChange(v.key, e.target.value)}
-                      className="rounded-lg border border-line bg-canvas px-3 py-1.5 text-label text-ink outline-none focus:border-brand-ring"
+                      className="h-control-sm rounded-md border border-line-subtle bg-well px-2.5 text-body-xs text-ink outline-none transition focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand-ring placeholder:text-ink-subtle"
                       placeholder={`默认: ${v.default}`}
                     />
                   </div>
@@ -293,12 +293,12 @@ export default function MarketingEmailSection({ canWrite }) {
         {/* 右侧实时沙箱预览区域 (6 列) */}
         <div className="flex flex-col gap-3 lg:col-span-6">
           <div className="flex items-center justify-between">
-            <span className="text-label font-semibold text-ink">实时邮件渲染预览</span>
-            <div className="flex items-center gap-1 rounded-lg border border-line bg-wash p-0.5 text-caption">
+            <span className="text-body-xs font-semibold text-ink">实时邮件渲染预览</span>
+            <div className="flex items-center gap-1 rounded-md border border-line-subtle bg-wash p-0.5 text-body-xs">
               <button
                 type="button"
                 onClick={() => setPreviewDevice('desktop')}
-                className={`rounded px-2.5 py-1 transition ${
+                className={`h-control-xs rounded px-2.5 text-micro transition ${
                   previewDevice === 'desktop' ? 'bg-brand text-ink-on-accent font-medium' : 'text-ink-muted'
                 }`}
               >
@@ -307,7 +307,7 @@ export default function MarketingEmailSection({ canWrite }) {
               <button
                 type="button"
                 onClick={() => setPreviewDevice('mobile')}
-                className={`rounded px-2.5 py-1 transition ${
+                className={`h-control-xs rounded px-2.5 text-micro transition ${
                   previewDevice === 'mobile' ? 'bg-brand text-ink-on-accent font-medium' : 'text-ink-muted'
                 }`}
               >
@@ -317,17 +317,17 @@ export default function MarketingEmailSection({ canWrite }) {
           </div>
 
           <div
-            className="mx-auto flex w-full flex-col items-center justify-center rounded-2xl border border-line bg-wash-press p-2 transition"
+            className="mx-auto flex w-full flex-col items-center justify-center rounded-xl border border-line-subtle bg-well p-2 transition"
             style={{ maxWidth: previewDevice === 'mobile' ? '395px' : '100%' }}
           >
             {previewDevice === 'mobile' && (
-              <div className="mb-1.5 h-3 w-16 rounded-full bg-line" />
+              <div className="mb-1.5 h-3 w-16 rounded-full bg-line-subtle" />
             )}
             <iframe
               title="邮件渲染预览"
               srcDoc={compiledHtml}
               sandbox="allow-same-origin"
-              className="w-full rounded-xl border border-line shadow-inner transition"
+              className="w-full rounded-lg border border-line-subtle shadow-inner transition"
               style={{
                 height: '560px',
                 maxWidth: previewDevice === 'mobile' ? '375px' : '100%',
@@ -340,12 +340,12 @@ export default function MarketingEmailSection({ canWrite }) {
 
       {/* 底部测试发信操作面板 */}
       {canWrite && (
-        <div className="mt-8 border-t border-line pt-6">
-          <form onSubmit={handleSendTest} className="flex flex-col gap-4 rounded-xl border border-line bg-wash p-5">
+        <div className="mt-8 border-t border-line-subtle pt-6">
+          <form onSubmit={handleSendTest} className="flex flex-col gap-4 rounded-lg border border-line-subtle bg-surface p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h3 className="text-label font-bold text-ink">向指定邮箱发送真实营销测试邮件</h3>
-                <p className="mt-0.5 text-caption text-ink-muted">
+                <h3 className="text-body-sm font-semibold text-ink">向指定邮箱发送真实营销测试邮件</h3>
+                <p className="mt-0.5 text-body-xs text-ink-muted">
                   将当前编辑器中编辑的【{currentTemplate.name}】HTML 及上方变量，经由 QQ 企业邮箱真实发出并记录至发信日志中。
                 </p>
               </div>
@@ -361,12 +361,12 @@ export default function MarketingEmailSection({ canWrite }) {
                 value={testEmail}
                 onChange={(e) => setTestEmail(e.target.value)}
                 placeholder="输入收件测试邮箱（例如 your-email@example.com）"
-                className="flex-1 rounded-xl border border-line bg-canvas px-4 py-2.5 text-body text-ink outline-none focus:border-brand-ring"
+                className="h-control-md flex-1 rounded-md border border-line-subtle bg-well px-3 text-body-sm text-ink outline-none transition focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand-ring placeholder:text-ink-subtle"
               />
               <button
                 type="submit"
                 disabled={busy}
-                className="rounded-xl bg-brand px-6 py-2.5 text-label font-bold text-ink-on-accent transition hover:bg-brand-active disabled:opacity-50"
+                className="inline-flex h-control-md items-center justify-center rounded-md bg-brand px-6 text-body-sm font-medium text-ink-on-accent transition hover:bg-brand-hover active:bg-brand-active disabled:opacity-50"
               >
                 {busy ? '正在发送测试邮件...' : '一键发送营销测试邮件'}
               </button>
@@ -374,7 +374,7 @@ export default function MarketingEmailSection({ canWrite }) {
 
             {sendResult && (
               <p
-                className={`mt-2 text-label font-medium ${
+                className={`mt-2 text-body-xs font-medium ${
                   sendResult.success ? 'text-good' : 'text-danger'
                 }`}
               >

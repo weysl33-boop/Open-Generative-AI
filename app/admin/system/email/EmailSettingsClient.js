@@ -23,10 +23,10 @@ async function readResponse(response) {
   return payload.data ?? payload;
 }
 
-const field = 'h-9 rounded-lg border border-line bg-canvas px-3 text-body text-ink outline-none focus:border-brand-ring disabled:opacity-60';
-const label = 'flex flex-col gap-1.5 text-label text-ink-muted';
-const secondary = 'h-9 rounded-lg border border-line bg-wash px-4 text-label text-ink disabled:opacity-50 hover:bg-wash-press';
-const primary = 'h-9 rounded-lg bg-brand-active px-4 text-label text-ink-on-accent hover:bg-brand disabled:opacity-50';
+const field = 'h-control-md rounded-md border border-line-subtle bg-well px-3 text-body-sm text-ink outline-none transition focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand-ring disabled:opacity-60 placeholder:text-ink-subtle';
+const label = 'flex flex-col gap-1.5 text-body-xs font-medium text-ink-muted';
+const secondary = 'inline-flex h-control-md items-center justify-center rounded-md border border-line-subtle bg-surface px-4 text-body-sm font-medium text-ink transition hover:bg-wash active:bg-wash-press disabled:opacity-50';
+const primary = 'inline-flex h-control-md items-center justify-center rounded-md bg-brand px-4 text-body-sm font-medium text-ink-on-accent transition hover:bg-brand-hover active:bg-brand-active disabled:opacity-50';
 
 export default function EmailSettingsClient({ initial, canWrite }) {
   const router = useRouter();
@@ -131,7 +131,7 @@ export default function EmailSettingsClient({ initial, canWrite }) {
       <form onSubmit={save} className="mt-5 grid gap-4 md:grid-cols-2">
         <div className={label}>
           SMTP 服务器
-          <div className="flex h-9 items-center rounded-lg border border-line bg-wash px-3 text-ink">smtp.exmail.qq.com : 465 · SSL/TLS</div>
+          <div className="flex h-control-md items-center rounded-md border border-line-subtle bg-well px-3 text-body-sm text-ink">smtp.exmail.qq.com : 465 · SSL/TLS</div>
         </div>
         <label className={label}>
           QQ 企业邮箱账号
@@ -151,8 +151,8 @@ export default function EmailSettingsClient({ initial, canWrite }) {
             <input type="password" autoComplete="current-password" value={form.adminPassword} disabled={disabled} onChange={set('adminPassword')} className={field} />
           </label>
         )}
-        <label className="flex items-center gap-2 text-label text-ink md:col-span-2">
-          <input type="checkbox" checked={form.enabled} disabled={disabled} onChange={set('enabled')} />
+        <label className="flex items-center gap-2 text-body-sm text-ink md:col-span-2">
+          <input type="checkbox" checked={form.enabled} disabled={disabled} onChange={set('enabled')} className="h-4 w-4 rounded border-line-subtle text-brand focus:ring-brand-ring" />
           启用邮箱登录邮件发送
         </label>
         {canWrite && (
@@ -163,7 +163,7 @@ export default function EmailSettingsClient({ initial, canWrite }) {
       </form>
 
       {canWrite && (
-        <div className="mt-5 flex flex-wrap items-end gap-3 border-t border-line pt-5">
+        <div className="mt-5 flex flex-wrap items-end gap-3 border-t border-line-subtle pt-5">
           <label className={`${label} min-w-0 flex-1`}>
             测试收件邮箱
             <input type="email" value={testRecipient} onChange={(event) => setTestRecipient(event.target.value)} placeholder="your-address@example.com" className={field} />
@@ -173,7 +173,7 @@ export default function EmailSettingsClient({ initial, canWrite }) {
         </div>
       )}
 
-      <p className="mt-3 text-label text-ink-subtle">
+      <p className="mt-3 text-body-xs text-ink-subtle">
         {message || `最近连接检查：${overview.lastHealthCheck ? new Date(overview.lastHealthCheck).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false }) : '—'}${overview.lastHealthLatencyMs != null ? ` · ${overview.lastHealthLatencyMs} ms` : ''}${overview.lastHealthError ? ` · ${overview.lastHealthError}` : ''}`}
       </p>
     </Card>

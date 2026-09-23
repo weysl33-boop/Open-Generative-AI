@@ -1,8 +1,8 @@
 # KOYO Studio 共享组件清单（Component Reference）
 
-**版本**：3.2.0
+**版本**：3.3.0 · **取代** 3.2.0（2026-09-23 增补商业化、一站式扫码、胶囊分段器与 Switch 复合行）
 **地位**：`UI_DESIGN_SYSTEM.md` 的配套实现清单。规范定义"必须是什么样"，本文定义"用什么拿到它"。
-**校验方式**：本文所有 API 逐字段读自源码，所有采纳数字由脚本扫描本仓库当前工作树得出（2026-09-21）。新增组件必须同步本文，否则视为未交付。
+**校验方式**：本文所有 API 逐字段读自源码，所有采纳数字由脚本扫描本仓库当前工作树得出。新增组件与 Recipe 必须同步本文，否则视为未交付。
 
 ---
 
@@ -443,3 +443,139 @@ Recipe 的两条硬约束：
 6. 更新本文。
 7. `npm run lint:ui` + `NEXT_DIST_DIR=.agents/verify-next npm run build` + 重截受影响基线。
 8. **禁止反向污染**：为了让业务页面少写点代码，就往业务组件里塞 `className` 打补丁 —— 这等于回到重构前。
+
+---
+
+## 13. 商业化、导航与设置组件模式（Commercial, Navigation & Settings Patterns）
+
+深度吸收 OiiOii 与即梦的生产级商业化与设置场景，统一为 8 个标准模式：
+
+### 13.1 营销通告横幅（`AnnouncementBar`）
+```jsx
+<AnnouncementBar
+  variant="highlight" // "neutral" | "highlight"
+  onClose={() => setVisible(false)}
+>
+  双节限时特惠，年付会员享 3 倍算力，<span className="font-semibold text-ink">Seedance 2.5 720p</span> 低至 0.03 积分/秒
+</AnnouncementBar>
+```
+- **结构契约**：全宽单行，高度严格绑定 `h-announcement-h` (36px)。
+- **样式 Recipe**：
+  - `neutral`: `bg-surface text-ink-muted border-b border-line-subtle text-body-sm flex items-center justify-center px-4`
+  - `highlight`: `bg-brand-soft text-brand border-b border-brand-line text-body-sm flex items-center justify-center px-4`
+- **操作**：右侧内置 `IconButton variant="ghost" size="xs"` 关闭按钮。
+
+### 13.2 胶囊分段控制器（`PillSegmentedControl`）
+```jsx
+<PillSegmentedControl
+  size="md" // "sm" (32px) | "md" (36px) | "lg" (40px)
+  options={[
+    { label: '个人/自媒体', value: 'creator' },
+    { label: '短漫剧', value: 'comic' },
+    { label: 'MV', value: 'mv' },
+    { label: '广告', value: 'ad' },
+  ]}
+  value={tab}
+  onChange={setTab}
+/>
+```
+- **结构契约**：
+  - 外层 Track：`inline-flex items-center p-1 bg-well rounded-full border border-line-subtle gap-0.5`
+  - 未选 Option：`px-3.5 py-1 text-label text-ink-muted rounded-full hover:text-ink hover:bg-wash transition-colors duration-fast`
+  - 选中 Option：`px-3.5 py-1 text-label font-medium text-ink-inverse bg-surface-inverse rounded-full shadow-elevation-1 transition-all duration-fast`（或品牌高亮态 `text-ink-on-accent bg-brand`）
+
+### 13.3 用户资产展示条（`AssetStatusBar`）
+用于充值与个人中心弹窗头部：
+```jsx
+<AssetStatusBar
+  user={{ name: '用户昵称', avatarUrl: '...', tier: 'FREE' }}
+  balance={{ amount: 60, unit: '通用算力' }}
+  upgradeLink="/pricing"
+/>
+```
+- **结构契约**：高度 48px，`bg-surface border border-line-subtle rounded-xl px-4 flex items-center justify-between`。
+- **左侧簇**：`size-7 rounded-full` 头像 + 用户昵称 + `rounded-xs px-1.5 py-0.5 text-micro bg-wash font-semibold` 身份标签 + `text-brand hover:underline` 升级入口。
+- **右侧簇**：`text-body-sm text-ink-muted` + 粗体代币读数 `text-page-title font-semibold text-ink font-mono`。
+
+### 13.4 算力充值包卡片（`PackCard`）
+```jsx
+<PackCard
+  credits={1400}
+  bonusCredits={1400} // 可选，展示首购加赠
+  price={140}
+  selected={selectedId === 'pack-1400'}
+  badgeText="首购加赠 100%"
+  modelName="GPT Image 2.5"
+  memberOnly={false}
+  onClick={() => setSelectedId('pack-1400')}
+/>
+```
+- **结构契约**：
+  - 底色：`bg-surface-raised border border-line rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition-all duration-fast`
+  - 选中态：`border-brand ring-1 ring-brand-ring bg-brand-soft`
+  - 悬浮态：`hover:border-line-strong hover:bg-wash`
+  - 加赠徽章：绝对定位顶部居中 `px-2 py-0.5 rounded-full text-micro font-medium bg-warning-soft text-warning border border-warning-line`
+  - 额度显示：原额度 `line-through text-ink-disabled text-caption` + 加赠后总额 `text-card-title font-bold text-ink`
+
+### 13.5 一站式即时扫码支付模态（`SplitPanePaymentModal`）
+吸收自即梦支付弹窗，极致消除充值漏斗二次跳转：
+- **布局分栏**：
+  - 模态总宽 640px，居中无内边距（由左右两栏自带内边距）；
+  - 左栏（宽 380px，`p-6`）：充值档位 2×3 网格，单选交互，点击无刷新联动右栏；
+  - 右栏（宽 260px，`p-6 bg-surface border-l border-line-subtle flex flex-col items-center justify-center`）：
+    - 纯白二维码方块：`size-40 bg-white p-2.5 rounded-xl flex items-center justify-center shadow-elevation-2`；
+    - 支付提示：`text-caption text-ink-muted mt-3 mb-2`；
+    - 渠道图标栈：支付宝、微信支付小图标水平平铺（`size-4`）；
+    - 协议勾选小字：`text-micro text-ink-subtle text-center leading-relaxed`。
+
+### 13.6 四档订阅定价卡片（`PricingTierCard`）
+```jsx
+<PricingTierCard
+  tier="APEX"
+  price={1319}
+  originalPrice={2394}
+  discount="限时 5.5折"
+  creditsPerMonth="19860 / 月"
+  creditRateAnchor="1积分 ≈ ¥0.066"
+  isFlagship={true} // APEX 强化态
+  features={[
+    { title: 'Seedance 2.5 独占模型', discount: '最低4.2折' },
+    { title: '极速生成通道与专属算力池' },
+  ]}
+  ctaLabel="立即订阅"
+  onSubscribe={() => {}}
+/>
+```
+- **结构契约**：
+  - 卡片：`w-full max-w-[280px] bg-surface-raised rounded-2xl p-6 flex flex-col justify-between border border-line`
+  - APEX 旗舰态：`border-brand ring-1 ring-brand-ring shadow-elevation-brand`
+  - 按钮分工：普通档采用反色实心按钮 `Button variant="secondary" className="bg-surface-inverse text-ink-inverse hover:opacity-90"`；APEX 旗舰采用 `Button variant="primary"`（青色高光按钮）。
+
+### 13.7 设置与合规表单 Switch 复合行（`SwitchRow`）
+```jsx
+<SwitchRow
+  id="remove-watermark"
+  checked={removeWatermark}
+  onCheckedChange={setRemoveWatermark}
+  label="导出内容去除 AI 生成水印"
+  description="打开开关并保存设置后，您使用当前账号所创作、生成的 AI 内容在导出后将不再添加显式水印。"
+  subDescription="后续可以在「侧边栏 -> 设置 -> 水印设置」中随时修改此项偏好。"
+/>
+```
+- **无障碍契约**：
+  - Switch 控件（`h-6 w-11 rounded-full p-0.5 bg-subtle`，激活态 `bg-brand`）；
+  - 内部圆钮：`size-5 rounded-full bg-white transition-transform`（激活态 `translate-x-5`）；
+  - 强制声明 `role="switch" aria-checked={checked}`，关联 `htmlFor="remove-watermark"`。
+
+### 13.8 4 级语义微标签（`MicroBadge`）
+```jsx
+<MicroBadge variant="discount">限时 6.7折</MicroBadge>
+<MicroBadge variant="bonus">首购加赠 100%</MicroBadge>
+<MicroBadge variant="privilege">最低4.2折</MicroBadge>
+<MicroBadge variant="membership">仅限会员</MicroBadge>
+```
+- **尺寸与间距硬规则**：
+  - `discount`: `inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium bg-wash-strong text-ink`
+  - `bonus`: `inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium bg-warning-soft text-warning border border-warning-line`
+  - `privilege`: `inline-flex items-center px-1.5 py-0.5 rounded-xs text-micro text-ink-muted bg-surface border border-line-subtle`
+  - `membership`: `inline-flex items-center text-caption text-ink-subtle select-none`

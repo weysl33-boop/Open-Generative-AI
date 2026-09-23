@@ -372,7 +372,7 @@ export default function BrandingManagerClient({
             variant="outline"
             onClick={handleResetToDefault}
             disabled={isSaving}
-            className="border-line-strong bg-slate-800/80 hover:bg-overlay text-ink text-xs flex items-center gap-1.5"
+            className="h-control-sm rounded-md border border-line-subtle bg-surface px-3 text-body-xs font-medium text-ink-muted hover:bg-wash hover:text-ink transition flex items-center gap-1.5"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             恢复默认配置
@@ -380,7 +380,7 @@ export default function BrandingManagerClient({
           <Button
             onClick={handleSaveAll}
             disabled={isSaving || isUploading}
-            className="bg-brand-active hover:bg-brand text-ink-on-accent font-semibold text-xs flex items-center gap-1.5 shadow-elevation-2 shadow-brand-soft"
+            className="inline-flex h-control-sm items-center gap-1.5 rounded-md bg-brand px-4 text-body-xs font-medium text-ink-on-accent transition hover:bg-brand-hover active:bg-brand-active shadow-elevation-1"
           >
             <Save className="w-3.5 h-3.5" />
             {isSaving ? '正在发布...' : '保存全网发布'}
@@ -391,14 +391,14 @@ export default function BrandingManagerClient({
       {/* 提示反馈栏 */}
       {feedback.message && (
         <div
-          className={`p-4 rounded-xl border flex items-center gap-3 text-sm transition-all duration-page ${
+          className={`p-4 rounded-xl border flex items-center gap-3 text-body-sm transition duration-page ${
             feedback.type === 'success'
-              ? 'bg-success-soft border-success-line text-success'
-              : 'bg-danger-soft border-danger-line text-danger'
+              ? 'bg-good/10 border-good/30 text-good'
+              : 'bg-danger/10 border-danger/30 text-danger'
           }`}
         >
           {feedback.type === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-success" />
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-good" />
           ) : (
             <AlertCircle className="w-5 h-5 flex-shrink-0 text-danger" />
           )}
@@ -407,22 +407,22 @@ export default function BrandingManagerClient({
       )}
 
       {/* 模块 1：全真 1:1 Live Header 实时顶栏仿真器 */}
-      <Card className="border-line-strong bg-slate-900/90 shadow-elevation-3 overflow-hidden">
-        <div className="p-4 sm:p-5 border-b border-line-strong flex flex-wrap items-center justify-between gap-3">
+      <Card className="overflow-hidden">
+        <div className="p-4 sm:p-5 border-b border-line-subtle flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Eye className="w-4 h-4 text-brand" />
-            <h3 className="text-sm font-semibold text-ink">网站顶栏 1:1 真实渲染仿真器</h3>
-            <span className="text-xs text-ink-subtle hidden md:inline">所见即所得 · 与前台全站无缝同步</span>
+            <h3 className="text-body-sm font-semibold text-ink">网站顶栏 1:1 真实渲染仿真器</h3>
+            <span className="text-body-xs text-ink-subtle hidden md:inline">所见即所得 · 与前台全站无缝同步</span>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-canvas p-1 rounded-xl border border-line-strong text-xs">
-            <span className="text-[11px] text-ink-subtle px-2">预览背景:</span>
+          <div className="flex items-center gap-1.5 bg-well p-1 rounded-md border border-line-subtle text-body-xs">
+            <span className="text-micro text-ink-subtle px-2">预览背景:</span>
             <button
               type="button"
               onClick={() => setPreviewTheme('dark')}
-              className={`px-3 py-1 rounded-lg font-medium transition ${
+              className={`px-3 py-1 rounded font-medium transition ${
                 previewTheme === 'dark'
-                  ? 'bg-slate-800 text-ink shadow'
+                  ? 'bg-wash-press text-ink shadow-elevation-1'
                   : 'text-ink-muted hover:text-ink'
               }`}
             >
@@ -431,9 +431,9 @@ export default function BrandingManagerClient({
             <button
               type="button"
               onClick={() => setPreviewTheme('light')}
-              className={`px-3 py-1 rounded-lg font-medium transition ${
+              className={`px-3 py-1 rounded font-medium transition ${
                 previewTheme === 'light'
-                  ? 'bg-white text-ink-inverse shadow'
+                  ? 'bg-surface-inverse text-ink-inverse shadow-elevation-1'
                   : 'text-ink-muted hover:text-ink'
               }`}
             >
@@ -443,12 +443,12 @@ export default function BrandingManagerClient({
         </div>
 
         {/* 仿真画布容器 */}
-        <div className="p-6 bg-slate-950/60 flex justify-center">
+        <div className="p-6 bg-well flex justify-center">
           <div
-            className={`w-full max-w-5xl rounded-2xl border transition-all duration-page px-6 py-3.5 flex items-center justify-between shadow-elevation-4 ${
+            className={`w-full max-w-5xl rounded-2xl border transition duration-page px-6 py-3.5 flex items-center justify-between shadow-elevation-4 ${
               previewTheme === 'dark'
                 ? 'bg-canvas border-line text-ink'
-                : 'bg-surface-inverse border-slate-200 text-ink-inverse'
+                : 'bg-surface-inverse border-line-subtle text-ink-inverse'
             }`}
           >
             {/* 左侧：自适应 Logo 与 品牌标题 */}
@@ -522,17 +522,17 @@ export default function BrandingManagerClient({
       </Card>
 
       {/* 模块 2：网站 Logo 替换工具（核心交互区） */}
-      <Card className="border-line-strong bg-slate-900/90 shadow-elevation-3 overflow-hidden">
-        <div className="p-5 border-b border-line-strong flex items-center justify-between">
+      <Card className="overflow-hidden">
+        <div className="p-5 border-b border-line-subtle flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Crop className="w-5 h-5 text-brand" />
             <div>
               <h2 className="text-base font-semibold text-ink">网站 Logo 替换工具</h2>
-              <p className="text-xs text-ink-muted">选择图片后将自动调出裁剪工具，支持 1:1 方形、3:1 横版或自由裁切</p>
+              <p className="text-body-xs text-ink-muted">选择图片后将自动调出裁剪工具，支持 1:1 方形、3:1 横版或自由裁切</p>
             </div>
           </div>
           {brand.logoUrl && !isCropping && (
-            <span className="text-xs px-2.5 py-1 rounded-full bg-brand-soft text-brand border border-brand-soft font-medium">
+            <span className="text-body-xs px-2.5 py-1 rounded-full bg-brand-soft text-brand border border-brand-line font-medium">
               自定义 Logo 已生效
             </span>
           )}
@@ -555,32 +555,32 @@ export default function BrandingManagerClient({
             /* 未处于裁剪时：展示当前 Logo 卡片 + 替换入口 */
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
               {/* 当前在用 Logo 状态展示 */}
-              <div className="bg-slate-950/80 border border-line-strong rounded-2xl p-5 flex flex-col justify-between space-y-4">
+              <div className="bg-well border border-line-subtle rounded-xl p-5 flex flex-col justify-between space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-ink-muted">当前前台展示 Logo</span>
+                  <span className="text-micro font-semibold uppercase tracking-wider text-ink-muted">当前前台展示 Logo</span>
                   {brand.logoUrl ? (
                     logoLoadError ? (
-                      <span className="text-xs text-warning flex items-center gap-1 font-medium">
+                      <span className="text-body-xs text-warn flex items-center gap-1 font-medium">
                         <AlertCircle className="w-3.5 h-3.5" /> 图像加载异常
                       </span>
                     ) : (
-                      <span className="text-xs text-success flex items-center gap-1 font-medium">
+                      <span className="text-body-xs text-good flex items-center gap-1 font-medium">
                         <CheckCircle2 className="w-3.5 h-3.5" /> 自定义图像
                       </span>
                     )
                   ) : (
-                    <span className="text-xs text-ink-subtle">系统官方默认</span>
+                    <span className="text-body-xs text-ink-subtle">系统官方默认</span>
                   )}
                 </div>
 
                 {/* 实际效果预览方盒 */}
-                <div className="h-28 rounded-xl bg-raised border border-slate-800/80 flex items-center justify-center p-4 relative group">
+                <div className="h-28 rounded-xl bg-surface border border-line-subtle flex items-center justify-center p-4 relative group">
                   {brand.logoUrl ? (
                     logoLoadError ? (
                       <div className="flex flex-col items-center justify-center text-center px-4 py-2">
-                        <AlertCircle className="w-6 h-6 text-warning mb-1.5" />
-                        <span className="text-xs text-warning font-medium">Logo 图片无法加载或链接已失效</span>
-                        <span className="text-[11px] text-ink-subtle mt-1 max-w-[280px] truncate" title={brand.logoUrl}>
+                        <AlertCircle className="w-6 h-6 text-warn mb-1.5" />
+                        <span className="text-body-xs text-warn font-medium">Logo 图片无法加载或链接已失效</span>
+                        <span className="text-micro text-ink-subtle mt-1 max-w-[280px] truncate" title={brand.logoUrl}>
                           {brand.logoUrl}
                         </span>
                       </div>
@@ -607,7 +607,7 @@ export default function BrandingManagerClient({
                   )}
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-ink-subtle pt-1">
+                <div className="flex items-center justify-between text-body-xs text-ink-subtle pt-1">
                   <span>支持格式: PNG, JPG, WEBP, SVG</span>
                   {brand.logoUrl && (
                     <button
@@ -626,20 +626,20 @@ export default function BrandingManagerClient({
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className="bg-slate-950/40 border-2 border-dashed border-line-strong hover:border-brand-ring rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-base group h-full min-h-[175px]"
+                className="bg-well border-2 border-dashed border-line-subtle hover:border-brand rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition duration-base group h-full min-h-[175px]"
               >
-                <div className="w-12 h-12 rounded-2xl bg-brand-soft border border-brand-soft text-brand flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 rounded-2xl bg-brand-soft border border-brand-line text-brand flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                   <Upload className="w-5 h-5" />
                 </div>
-                <h4 className="text-sm font-semibold text-ink group-hover:text-brand transition-colors">
+                <h4 className="text-body-sm font-semibold text-ink group-hover:text-brand transition-colors">
                   {isUploading ? '正在处理上传...' : '点击添加图片 或 拖拽图片至此处'}
                 </h4>
-                <p className="text-xs text-ink-muted mt-1.5 max-w-xs">
+                <p className="text-body-xs text-ink-muted mt-1.5 max-w-xs">
                   支持上传透明背景 PNG 或任意图片，添加后即可在可视画布中自由裁剪比例并即时生效
                 </p>
                 <button
                   type="button"
-                  className="mt-3 px-4 py-1.5 rounded-lg bg-overlay hover:bg-slate-700 text-xs text-ink font-medium transition"
+                  className="mt-3 inline-flex h-control-sm items-center rounded-md bg-wash hover:bg-wash-press text-body-xs text-ink font-medium transition px-4"
                 >
                   选择本地文件
                 </button>
@@ -648,24 +648,24 @@ export default function BrandingManagerClient({
           )}
 
           {/* 备选：手动粘贴图片外链（极简折叠） */}
-          <div className="pt-2 border-t border-slate-800/80">
+          <div className="pt-2 border-t border-line-subtle">
             <button
               type="button"
               onClick={() => setShowManualUrl(!showManualUrl)}
-              className="text-xs text-ink-muted hover:text-brand flex items-center gap-1.5 transition-colors"
+              className="text-body-xs text-ink-muted hover:text-brand flex items-center gap-1.5 transition-colors"
             >
               <LinkIcon className="w-3.5 h-3.5" />
               {showManualUrl ? '收起外部链接输入' : '高级选项: 直接输入外部图片 URL 或 CDN 链接'}
             </button>
 
             {showManualUrl && (
-              <div className="mt-3 p-3 bg-canvas rounded-xl border border-line-strong flex items-center gap-3">
+              <div className="mt-3 p-3 bg-well rounded-md border border-line-subtle flex items-center gap-3">
                 <input
                   type="text"
                   placeholder="https://example.com/logo.png 或 /uploads/..."
                   value={brand.logoUrl}
                   onChange={(e) => setBrand((prev) => ({ ...prev, logoType: 'image', logoUrl: e.target.value }))}
-                  className="flex-1 bg-raised border border-line-strong rounded-lg px-3 py-1.5 text-xs text-ink focus:border-brand"
+                  className="h-control-sm flex-1 bg-surface border border-line-subtle rounded-md px-3 text-body-xs text-ink focus:border-brand outline-none"
                 />
                 <Button
                   size="sm"
@@ -675,7 +675,7 @@ export default function BrandingManagerClient({
                       setIsCropping(true);
                     }
                   }}
-                  className="text-xs bg-overlay hover:bg-slate-700 text-ink"
+                  className="h-control-sm inline-flex items-center rounded-md border border-line-subtle bg-surface px-3 text-body-xs text-ink font-medium hover:bg-wash"
                 >
                   <Crop className="w-3.5 h-3.5 mr-1" />
                   对此图裁剪
@@ -711,7 +711,7 @@ export default function BrandingManagerClient({
                   type="button"
                   onClick={() => setBrand((prev) => ({ ...prev, showBrandName: !prev.showBrandName }))}
                   className={`w-11 h-6 rounded-full transition-colors relative ${
-                    brand.showBrandName ? 'bg-cyan-500' : 'bg-slate-800'
+                    brand.showBrandName ? 'bg-brand' : 'bg-wash-press'
                   }`}
                 >
                   <span
@@ -724,7 +724,7 @@ export default function BrandingManagerClient({
                   {brand.showBrandName ? '在 Logo 右侧显示文字' : '隐藏旁置文字 (图文一体标推荐)'}
                 </span>
               </div>
-              <span className="text-[11px] text-ink-subtle mt-1 block">若您的 Logo 已带有文字，建议关闭以防文字重复</span>
+              <span className="text-micro text-ink-subtle mt-1 block">若您的 Logo 已带有文字，建议关闭以防文字重复</span>
             </div>
 
             {/* Logo 点击跳转路由 */}
@@ -739,26 +739,26 @@ export default function BrandingManagerClient({
                 placeholder="/studio"
                 className="w-full bg-canvas border border-line-strong rounded-xl px-3.5 py-2 text-xs text-ink focus:border-brand"
               />
-              <span className="text-[11px] text-ink-subtle mt-1 block">默认跳转工作室首页 `/studio`</span>
+              <span className="text-micro text-ink-subtle mt-1 block">默认跳转工作室首页 `/studio`</span>
             </div>
           </div>
         </div>
       </Card>
 
       {/* 模块 3：顶栏导航菜单配置 */}
-      <Card className="border-line-strong bg-slate-900/90 shadow-elevation-3 overflow-hidden">
-        <div className="p-5 border-b border-line-strong flex flex-wrap items-center justify-between gap-3">
+      <Card className="overflow-hidden">
+        <div className="p-5 border-b border-line-subtle flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-ink flex items-center gap-2">
               <Sliders className="w-4 h-4 text-brand" />
               顶栏导航菜单与按钮管理
             </h2>
-            <p className="text-xs text-ink-muted mt-0.5">控制前台顶栏右侧菜单胶囊按钮，支持排序、开关与增删改</p>
+            <p className="text-body-xs text-ink-muted mt-0.5">控制前台顶栏右侧菜单胶囊按钮，支持排序、开关与增删改</p>
           </div>
 
           <Button
             onClick={handleOpenAddModal}
-            className="bg-overlay hover:bg-slate-700 text-ink text-xs flex items-center gap-1.5 border border-line-strong"
+            className="inline-flex h-control-sm items-center gap-1.5 rounded-md border border-line-subtle bg-surface px-3 text-body-xs font-medium text-ink hover:bg-wash transition"
           >
             <Plus className="w-3.5 h-3.5" />
             新增导航菜单项
@@ -767,14 +767,14 @@ export default function BrandingManagerClient({
 
         <div className="p-5 space-y-3">
           {navigation.length === 0 ? (
-            <div className="py-8 text-center text-xs text-ink-subtle">
+            <div className="py-8 text-center text-body-xs text-ink-subtle">
               当前暂未配置导航菜单，点击右上角“新增导航菜单项”添加。
             </div>
           ) : (
             navigation.map((item, index) => (
               <div
                 key={item.id}
-                className="p-3.5 bg-slate-950/70 border border-slate-800/80 rounded-xl flex flex-wrap items-center justify-between gap-3 hover:border-line-strong transition"
+                className="p-3.5 bg-well border border-line-subtle rounded-lg flex flex-wrap items-center justify-between gap-3 hover:border-line transition"
               >
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-mono text-ink-subtle w-5 text-center">
@@ -785,7 +785,7 @@ export default function BrandingManagerClient({
                     type="button"
                     onClick={() => toggleItemEnabled(item.id)}
                     className={`w-9 h-5 rounded-full transition-colors relative ${
-                      item.enabled ? 'bg-cyan-500' : 'bg-slate-800'
+                      item.enabled ? 'bg-brand' : 'bg-wash-press'
                     }`}
                   >
                     <span
@@ -830,7 +830,7 @@ export default function BrandingManagerClient({
                   <button
                     type="button"
                     onClick={() => handleOpenEditModal(item)}
-                    className="px-3 py-1.5 rounded-lg bg-overlay hover:bg-slate-700 text-ink text-xs font-medium"
+                    className="inline-flex h-control-xs items-center rounded px-2.5 text-micro font-medium text-ink hover:bg-wash transition border border-line-subtle"
                   >
                     编辑
                   </button>
@@ -850,8 +850,8 @@ export default function BrandingManagerClient({
 
       {/* 底部悬浮操作发布栏 */}
       <div className="fixed bottom-6 left-0 right-0 z-40 max-w-4xl mx-auto px-4 pointer-events-none">
-        <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl p-4 shadow-elevation-4 flex items-center justify-between pointer-events-auto">
-          <div className="flex items-center gap-2 text-xs text-ink-muted">
+        <div className="bg-surface backdrop-blur-md border border-line-subtle rounded-xl p-4 shadow-elevation-4 flex items-center justify-between pointer-events-auto">
+          <div className="flex items-center gap-2 text-body-xs text-ink-muted">
             <Sparkles className="w-4 h-4 text-brand" />
             <span>修改后请点击发布，变更将实时推送到全站前台。</span>
           </div>
@@ -861,14 +861,14 @@ export default function BrandingManagerClient({
               variant="outline"
               onClick={handleResetToDefault}
               disabled={isSaving}
-              className="text-xs border-line-strong text-ink"
+              className="h-control-sm rounded-md border border-line-subtle bg-surface px-3 text-body-xs font-medium text-ink-muted hover:bg-wash hover:text-ink transition"
             >
               恢复默认
             </Button>
             <Button
               onClick={handleSaveAll}
               disabled={isSaving || isUploading}
-              className="bg-brand hover:bg-brand text-ink-on-accent font-semibold text-xs px-5 shadow-elevation-2 shadow-brand-soft"
+              className="inline-flex h-control-sm items-center gap-1 rounded-md bg-brand px-4 text-body-xs font-medium text-ink-on-accent transition hover:bg-brand-hover active:bg-brand-active"
             >
               <Save className="w-3.5 h-3.5 mr-1" />
               {isSaving ? '保存中...' : '保存全网发布'}

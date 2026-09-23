@@ -92,10 +92,10 @@ export default async function AdminDashboardPage() {
         <Card>
           <div className="flex items-center justify-between border-b border-line-subtle pb-4">
             <div>
-              <h2 className="text-base font-semibold text-ink tracking-[-0.015em] leading-6">近 7 天生成调用走势</h2>
-              <p className="mt-1 text-xs text-ink-muted tracking-[-0.005em] leading-5">每日 AI 图像/视频生成请求总量</p>
+              <h2 className="text-card-title font-semibold text-ink">近 7 天生成调用走势</h2>
+              <p className="mt-1 text-body-sm text-ink-muted">每日 AI 图像/视频生成请求总量</p>
             </div>
-            <span className="text-xs text-ink-muted font-mono">
+            <span className="text-caption font-mono text-ink-muted">
               7 天累计: {trends?.last7Days?.reduce((acc, d) => acc + d.count, 0) || 0} 次
             </span>
           </div>
@@ -106,15 +106,15 @@ export default async function AdminDashboardPage() {
               return (
                 <div key={day.date} className="group relative flex flex-1 flex-col items-center h-full justify-end">
                   {/* Tooltip */}
-                  <div className="absolute -top-9 opacity-0 group-hover:opacity-100 transition rounded-lg bg-wash-press backdrop-blur px-2 py-1 text-micro text-brand-hover font-mono pointer-events-none whitespace-nowrap">
+                  <div className="pointer-events-none absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity duration-fast rounded-md border border-line-subtle bg-overlay px-2 py-1 text-caption text-brand font-mono shadow-elevation-2 whitespace-nowrap">
                     {day.date}: {day.count} 次
                   </div>
                   {/* 柱子 */}
                   <div
                     style={{ height: `${heightPct}%` }}
-                    className="w-full max-w-[42px] rounded-t-lg bg-gradient-to-t from-brand-pressed via-brand-line to-brand transition-all duration-base group-hover:from-brand-line group-hover:to-brand"
+                    className="w-full max-w-[42px] rounded-t-md bg-brand-soft border-t border-x border-brand-line transition-[background-color] duration-fast group-hover:bg-brand"
                   />
-                  <span className="mt-2 text-[11px] text-ink-muted font-mono">{day.label}</span>
+                  <span className="mt-2 text-caption text-ink-muted font-mono">{day.label}</span>
                 </div>
               );
             })}
@@ -125,8 +125,8 @@ export default async function AdminDashboardPage() {
         <Card>
           <div className="flex items-center justify-between border-b border-line-subtle pb-4">
             <div>
-              <h2 className="text-base font-semibold text-ink tracking-[-0.015em] leading-6">待处理风险队列</h2>
-              <p className="mt-1 text-xs text-ink-muted tracking-[-0.005em] leading-5">系统检测到的生成失败或待审核异常项</p>
+              <h2 className="text-card-title font-semibold text-ink">待处理风险队列</h2>
+              <p className="mt-1 text-body-sm text-ink-muted">系统检测到的生成失败或待审核异常项</p>
             </div>
             <StatusBadge tone={risks.length ? 'warn' : 'good'}>
               {risks.length ? `${risks.length} 项关注` : '健康平稳'}
@@ -138,25 +138,25 @@ export default async function AdminDashboardPage() {
               risks.map((risk) => (
                 <div
                   key={risk.id}
-                  className="flex items-center justify-between rounded-xl border border-line bg-wash p-4 transition-all duration-base hover:border-line-strong hover:bg-wash"
+                  className="flex items-center justify-between rounded-lg border border-line-subtle bg-raised p-4 transition-[border-color,background-color] duration-fast hover:border-line hover:bg-overlay"
                 >
                   <div>
-                    <p className="text-sm font-semibold text-ink tracking-[-0.005em]">{risk.title}</p>
-                    <p className="mt-1 text-xs text-ink-muted tracking-[-0.005em]">
-                      共有 <span className="font-bold text-warning">{risk.count}</span> 条记录待处理
+                    <p className="text-body font-medium text-ink">{risk.title}</p>
+                    <p className="mt-1 text-body-sm text-ink-muted">
+                      共有 <span className="font-semibold text-warning">{risk.count}</span> 条记录待处理
                     </p>
                   </div>
                   <Link
                     href={risk.link}
-                    className="inline-flex h-8 items-center rounded-lg border border-line bg-wash px-3 text-xs font-medium text-ink transition-all duration-base hover:bg-wash-strong hover:text-ink active:scale-[0.98]"
+                    className="h-control-sm inline-flex items-center rounded-md border border-line-subtle bg-surface px-3 text-label font-medium text-ink transition-[border-color,background-color,color] duration-fast hover:border-line hover:bg-overlay hover:text-brand"
                   >
                     立即排查 →
                   </Link>
                 </div>
               ))
             ) : (
-              <div className="rounded-xl border border-dashed border-line p-8 text-center">
-                <p className="text-xs text-ink-muted">当前暂无待处理风险，系统运行正常。</p>
+              <div className="rounded-lg border border-dashed border-line-subtle p-8 text-center">
+                <p className="text-body-sm text-ink-muted">当前暂无待处理风险，系统运行正常。</p>
               </div>
             )}
           </div>
@@ -168,10 +168,10 @@ export default async function AdminDashboardPage() {
         <Card>
           <div className="flex items-center justify-between border-b border-line-subtle pb-4">
             <div>
-              <h2 className="text-base font-semibold text-ink tracking-[-0.015em] leading-6">最近管理员操作审计</h2>
-              <p className="mt-1 text-xs text-ink-muted tracking-[-0.005em] leading-5">全站重要管理动作（调额、改价、封禁、切换角色）全自动留痕</p>
+              <h2 className="text-card-title font-semibold text-ink">最近管理员操作审计</h2>
+              <p className="mt-1 text-body-sm text-ink-muted">全站重要管理动作（调额、改价、封禁、切换角色）全自动留痕</p>
             </div>
-            <Link href="/admin/audit" className="text-xs text-brand-hover hover:text-brand-hover font-semibold tracking-[-0.005em]">
+            <Link href="/admin/audit" className="text-caption text-brand hover:underline font-medium">
               全部审计记录 →
             </Link>
           </div>
@@ -184,8 +184,8 @@ export default async function AdminDashboardPage() {
                   className="flex items-start justify-between gap-3 border-b border-line-subtle pb-3 last:border-0 last:pb-0"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-semibold text-ink tracking-[-0.005em]">{item.action}</p>
-                    <p className="mt-1 truncate text-[11px] text-ink-subtle">
+                    <p className="truncate text-body-sm font-medium text-ink">{item.action}</p>
+                    <p className="mt-1 truncate text-caption text-ink-subtle font-mono">
                       {item.actor_email} · {item.target_type || '系统'} {item.target_id || ''}
                     </p>
                   </div>
@@ -206,43 +206,43 @@ export default async function AdminDashboardPage() {
                 </div>
               ))
             ) : (
-              <div className="p-8 text-center text-xs text-ink-subtle">暂无管理员操作记录</div>
+              <div className="p-8 text-center text-body-sm text-ink-subtle">暂无管理员操作记录</div>
             )}
           </div>
         </Card>
 
         {/* 快捷导航与模型管理入口 */}
         <Card>
-          <h2 className="text-base font-semibold text-ink tracking-[-0.015em] leading-6 mb-2">快速调度与运维入口</h2>
-          <p className="text-xs text-ink-muted tracking-[-0.005em] leading-5 mb-5">一键直达核心业务管控模块</p>
+          <h2 className="text-card-title font-semibold text-ink mb-1.5">快速调度与运维入口</h2>
+          <p className="text-body-sm text-ink-muted mb-4">一键直达核心业务管控模块</p>
           <div className="grid grid-cols-2 gap-3">
             <Link
               href="/admin/users"
-              className="rounded-xl border border-line bg-wash p-3.5 hover:border-brand-line hover:bg-wash transition-all duration-base"
+              className="rounded-lg border border-line-subtle bg-raised p-3.5 hover:border-line hover:bg-overlay transition-[border-color,background-color] duration-fast"
             >
-              <p className="text-xs font-semibold text-ink tracking-[-0.005em]">👥 用户与角色</p>
-              <p className="mt-1 text-[11px] text-ink-muted">搜索、封禁、解封</p>
+              <p className="text-body-sm font-medium text-ink">👥 用户与角色</p>
+              <p className="mt-1 text-caption text-ink-muted">搜索、封禁、解封</p>
             </Link>
             <Link
               href="/admin/credits"
-              className="rounded-xl border border-line bg-wash p-3.5 hover:border-brand-line hover:bg-wash transition-all duration-base"
+              className="rounded-lg border border-line-subtle bg-raised p-3.5 hover:border-line hover:bg-overlay transition-[border-color,background-color] duration-fast"
             >
-              <p className="text-xs font-semibold text-ink tracking-[-0.005em]">💰 额度流水台账</p>
-              <p className="mt-1 text-[11px] text-ink-muted">充值、扣减、明细</p>
+              <p className="text-body-sm font-medium text-ink">💰 额度流水台账</p>
+              <p className="mt-1 text-caption text-ink-muted">充值、扣减、明细</p>
             </Link>
             <Link
               href="/admin/models"
-              className="rounded-xl border border-brand-line bg-brand-soft p-3.5 hover:bg-brand-soft transition-all duration-base"
+              className="rounded-lg border border-brand-line bg-brand-soft p-3.5 hover:border-brand hover:bg-brand-pressed transition-[border-color,background-color] duration-fast"
             >
-              <p className="text-xs font-semibold text-brand-hover tracking-[-0.005em]">🎛️ 模型开关与成本</p>
-              <p className="mt-1 text-[11px] text-brand-hover">成本价与 Credits 定价</p>
+              <p className="text-body-sm font-medium text-brand">🎛️ 模型开关与成本</p>
+              <p className="mt-1 text-caption text-brand">成本价与 Credits 定价</p>
             </Link>
             <Link
               href="/admin/health"
-              className="rounded-xl border border-line bg-wash p-3.5 hover:border-brand-line hover:bg-wash transition-all duration-base"
+              className="rounded-lg border border-line-subtle bg-raised p-3.5 hover:border-line hover:bg-overlay transition-[border-color,background-color] duration-fast"
             >
-              <p className="text-xs font-semibold text-ink tracking-[-0.005em]">🩺 系统健康 & 日志</p>
-              <p className="mt-1 text-[11px] text-ink-muted">PM2 日志、队列与内存</p>
+              <p className="text-body-sm font-medium text-ink">🩺 系统健康 & 日志</p>
+              <p className="mt-1 text-caption text-ink-muted">PM2 日志、队列与内存</p>
             </Link>
           </div>
         </Card>

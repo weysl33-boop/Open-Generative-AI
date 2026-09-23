@@ -63,13 +63,13 @@ export default function AdminShell({ user, children }) {
   return (
     <div className="min-h-screen bg-canvas text-ink">
       {/* 顶栏（--header-h 固定） */}
-      <header className="fixed inset-x-0 top-0 z-40 flex h-header-h items-center justify-between border-b border-line-subtle bg-canvas/85 px-4 backdrop-blur-md">
+      <header className="fixed inset-x-0 top-0 z-sticky flex h-header-h items-center justify-between border-b border-line-subtle bg-surface-glass px-4 backdrop-blur-md shadow-elevation-1">
         <div className="flex items-center gap-3">
           {/* 移动端汉堡按钮 */}
           <button
             type="button"
             onClick={() => setMobileNavOpen(!mobileNavOpen)}
-            className="flex size-8 items-center justify-center rounded-lg border border-line-subtle bg-wash text-ink hover:bg-wash-strong focus-visible:ring-2 focus-visible:ring-brand-ring lg:hidden"
+            className="flex size-8 items-center justify-center rounded-md border border-line-subtle bg-wash text-ink hover:bg-wash-strong focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring lg:hidden"
             aria-label="切换侧栏导航"
           >
             {mobileNavOpen ? <X className="size-4" /> : <Menu className="size-4" />}
@@ -92,7 +92,7 @@ export default function AdminShell({ user, children }) {
             {roleLabel(user?.role)}
           </Badge>
 
-          <span className="hidden rounded-lg border border-line-subtle bg-wash px-2.5 py-1 font-mono text-caption text-ink-muted md:inline">
+          <span className="hidden rounded-md border border-line-subtle bg-wash px-2.5 py-1 font-mono text-caption text-ink-muted md:inline">
             {user?.email}
           </span>
         </div>
@@ -100,7 +100,7 @@ export default function AdminShell({ user, children }) {
 
       {/* 桌面端侧栏：Header 固定 / Navigation 滚动 / 用户区固定 */}
       <aside
-        className={`fixed bottom-0 left-0 top-header-h z-30 hidden flex-col border-r border-line-subtle bg-canvas transition-[width] duration-base ease-standard lg:flex ${
+        className={`fixed bottom-0 left-0 top-header-h z-30 hidden flex-col border-r border-line-subtle bg-surface transition-[width] duration-base ease-standard lg:flex ${
           collapsed ? 'w-sidebar-collapsed' : 'w-sidebar'
         }`}
       >
@@ -118,14 +118,14 @@ export default function AdminShell({ user, children }) {
             type="button"
             onClick={toggleCollapsed}
             aria-label={collapsed ? '展开侧栏' : '折叠侧栏'}
-            className="flex size-7 items-center justify-center rounded-lg border border-transparent text-ink-muted transition-colors duration-base hover:border-line-subtle hover:bg-wash hover:text-ink"
+            className="flex size-7 items-center justify-center rounded-md border border-transparent text-ink-muted transition-colors duration-fast hover:border-line-subtle hover:bg-wash hover:text-ink"
           >
             {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
           </button>
         </div>
 
         <div
-          className={`admin-sidebar-scrollbar scrollbar-none min-h-0 flex-1 overflow-y-auto py-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
+          className={`admin-sidebar-scrollbar scrollbar-rail min-h-0 flex-1 overflow-y-auto py-3 ${
             collapsed ? 'px-1.5' : 'px-2.5'
           }`}
         >
@@ -144,12 +144,12 @@ export default function AdminShell({ user, children }) {
               onClick={handleLogout}
               disabled={loggingOut}
               aria-label="退出登录"
-              className="flex size-10 items-center justify-center rounded-lg border border-transparent text-ink-muted transition-colors duration-base hover:border-danger-line hover:bg-danger-soft hover:text-danger"
+              className="flex size-10 items-center justify-center rounded-md border border-transparent text-ink-muted transition-colors duration-fast hover:border-danger-line hover:bg-danger-soft hover:text-danger"
             >
               <LogOut className={`size-4 ${loggingOut ? 'animate-spin' : ''}`} />
             </button>
           ) : (
-            <div className="rounded-xl border border-line-subtle bg-wash p-2.5">
+            <div className="rounded-lg border border-line-subtle bg-well p-2.5">
               <p className="truncate text-micro font-medium text-ink" title={user?.email}>
                 {user?.email || '未登录'}
               </p>
@@ -157,13 +157,13 @@ export default function AdminShell({ user, children }) {
               <div className="mt-2 flex items-center gap-1.5">
                 <Link
                   href="/studio"
-                  className="flex h-control-xs flex-1 items-center justify-center rounded-md border border-line-subtle bg-wash text-micro font-medium text-ink-muted transition-colors duration-base hover:border-brand-line hover:bg-brand-soft hover:text-brand"
+                  className="flex h-control-xs flex-1 items-center justify-center rounded-sm border border-line-subtle bg-wash text-micro font-medium text-ink-muted transition-colors duration-fast hover:border-brand-line hover:bg-brand-soft hover:text-brand"
                 >
                   返回 Studio
                 </Link>
                 <Link
                   href="/account"
-                  className="flex h-control-xs flex-1 items-center justify-center rounded-md border border-line-subtle bg-wash text-micro font-medium text-ink-muted transition-colors duration-base hover:border-brand-line hover:bg-brand-soft hover:text-brand"
+                  className="flex h-control-xs flex-1 items-center justify-center rounded-sm border border-line-subtle bg-wash text-micro font-medium text-ink-muted transition-colors duration-fast hover:border-brand-line hover:bg-brand-soft hover:text-brand"
                 >
                   账户
                 </Link>
@@ -172,7 +172,7 @@ export default function AdminShell({ user, children }) {
                   onClick={handleLogout}
                   disabled={loggingOut}
                   aria-label="退出登录"
-                  className="flex size-7 items-center justify-center rounded-md border border-line-subtle bg-wash text-ink-muted transition-colors duration-base hover:border-danger-line hover:bg-danger-soft hover:text-danger"
+                  className="flex size-7 items-center justify-center rounded-sm border border-line-subtle bg-wash text-ink-muted transition-colors duration-fast hover:border-danger-line hover:bg-danger-soft hover:text-danger"
                 >
                   <LogOut className={`size-3.5 ${loggingOut ? 'animate-spin' : ''}`} />
                 </button>
@@ -184,12 +184,12 @@ export default function AdminShell({ user, children }) {
 
       {/* 移动端侧栏抽屉 */}
       {mobileNavOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-modal lg:hidden">
           <div
             className="fixed inset-0 bg-scrim backdrop-blur-sm"
             onClick={() => setMobileNavOpen(false)}
           />
-          <aside className="admin-sidebar-scrollbar scrollbar-none fixed bottom-0 left-0 top-header-h w-sidebar overflow-y-auto border-r border-line bg-canvas px-2.5 py-4 shadow-elevation-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <aside className="admin-sidebar-scrollbar scrollbar-rail fixed bottom-0 left-0 top-header-h w-sidebar overflow-y-auto border-r border-line-subtle bg-surface px-2.5 py-4 shadow-elevation-4">
             <AdminNav user={user} onItemClick={() => setMobileNavOpen(false)} />
           </aside>
         </div>

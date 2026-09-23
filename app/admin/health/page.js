@@ -47,13 +47,13 @@ export default async function SystemHealthPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <h2 className="text-sm font-bold text-ink mb-4">外部依赖与网关健康摘要</h2>
+          <h2 className="text-body-sm font-bold text-ink mb-4">外部依赖与网关健康摘要</h2>
           <div className="space-y-3">
             {providers.map((p) => (
-              <div key={p.id} className="flex items-center justify-between rounded-xl border border-line bg-black/20 p-3.5">
+              <div key={p.id} className="flex items-center justify-between rounded-xl border border-line-subtle bg-well p-3.5">
                 <div>
-                  <p className="text-xs font-semibold text-ink">{p.name}</p>
-                  <p className="text-[11px] text-ink-subtle">{p.description}</p>
+                  <p className="text-body-xs font-semibold text-ink">{p.name}</p>
+                  <p className="text-micro text-ink-subtle">{p.description}</p>
                 </div>
                 <StatusBadge tone={p.configured ? 'good' : 'warn'}>
                   {p.configured ? '已就绪' : '待配置'}
@@ -64,8 +64,8 @@ export default async function SystemHealthPage() {
         </Card>
 
         <Card>
-          <h2 className="text-sm font-bold text-ink mb-4">运行环境与安全规则</h2>
-          <div className="space-y-2.5 text-xs text-ink-muted">
+          <h2 className="text-body-sm font-bold text-ink mb-4">运行环境与安全规则</h2>
+          <div className="space-y-2.5 text-body-xs text-ink-muted">
             <div className="flex justify-between border-b border-line-subtle pb-2">
               <span className="text-ink-subtle">应用协议模式</span>
               <span>Next.js 15 全栈 App Router</span>

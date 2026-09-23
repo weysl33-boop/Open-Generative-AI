@@ -72,41 +72,41 @@ export default function ProviderCard({ provider }) {
   };
 
   return (
-    <Card className="flex flex-col justify-between relative overflow-hidden border-line bg-base/90 backdrop-blur-md hover:border-brand-line hover:shadow-brand-soft transition-all duration-base shadow-elevation-3 shadow-black/40">
+    <Card className="flex flex-col justify-between relative overflow-hidden transition-[border-color,box-shadow] duration-fast hover:border-brand-ring hover:shadow-elevation-2">
       <div>
-        <div className="flex items-start justify-between border-b border-line pb-3.5 mb-4">
+        <div className="flex items-start justify-between border-b border-line-subtle pb-3 mb-4">
           <div>
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-brand">
+            <span className="font-mono text-micro font-semibold uppercase tracking-wider text-brand">
               {provider.kind === 'ai' ? 'AI MODEL ENGINE' : 'PAYMENT GATEWAY'}
             </span>
-            <h3 className="mt-1 text-base font-semibold text-ink tracking-[-0.01em] leading-6">{provider.name}</h3>
+            <h3 className="mt-1 text-card-title text-ink">{provider.name}</h3>
           </div>
           <StatusBadge tone={provider.configured ? 'good' : 'warn'}>
             {provider.configured ? '已就绪' : '待配置'}
           </StatusBadge>
         </div>
 
-        <p className="text-xs text-ink-muted mb-4 leading-5 tracking-[-0.005em]">{provider.description}</p>
+        <p className="text-body-xs text-ink-muted mb-4">{provider.description}</p>
 
-        <div className="space-y-2.5 rounded-xl border border-line-subtle bg-canvas/70 p-3.5 text-xs">
+        <div className="space-y-2 rounded-lg border border-line-subtle bg-well p-3 text-body-xs">
           <div className="flex justify-between items-center">
-            <span className="text-ink-muted tracking-[0.01em]">通信模式</span>
+            <span className="text-ink-muted">通信模式</span>
             <span className="font-mono text-ink">{provider.mode}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-ink-muted tracking-[0.01em]">密钥存储机制</span>
-            <span className="text-brand-hover font-medium">写入式（不可反显明文）</span>
+            <span className="text-ink-muted">密钥存储机制</span>
+            <span className="text-brand font-medium">写入式（不可反显明文）</span>
           </div>
           {provider.unavailableReason && (
             <div className="flex justify-between items-start gap-3">
               <span className="text-ink-muted shrink-0">未就绪原因</span>
-              <span className="text-warning text-right">{provider.unavailableReason}</span>
+              <span className="text-warn text-right">{provider.unavailableReason}</span>
             </div>
           )}
           {testResult && (
             <div className="flex justify-between items-center border-t border-line-subtle pt-2">
-              <span className="text-ink-muted tracking-[0.01em]">最近健康状况</span>
-              <span className={testResult.status === 'healthy' ? 'text-success font-semibold' : 'text-warning'}>
+              <span className="text-ink-muted">最近健康状况</span>
+              <span className={testResult.status === 'healthy' ? 'text-good font-semibold' : 'text-warn'}>
                 {testResult.status} ({testResult.latency_ms}ms)
               </span>
             </div>
@@ -115,42 +115,42 @@ export default function ProviderCard({ provider }) {
 
         {/* 密钥轮换折叠表单 */}
         {showRotate && (
-          <form onSubmit={handleRotate} className="mt-4 rounded-xl border border-line bg-canvas/80 p-4 space-y-3.5 backdrop-blur-sm">
-            <p className="text-xs font-semibold text-brand-hover tracking-[-0.005em]">安全密钥轮换（仅限超管）</p>
+          <form onSubmit={handleRotate} className="mt-4 rounded-lg border border-line-subtle bg-surface p-4 space-y-3">
+            <p className="text-body-xs font-semibold text-brand">安全密钥轮换（仅限超管）</p>
             <div>
-              <label className="block text-xs text-ink-muted font-medium tracking-[0.01em] mb-1">新密钥明文（只写一次）</label>
+              <label className="block text-body-xs text-ink-muted font-medium mb-1">新密钥明文（只写一次）</label>
               <input
                 type="password"
                 required
                 value={newKey}
                 onChange={(e) => setNewKey(e.target.value)}
                 placeholder="sk-..."
-                className="h-[38px] w-full rounded-lg border border-line bg-canvas px-3 text-xs text-ink font-mono placeholder:text-ink-subtle focus:border-brand focus:ring-2 focus:ring-brand-soft outline-none transition-all"
+                className="h-control-md w-full rounded-md border border-line-subtle bg-well px-3 text-body-xs text-ink font-mono placeholder:text-ink-subtle outline-none transition focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand-ring"
               />
             </div>
             <div>
-              <label className="block text-xs text-ink-muted font-medium tracking-[0.01em] mb-1">当前超管密码（二次确认）</label>
+              <label className="block text-body-xs text-ink-muted font-medium mb-1">当前超管密码（二次确认）</label>
               <input
                 type="password"
                 required
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
                 placeholder="你的管理员密码"
-                className="h-[38px] w-full rounded-lg border border-line bg-canvas px-3 text-xs text-ink font-mono placeholder:text-ink-subtle focus:border-brand focus:ring-2 focus:ring-brand-soft outline-none transition-all"
+                className="h-control-md w-full rounded-md border border-line-subtle bg-well px-3 text-body-xs text-ink font-mono placeholder:text-ink-subtle outline-none transition focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand-ring"
               />
             </div>
             <div className="flex justify-end gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => setShowRotate(false)}
-                className="h-8 rounded-lg border border-line bg-transparent px-3 text-xs font-medium text-ink-muted hover:bg-wash-strong hover:text-ink transition active:scale-[0.98]"
+                className="h-control-sm rounded-md border border-line-subtle bg-transparent px-3 text-body-xs font-medium text-ink-muted hover:bg-wash hover:text-ink transition"
               >
                 取消
               </button>
               <button
                 type="submit"
                 disabled={busy}
-                className="h-8 rounded-lg bg-brand-active hover:bg-brand px-4 text-xs font-semibold text-ink-on-accent active:scale-[0.98] transition disabled:opacity-50"
+                className="h-control-sm rounded-md bg-brand hover:bg-brand-hover active:bg-brand-active px-4 text-body-xs font-medium text-ink-on-accent transition disabled:opacity-50"
               >
                 {busy ? '轮换中…' : '确认轮换'}
               </button>
@@ -164,7 +164,7 @@ export default function ProviderCard({ provider }) {
           type="button"
           disabled={testing}
           onClick={runTest}
-          className="inline-flex h-[38px] items-center gap-1.5 rounded-lg border border-line bg-wash px-3.5 text-xs font-medium text-ink hover:bg-wash-strong hover:text-ink transition active:scale-[0.98] disabled:opacity-50 tracking-[-0.005em]"
+          className="inline-flex h-control-md items-center gap-1.5 rounded-md border border-line-subtle bg-surface px-3 text-body-xs font-medium text-ink hover:bg-wash transition disabled:opacity-50"
         >
           {testing ? '探针发送中…' : '心跳诊断探针'}
         </button>
@@ -172,13 +172,13 @@ export default function ProviderCard({ provider }) {
         <button
           type="button"
           onClick={() => setShowRotate(!showRotate)}
-          className="inline-flex h-[38px] items-center rounded-lg border border-brand-line bg-brand-soft px-4 text-xs font-semibold text-brand-hover hover:bg-brand-pressed active:scale-[0.98] transition tracking-[-0.005em]"
+          className="inline-flex h-control-md items-center rounded-md border border-line-subtle bg-well px-3.5 text-body-xs font-medium text-ink-muted hover:text-ink hover:bg-wash transition"
         >
           {showRotate ? '收起' : '轮换密钥 ⚙'}
         </button>
       </div>
 
-      {message && <p className="mt-2 text-xs text-brand-hover">{message}</p>}
+      {message && <p className="mt-2 text-body-xs text-ink-muted">{message}</p>}
     </Card>
   );
 }

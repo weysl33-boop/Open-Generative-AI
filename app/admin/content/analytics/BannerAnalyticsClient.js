@@ -150,7 +150,7 @@ export default function BannerAnalyticsClient({ initialData }) {
               type="button"
               onClick={() => fetchData(offset)}
               disabled={isLoading}
-              className="flex items-center gap-1.5 rounded-lg border border-line bg-wash px-3 py-1.5 text-xs text-ink hover:bg-wash-press hover:text-ink transition-all disabled:opacity-50"
+              className="inline-flex h-control-sm items-center gap-1.5 rounded-md border border-line-subtle bg-surface px-3 text-body-xs font-medium text-ink hover:bg-wash transition disabled:opacity-50"
             >
               <RefreshCw className={`size-3.5 ${isLoading ? 'animate-spin' : ''}`} />
               <span>刷新</span>
@@ -160,7 +160,7 @@ export default function BannerAnalyticsClient({ initialData }) {
               type="button"
               onClick={handleReset}
               disabled={isResetting || total === 0}
-              className="flex items-center gap-1.5 rounded-lg border border-danger-soft bg-danger-soft px-3 py-1.5 text-xs text-danger hover:bg-danger-hover transition-all disabled:opacity-50"
+              className="inline-flex h-control-sm items-center gap-1.5 rounded-md border border-danger-line bg-danger-soft px-3 text-body-xs font-medium text-danger hover:bg-danger-hover transition-colors duration-fast disabled:opacity-50"
             >
               <Trash2 className="size-3.5" />
               <span>清空测试数据</span>
@@ -263,7 +263,7 @@ export default function BannerAnalyticsClient({ initialData }) {
                 type="button"
                 disabled={!hasPrev || isLoading}
                 onClick={() => fetchData(offset - limit)}
-                className="flex items-center gap-1 rounded px-2.5 py-1 bg-wash hover:bg-wash-press disabled:opacity-30 transition-all text-ink"
+                className="inline-flex h-control-xs items-center gap-1 rounded-md border border-line-subtle bg-surface px-2.5 text-micro font-medium text-ink hover:bg-wash disabled:opacity-30 transition"
               >
                 <ChevronLeft className="size-3.5" />
                 <span>上一页</span>
@@ -272,7 +272,7 @@ export default function BannerAnalyticsClient({ initialData }) {
                 type="button"
                 disabled={!hasNext || isLoading}
                 onClick={() => fetchData(offset + limit)}
-                className="flex items-center gap-1 rounded px-2.5 py-1 bg-wash hover:bg-wash-press disabled:opacity-30 transition-all text-ink"
+                className="inline-flex h-control-xs items-center gap-1 rounded-md border border-line-subtle bg-surface px-2.5 text-micro font-medium text-ink hover:bg-wash disabled:opacity-30 transition"
               >
                 <span>下一页</span>
                 <ChevronRight className="size-3.5" />

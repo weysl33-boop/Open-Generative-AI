@@ -63,10 +63,10 @@ export default function CostCenterClient({ initialData, providers = [], models =
   return (
     <div className="space-y-6">
       {/* 筛选控制器 */}
-      <Card className="p-4 border-line bg-base">
+      <Card className="p-4 border-line-subtle bg-surface">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-ink-muted">
+            <div className="flex items-center gap-1.5 text-body-xs text-ink-muted">
               <Filter className="size-3.5 text-brand" />
               <span>筛选过滤:</span>
             </div>
@@ -75,7 +75,7 @@ export default function CostCenterClient({ initialData, providers = [], models =
             <select
               value={selectedProvider}
               onChange={handleProviderChange}
-              className="rounded-lg border border-line bg-raised px-3 py-1.5 text-xs text-ink focus:border-brand"
+              className="h-control-sm rounded-md border border-line-subtle bg-well px-2.5 text-body-xs text-ink focus-visible:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring"
             >
               <option value="">全部供应商 (All Providers)</option>
               {providers.map((p) => (
@@ -89,7 +89,7 @@ export default function CostCenterClient({ initialData, providers = [], models =
             <select
               value={selectedModel}
               onChange={handleModelChange}
-              className="rounded-lg border border-line bg-raised px-3 py-1.5 text-xs text-ink focus:border-brand"
+              className="h-control-sm rounded-md border border-line-subtle bg-well px-2.5 text-body-xs text-ink focus-visible:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring"
             >
               <option value="">全部规范模型 (All Models)</option>
               {models.map((m) => (
@@ -101,7 +101,7 @@ export default function CostCenterClient({ initialData, providers = [], models =
           </div>
 
           {/* 时间范围快速切换 */}
-          <div className="flex items-center gap-1 bg-wash p-1 rounded-lg border border-line-subtle">
+          <div className="flex items-center gap-1 bg-well p-0.5 rounded-lg border border-line-subtle">
             {[
               { id: '7d', label: '近 7 天' },
               { id: '14d', label: '近 14 天' },
@@ -111,9 +111,9 @@ export default function CostCenterClient({ initialData, providers = [], models =
               <button
                 key={r.id}
                 onClick={() => handleDateRangeChange(r.id)}
-                className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                className={`h-control-xs rounded px-2.5 text-body-xs font-medium transition-colors ${
                   dateRange === r.id
-                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                    ? 'bg-raised text-label shadow-elevation-1'
                     : 'text-ink-muted hover:text-ink'
                 }`}
               >
@@ -161,18 +161,18 @@ export default function CostCenterClient({ initialData, providers = [], models =
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* 左侧：供应商支出明细 */}
           <div className="lg:col-span-2 space-y-6">
-            <Card className="p-5 border-line space-y-4">
-              <div className="flex items-center justify-between border-b border-line pb-3">
-                <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+            <Card className="p-5 border-line-subtle space-y-4">
+              <div className="flex items-center justify-between border-b border-line-subtle pb-3">
+                <h3 className="text-body-sm font-bold text-ink flex items-center gap-2">
                   <Server className="size-4 text-brand" />
                   各供应商成本与调用分布
                 </h3>
-                <span className="text-xs text-ink-muted">按美金支出从高到低</span>
+                <span className="text-body-xs text-ink-muted">按美金支出从高到低</span>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="border-b border-line bg-wash text-ink-muted">
+                <table className="w-full text-left text-body-xs">
+                  <thead className="border-b border-line-subtle bg-well text-ink-muted">
                     <tr>
                       <th className="px-3 py-2.5">供应商</th>
                       <th className="px-3 py-2.5">调用次数</th>
@@ -184,14 +184,14 @@ export default function CostCenterClient({ initialData, providers = [], models =
                   </thead>
                   <tbody className="divide-y divide-line-subtle">
                     {(data?.providers || []).map((p) => (
-                      <tr key={p.providerId} className="hover:bg-wash">
+                      <tr key={p.providerId} className="hover:bg-wash transition-colors duration-fast">
                         <td className="px-3 py-2.5">
                           <span className="font-semibold text-ink">{p.providerName}</span>
                           <span className="ml-1.5 font-mono text-[11px] text-ink-muted">({p.providerId})</span>
                         </td>
                         <td className="px-3 py-2.5 font-mono text-ink">{p.totalCalls}</td>
                         <td className="px-3 py-2.5">
-                          <span className={`font-mono ${p.successRate >= 95 ? 'text-success' : 'text-warning'}`}>
+                          <span className={`font-mono ${p.successRate >= 95 ? 'text-good' : 'text-warn'}`}>
                             {p.successRate}%
                           </span>
                         </td>
@@ -217,15 +217,15 @@ export default function CostCenterClient({ initialData, providers = [], models =
             </Card>
 
             {/* 模型成本明细 */}
-            <Card className="p-5 border-line space-y-4">
-              <div className="flex items-center justify-between border-b border-line pb-3">
-                <h3 className="text-sm font-bold text-ink">模型物理成本分布</h3>
-                <span className="text-xs text-ink-muted">归属到规范模型的物理开销</span>
+            <Card className="p-5 border-line-subtle space-y-4">
+              <div className="flex items-center justify-between border-b border-line-subtle pb-3">
+                <h3 className="text-body-sm font-bold text-ink">模型物理成本分布</h3>
+                <span className="text-body-xs text-ink-muted">归属到规范模型的物理开销</span>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="border-b border-line bg-wash text-ink-muted">
+                <table className="w-full text-left text-body-xs">
+                  <thead className="border-b border-line-subtle bg-well text-ink-muted">
                     <tr>
                       <th className="px-3 py-2.5">规范模型</th>
                       <th className="px-3 py-2.5">物理调用数</th>
@@ -235,10 +235,10 @@ export default function CostCenterClient({ initialData, providers = [], models =
                   </thead>
                   <tbody className="divide-y divide-line-subtle">
                     {(data?.models || []).map((m) => (
-                      <tr key={m.modelId} className="hover:bg-wash">
+                      <tr key={m.modelId} className="hover:bg-wash transition-colors duration-fast">
                         <td className="px-3 py-2.5 font-semibold text-ink">{m.modelName}</td>
                         <td className="px-3 py-2.5 font-mono text-ink">{m.totalCalls}</td>
-                        <td className="px-3 py-2.5 font-mono text-success">{m.successRate}%</td>
+                        <td className="px-3 py-2.5 font-mono text-good">{m.successRate}%</td>
                         <td className="px-3 py-2.5 text-right font-mono font-bold text-brand">
                           ${m.totalCostUsd.toFixed(4)}
                         </td>
@@ -253,9 +253,9 @@ export default function CostCenterClient({ initialData, providers = [], models =
           {/* 右侧：每日趋势 & 错误排查 */}
           <div className="space-y-6">
             {/* 每日消费流水 */}
-            <Card className="p-5 border-line space-y-4">
-              <div className="flex items-center justify-between border-b border-line pb-3">
-                <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+            <Card className="p-5 border-line-subtle space-y-4">
+              <div className="flex items-center justify-between border-b border-line-subtle pb-3">
+                <h3 className="text-body-sm font-bold text-ink flex items-center gap-2">
                   <Calendar className="size-4 text-brand" />
                   每日支出流水
                 </h3>
@@ -266,7 +266,7 @@ export default function CostCenterClient({ initialData, providers = [], models =
                 {(data?.dailyTrends || []).map((d) => (
                   <div
                     key={d.date}
-                    className="flex items-center justify-between rounded-lg border border-line-subtle bg-wash p-2.5 text-xs"
+                    className="flex items-center justify-between rounded-lg border border-line-subtle bg-well p-2.5 text-body-xs"
                   >
                     <div>
                       <p className="font-mono text-ink">{d.date}</p>
@@ -281,16 +281,16 @@ export default function CostCenterClient({ initialData, providers = [], models =
                   </div>
                 ))}
                 {(data?.dailyTrends || []).length === 0 && (
-                  <p className="py-6 text-center text-xs text-ink-subtle">暂无趋势记录</p>
+                  <p className="py-6 text-center text-body-xs text-ink-subtle">暂无趋势记录</p>
                 )}
               </div>
             </Card>
 
             {/* 错误归因 */}
-            <Card className="p-5 border-line space-y-4">
-              <div className="flex items-center justify-between border-b border-line pb-3">
-                <h3 className="text-sm font-bold text-ink flex items-center gap-2">
-                  <AlertTriangle className="size-4 text-warning" />
+            <Card className="p-5 border-line-subtle space-y-4">
+              <div className="flex items-center justify-between border-b border-line-subtle pb-3">
+                <h3 className="text-body-sm font-bold text-ink flex items-center gap-2">
+                  <AlertTriangle className="size-4 text-warn" />
                   常见失败归因
                 </h3>
                 <span className="text-[11px] text-ink-muted">Top 10</span>
@@ -300,14 +300,14 @@ export default function CostCenterClient({ initialData, providers = [], models =
                 {(data?.topErrors || []).map((err) => (
                   <div
                     key={err.errorCode}
-                    className="flex items-center justify-between rounded-lg border border-line-subtle bg-wash p-2.5 text-xs"
+                    className="flex items-center justify-between rounded-lg border border-line-subtle bg-well p-2.5 text-body-xs"
                   >
                     <span className="font-mono text-ink truncate max-w-[180px]">{err.errorCode}</span>
-                    <span className="font-mono font-bold text-warning">{err.count} 次</span>
+                    <span className="font-mono font-bold text-warn">{err.count} 次</span>
                   </div>
                 ))}
                 {(data?.topErrors || []).length === 0 && (
-                  <p className="py-6 text-center text-xs text-ink-subtle">无失败异常记录</p>
+                  <p className="py-6 text-center text-body-xs text-ink-subtle">无失败异常记录</p>
                 )}
               </div>
             </Card>

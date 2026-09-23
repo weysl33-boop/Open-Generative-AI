@@ -187,7 +187,7 @@ export default function CatalogManagerClient({ initialModels = [] }) {
       </div>
 
       {/* 模型列表 */}
-      <div className="overflow-x-auto rounded-2xl border border-line bg-base/90 shadow-elevation-3 backdrop-blur-md">
+      <div className="overflow-x-auto scrollbar-rail rounded-xl border border-line-subtle bg-surface shadow-elevation-1">
         <table className="w-full text-left text-xs">
           <thead className="border-b border-line bg-wash uppercase tracking-[0.06em] text-ink-muted">
             <tr>
@@ -259,93 +259,89 @@ export default function CatalogManagerClient({ initialModels = [] }) {
 
       {/* 编辑/新增弹窗 */}
       {editingModel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-line bg-base p-6 shadow-elevation-4">
-            <h3 className="text-lg font-bold text-ink">
+        <div className="fixed inset-0 z-modal flex items-center justify-center bg-scrim p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-xl border border-line bg-surface p-6 shadow-elevation-4">
+            <h3 className="text-section-title font-semibold text-ink">
               {isCreating ? '注册新规范模型' : `编辑规范模型: ${editingModel.id}`}
             </h3>
-            <p className="mt-1 text-xs text-ink-muted">
+            <p className="mt-1 text-body-sm text-ink-muted">
               设置对外暴露的规范元数据。底层映射请前往「路由策略配置」维护。
             </p>
 
             <form onSubmit={handleSaveModel} className="mt-5 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-ink">模型 ID (Canonical ID)</label>
+                <label className="block text-label font-medium text-ink mb-1.5">模型 ID (Canonical ID)</label>
                 <input
                   name="id"
                   defaultValue={editingModel.id}
                   disabled={!isCreating}
                   required
                   placeholder="例如: kling-2.6-pro, flux-1.1-pro"
-                  className="mt-1.5 w-full rounded-lg border border-line bg-wash px-3 py-2 text-sm text-ink focus:border-brand disabled:opacity-50 font-mono"
+                  className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast disabled:opacity-50 font-mono"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-ink">内部系统名</label>
+                  <label className="block text-label font-medium text-ink mb-1.5">内部系统名</label>
                   <input
                     name="name"
                     defaultValue={editingModel.name}
                     required
                     placeholder="例如: Kling 2.6 Pro"
-                    className="mt-1.5 w-full rounded-lg border border-line bg-wash px-3 py-2 text-sm text-ink focus:border-brand"
+                    className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-ink">前台展示名 (Display Name)</label>
+                  <label className="block text-label font-medium text-ink mb-1.5">前台展示名 (Display Name)</label>
                   <input
                     name="displayName"
                     defaultValue={editingModel.display_name}
                     placeholder="前台展示名"
-                    className="mt-1.5 w-full rounded-lg border border-line bg-wash px-3 py-2 text-sm text-ink focus:border-brand"
+                    className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-ink">业务类别</label>
+                  <label className="block text-label font-medium text-ink mb-1.5">所属创作中心 (Studio)</label>
                   <select
-                    name="category"
-                    defaultValue={editingModel.category || 'image'}
-                    className="mt-1.5 w-full rounded-lg border border-line bg-raised px-3 py-2 text-sm text-ink focus:border-brand"
+                    name="studioId"
+                    defaultValue={editingModel.studio_id}
+                    className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                   >
-                    <option value="image">图像 (Image)</option>
-                    <option value="video">视频 (Video)</option>
-                    <option value="audio">音频 (Audio)</option>
+                    <option value="image">图像创作 (image)</option>
+                    <option value="video">视频生成 (video)</option>
+                    <option value="audio">音频工坊 (audio)</option>
+                    <option value="workflow">智能工作流 (workflow)</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-ink">排序权重</label>
-                  <input
-                    type="number"
-                    name="sort"
-                    defaultValue={editingModel.sort ?? 10}
-                    className="mt-1.5 w-full rounded-lg border border-line bg-wash px-3 py-2 text-sm text-ink focus:border-brand font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-ink">状态</label>
+                  <label className="block text-label font-medium text-ink mb-1.5">能力类型 (Capability)</label>
                   <select
-                    name="status"
-                    defaultValue={editingModel.status || 'active'}
-                    className="mt-1.5 w-full rounded-lg border border-line bg-raised px-3 py-2 text-sm text-ink focus:border-brand"
+                    name="capability"
+                    defaultValue={editingModel.capability || 'text-to-image'}
+                    className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                   >
-                    <option value="active">Active (开放)</option>
-                    <option value="disabled">Disabled (禁用)</option>
-                    <option value="maintenance">Maintenance (维护)</option>
+                    <option value="text-to-image">文生图 (text-to-image)</option>
+                    <option value="image-to-image">图生图 (image-to-image)</option>
+                    <option value="text-to-video">文生视频 (text-to-video)</option>
+                    <option value="image-to-video">图生视频 (image-to-video)</option>
+                    <option value="text-to-audio">文本生音频 (text-to-audio)</option>
+                    <option value="multimodal">多模态混成 (multimodal)</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-ink">描述</label>
+                <label className="block text-label font-medium text-ink mb-1.5">模型简述说明</label>
                 <textarea
                   name="description"
-                  defaultValue={editingModel.description || ''}
                   rows={2}
-                  className="mt-1.5 w-full rounded-lg border border-line bg-wash px-3 py-2 text-sm text-ink focus:border-brand"
+                  defaultValue={editingModel.description || ''}
+                  placeholder="展示给前台用户的模型特点简介"
+                  className="w-full rounded-md border border-line-subtle bg-well p-2.5 text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                 />
               </div>
 
@@ -355,31 +351,32 @@ export default function CatalogManagerClient({ initialModels = [] }) {
                   name="isFeatured"
                   id="isFeatured"
                   defaultChecked={Boolean(editingModel.is_featured)}
-                  className="size-4 rounded border-line-strong bg-wash text-brand-active focus:ring-0"
+                  className="size-4 rounded-xs border-line-subtle bg-well text-brand focus:ring-brand-ring"
                 />
-                <label htmlFor="isFeatured" className="text-xs text-ink cursor-pointer">
+                <label htmlFor="isFeatured" className="text-body-sm text-ink cursor-pointer">
                   标记为前台 Featured 推荐模型
                 </label>
               </div>
 
-              <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-line">
+              <div className="mt-6 flex justify-end gap-2.5 pt-3 border-t border-line-subtle">
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="secondary"
+                  size="md"
                   onClick={() => {
                     setEditingModel(null);
                     setIsCreating(false);
                   }}
-                  className="text-ink-muted hover:text-ink"
                 >
                   取消
                 </Button>
                 <Button
                   type="submit"
+                  variant="primary"
+                  size="md"
                   disabled={isSaving}
-                  className="bg-brand-active hover:bg-brand text-ink-on-accent font-semibold"
+                  loading={isSaving}
                 >
-                  {isSaving ? <Loader2 className="mr-1.5 size-4 animate-spin" /> : null}
                   保存模型
                 </Button>
               </div>

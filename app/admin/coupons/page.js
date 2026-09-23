@@ -85,10 +85,10 @@ export default async function CouponsPage({ searchParams }) {
 
       <CouponGeneratorClient />
 
-      <Card>
-        <DataTable columns={columns} data={result.rows} emptyText="暂无兑换码记录" />
+      <div className="space-y-4">
+        <DataTable columns={columns} rows={result.rows} empty="暂无兑换码记录" />
         <Pagination meta={result.meta} />
-      </Card>
+      </div>
     </>
   );
 }

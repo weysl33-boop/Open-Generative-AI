@@ -73,7 +73,7 @@ export default async function FailedGenerationsPage({ searchParams }) {
       >
         <Link
           href="/admin/generations"
-          className="rounded-xl border border-line-strong bg-wash px-4 py-2 text-xs font-semibold text-ink-muted hover:bg-wash-press"
+          className="h-control-md inline-flex items-center rounded-md border border-line-subtle bg-raised px-3.5 text-body-sm font-medium text-ink-muted transition-[background-color,border-color,color] duration-fast hover:border-line hover:bg-overlay hover:text-ink"
         >
           ← 返回全部生成任务
         </Link>
@@ -81,18 +81,18 @@ export default async function FailedGenerationsPage({ searchParams }) {
 
       {/* 错误代码聚类卡片 */}
       <Card className="mb-6">
-        <h2 className="text-sm font-bold text-ink mb-3">当前失败错误分类聚类 (Top 10)</h2>
+        <h2 className="text-card-title font-semibold text-ink mb-3">当前失败错误分类聚类 (Top 10)</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {clusters.length ? (
             clusters.map((c) => (
-              <div key={c.code} className="rounded-xl border border-line bg-scrim p-3.5">
-                <p className="font-mono text-xs font-bold text-danger truncate">{c.code}</p>
-                <p className="mt-2 text-2xl font-extrabold text-ink">{c.count} 次</p>
+              <div key={c.code} className="rounded-lg border border-line-subtle bg-well p-3.5">
+                <p className="font-mono text-mono font-semibold text-danger truncate">{c.code}</p>
+                <p className="mt-2 text-2xl font-semibold tabular-nums text-ink">{c.count} 次</p>
                 <p className="mt-1 text-micro text-ink-subtle">最近发生：{formatDate(c.last_occurred_at)}</p>
               </div>
             ))
           ) : (
-            <p className="text-xs text-ink-subtle col-span-full py-4 text-center">当前暂无失败错误聚类记录</p>
+            <p className="text-body-sm text-ink-subtle col-span-full py-4 text-center">当前暂无失败错误聚类记录</p>
           )}
         </div>
       </Card>

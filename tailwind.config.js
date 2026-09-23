@@ -198,6 +198,7 @@ module.exports = {
         'control-md': 'var(--control-md)',
         'control-lg': 'var(--control-lg)',
         'header-h': 'var(--header-h)',
+        'announcement-h': 'var(--announcement-h)',
         'sidebar-w': 'var(--sidebar-w)',
         'sidebar-collapsed': 'var(--sidebar-w-collapsed)',
       },

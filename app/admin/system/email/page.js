@@ -33,7 +33,7 @@ function formatDate(value) {
 }
 
 function selectClass() {
-  return 'rounded-xl border border-line bg-canvas px-3 py-2.5 text-label text-ink-muted outline-none focus:border-brand-ring';
+  return 'h-control-md rounded-md border border-line-subtle bg-well px-3 text-body-sm text-ink outline-none transition focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand-ring';
 }
 
 const columns = [
@@ -196,7 +196,7 @@ export default async function EmailSettingsPage({ searchParams }) {
                 name="q"
                 defaultValue={params.get('q') || ''}
                 placeholder="搜索收件邮箱或主题…"
-                className="min-w-60 flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-label text-ink outline-none focus:border-brand-ring"
+                className="h-control-md min-w-60 flex-1 rounded-md border border-line-subtle bg-well px-3 text-body-sm text-ink outline-none transition focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand-ring placeholder:text-ink-subtle"
               />
               <select name="purpose" defaultValue={params.get('purpose') || ''} className={selectClass()}>
                 <option value="">全部发信类型</option>
@@ -216,11 +216,11 @@ export default async function EmailSettingsPage({ searchParams }) {
                 <option value="7">近 7 天</option>
                 <option value="30">近 30 天</option>
               </select>
-              <button type="submit" className="rounded-xl bg-brand px-5 py-2.5 text-label font-bold text-ink-on-accent transition hover:bg-brand-active">
+              <button type="submit" className="h-control-md rounded-md bg-brand px-5 text-body-sm font-medium text-ink-on-accent transition hover:bg-brand-hover active:bg-brand-active">
                 筛选
               </button>
               {Array.from(params.keys()).length > 0 && (
-                <Link href="/admin/system/email" className="rounded-xl border border-line px-3 py-2.5 text-label text-ink-subtle hover:bg-wash hover:text-ink">
+                <Link href="/admin/system/email" className="inline-flex h-control-md items-center rounded-md border border-line-subtle bg-surface px-3 text-body-sm font-medium text-ink-muted hover:bg-wash hover:text-ink transition">
                   重置
                 </Link>
               )}

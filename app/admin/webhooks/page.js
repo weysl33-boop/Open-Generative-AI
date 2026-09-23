@@ -91,7 +91,7 @@ export default async function WebhooksPage({ searchParams }) {
           <select
             name="provider"
             defaultValue={params.get('provider') || ''}
-            className="rounded-xl border border-line bg-canvas px-4 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
+            className="h-control-md rounded-md border border-line-subtle bg-well px-3 text-body-sm text-ink focus-visible:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring"
           >
             <option value="">全部渠道</option>
             <option value="stripe">Stripe</option>
@@ -101,7 +101,7 @@ export default async function WebhooksPage({ searchParams }) {
 
           <button
             type="submit"
-            className="rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-ink-on-accent hover:bg-brand"
+            className="h-control-md rounded-md bg-brand hover:bg-brand-hover active:bg-brand-active px-4 text-body-sm font-semibold text-ink-on-accent transition-colors"
           >
             筛选记录
           </button>

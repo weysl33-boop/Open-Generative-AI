@@ -99,8 +99,10 @@
   --control-md: 38px;    /* DEFAULT across all studios */
   --control-lg: 44px;
   --header-h: 56px;
+  --announcement-h: 36px;        /* Top marketing announcement / notification bar */
   --sidebar-w: 240px;
   --sidebar-w-collapsed: 60px;
+  --dot-grid-size: 24px;         /* Engineering dot-grid background interval */
   /* Studio configuration column. Every studio that shows a left parameter
      panel uses this width so switching studios does not resize the shell. */
   --panel-w: 400px;
@@ -760,4 +762,16 @@
 
 .animate-toast-in {
   animation: toastIn var(--motion-slow) var(--ease-enter) both;
+}
+
+/* --- Engineering dot-grid background texture (absorbed from studio workbench aesthetic) --- */
+.bg-dot-grid {
+  background-image: radial-gradient(circle, var(--border-strong) 1px, transparent 1px);
+  background-size: var(--dot-grid-size, 24px) var(--dot-grid-size, 24px);
+}
+
+/* Atmospheric hero mask: smooth blend from hero art into dark canvas */
+.hero-atmospheric-mask {
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0) 100%);
 }

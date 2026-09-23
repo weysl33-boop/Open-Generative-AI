@@ -7,16 +7,18 @@ export { CopyableId, ConfirmActionDialog, Badge, Button };
 
 export function PageHeader({ eyebrow = 'KoyoSIM 运营后台', title, description, children }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
-      <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-brand">
-          {eyebrow}
-        </p>
-        <h1 className="text-2xl font-bold tracking-[-0.02em] leading-8 sm:text-3xl sm:leading-9 text-ink">
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-line-subtle pb-5">
+      <div className="min-w-0">
+        {eyebrow && (
+          <p className="mb-1.5 text-caption font-semibold uppercase tracking-[0.08em] text-brand">
+            {eyebrow}
+          </p>
+        )}
+        <h1 className="text-page-title font-semibold tracking-[-0.02em] text-ink">
           {title}
         </h1>
         {description && (
-          <p className="mt-1.5 max-w-3xl text-sm leading-6 tracking-[-0.005em] text-ink-muted">
+          <p className="mt-1.5 max-w-3xl text-body-sm leading-relaxed text-ink-muted">
             {description}
           </p>
         )}
@@ -25,69 +27,94 @@ export function PageHeader({ eyebrow = 'KoyoSIM 运营后台', title, descriptio
     </div>
   );
 }
+
 export function Card({ children, className = '' }) {
   return (
-    <section className={`rounded-2xl border border-line bg-base/90 p-5 shadow-elevation-3 shadow-black/40 backdrop-blur-md transition-all duration-base ease-out hover:border-line-strong ${className}`}>
+    <section
+      className={`rounded-xl border border-line-subtle bg-surface p-5 shadow-elevation-1 transition-[border-color,background-color,box-shadow] duration-fast hover:border-line ${className}`}
+    >
       {children}
     </section>
   );
 }
+
 export function StatusBadge({ children, tone = 'neutral' }) {
   const styles = {
     good: 'border-success-line bg-success-soft text-success',
     warn: 'border-warning-line bg-warning-soft text-warning',
     danger: 'border-danger-line bg-danger-soft text-danger',
     info: 'border-brand-line bg-brand-soft text-brand',
-    neutral: 'border-line bg-wash text-ink-muted',
+    neutral: 'border-line-subtle bg-wash text-ink-muted',
   };
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium tracking-[0.01em] leading-4 ${styles[tone] || styles.neutral}`}>
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-micro font-medium tracking-[0.01em] ${
+        styles[tone] || styles.neutral
+      }`}
+    >
       {children}
     </span>
   );
 }
+
 export function MetricCard({ label, value, hint, tone = 'neutral' }) {
   return (
-    <Card className="p-5 relative overflow-hidden group hover:border-brand-line hover:shadow-brand-soft transition-all duration-base">
-      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted">{label}</p>
-      <p className={`mt-2.5 text-3xl font-bold tracking-[-0.025em] leading-9 tabular-nums ${tone === 'info' ? 'text-brand' : tone === 'good' ? 'text-success' : tone === 'warn' ? 'text-warning' : tone === 'danger' ? 'text-danger' : 'text-ink'}`}>
+    <Card className="relative overflow-hidden transition-[border-color,box-shadow] duration-fast hover:border-brand-line">
+      <p className="text-caption font-medium uppercase tracking-[0.06em] text-ink-muted">{label}</p>
+      <p
+        className={`mt-2 text-2xl font-semibold tabular-nums ${
+          tone === 'info'
+            ? 'text-brand'
+            : tone === 'good'
+            ? 'text-success'
+            : tone === 'warn'
+            ? 'text-warning'
+            : tone === 'danger'
+            ? 'text-danger'
+            : 'text-ink'
+        }`}
+      >
         {value}
       </p>
-      {hint && <p className="mt-2 text-xs leading-5 tracking-[0.01em] text-ink-muted">{hint}</p>}
+      {hint && <p className="mt-1.5 text-caption text-ink-subtle">{hint}</p>}
     </Card>
   );
 }
+
 export function EmptyState({ title = '暂无数据', description = '当前范围内还没有可显示的记录。' }) {
   return (
-    <div className="rounded-2xl border border-dashed border-line bg-base/60 px-6 py-12 text-center backdrop-blur-sm">
-      <div className="mx-auto flex size-12 items-center justify-center rounded-xl border border-line bg-wash text-ink-muted">
-        <Inbox className="size-6 text-brand" />
+    <div className="rounded-xl border border-dashed border-line-subtle bg-well px-6 py-12 text-center">
+      <div className="mx-auto flex size-11 items-center justify-center rounded-lg border border-line-subtle bg-wash text-ink-muted">
+        <Inbox className="size-5 text-brand" />
       </div>
-      <p className="mt-4 font-semibold text-ink text-sm tracking-[-0.01em] leading-5">{title}</p>
-      <p className="mt-1 text-xs text-ink-muted max-w-sm mx-auto leading-5 tracking-[-0.005em]">{description}</p>
+      <p className="mt-4 text-card-title font-medium text-ink">{title}</p>
+      <p className="mt-1 max-w-sm mx-auto text-body-sm text-ink-muted">{description}</p>
     </div>
   );
 }
-export function DataTable({ columns, rows, empty = '暂无记录' }) {
-  if (!rows?.length) return <EmptyState title={empty} />;
+
+export function DataTable({ columns, rows, data, empty = '暂无记录', emptyText }) {
+  const tableRows = rows || data || [];
+  const emptyTitle = emptyText || empty;
+  if (!tableRows.length) return <EmptyState title={emptyTitle} />;
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-line bg-base/90 shadow-elevation-3 shadow-black/40 backdrop-blur-md scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-      <table className="w-full min-w-[760px] text-left text-sm">
-        <thead className="border-b border-line bg-wash text-xs font-semibold uppercase tracking-[0.06em] text-ink-muted">
+    <div className="overflow-x-auto scrollbar-rail rounded-xl border border-line-subtle bg-surface shadow-elevation-1">
+      <table className="w-full min-w-[760px] text-left text-body-sm">
+        <thead className="border-b border-line-subtle bg-well text-caption font-medium uppercase tracking-[0.04em] text-ink-muted">
           <tr>
             {columns.map((column) => (
-              <th key={column.key} className="whitespace-nowrap px-4 py-3.5">
+              <th key={column.key} className="whitespace-nowrap px-4 py-3">
                 {column.label}
               </th>
             ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-line-subtle">
-          {rows.map((row, index) => (
+          {tableRows.map((row, index) => (
             <tr key={row.id || index} className="transition-colors duration-fast hover:bg-wash">
               {columns.map((column) => (
-                <td key={column.key} className="px-4 py-3.5 text-ink text-xs leading-5 tracking-[-0.005em]">
+                <td key={column.key} className="px-4 py-3 text-ink leading-normal">
                   {column.render ? column.render(row) : (row[column.key] ?? '—')}
                 </td>
               ))}
@@ -108,7 +135,7 @@ export function Pagination({ meta, searchParams }) {
     <div className="mt-5 flex justify-end">
       <a
         href={`?${params.toString()}`}
-        className="inline-flex h-[38px] items-center rounded-lg border border-line bg-wash-strong px-4 text-xs font-medium text-ink tracking-[-0.005em] transition-all duration-base hover:border-brand-ring hover:bg-brand-soft hover:text-brand active:scale-[0.98]"
+        className="inline-flex h-control-md items-center rounded-md border border-line-subtle bg-raised px-4 text-body-sm font-medium text-ink transition-[background-color,border-color,color] duration-fast hover:border-brand-line hover:bg-brand-soft hover:text-brand"
       >
         加载下一页
       </a>

@@ -55,17 +55,17 @@ export default function ProfitCenterClient({ initialData, models = [] }) {
   return (
     <div className="space-y-6">
       {/* 筛选控制器 */}
-      <Card className="p-4 border-line bg-base">
+      <Card className="p-4 border-line-subtle bg-surface">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-ink-muted">
+            <div className="flex items-center gap-1.5 text-body-xs text-ink-muted">
               <Filter className="size-3.5 text-brand" />
               <span>模型筛选:</span>
             </div>
             <select
               value={selectedModel}
               onChange={handleModelChange}
-              className="rounded-lg border border-line bg-raised px-3 py-1.5 text-xs text-ink focus:border-brand"
+              className="h-control-sm rounded-md border border-line-subtle bg-well px-2.5 text-body-xs text-ink focus-visible:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring"
             >
               <option value="">全部规范模型 (All Models)</option>
               {models.map((m) => (
@@ -76,7 +76,7 @@ export default function ProfitCenterClient({ initialData, models = [] }) {
             </select>
           </div>
 
-          <div className="flex items-center gap-1 bg-wash p-1 rounded-lg border border-line-subtle">
+          <div className="flex items-center gap-1 bg-well p-0.5 rounded-lg border border-line-subtle">
             {[
               { id: '7d', label: '近 7 天' },
               { id: '14d', label: '近 14 天' },
@@ -86,9 +86,9 @@ export default function ProfitCenterClient({ initialData, models = [] }) {
               <button
                 key={r.id}
                 onClick={() => handleDateRangeChange(r.id)}
-                className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                className={`h-control-xs rounded px-2.5 text-body-xs font-medium transition-colors ${
                   dateRange === r.id
-                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                    ? 'bg-raised text-label shadow-elevation-1'
                     : 'text-ink-muted hover:text-ink'
                 }`}
               >
@@ -135,25 +135,25 @@ export default function ProfitCenterClient({ initialData, models = [] }) {
       ) : (
         <div className="space-y-6">
           {/* 模型利润分析表 */}
-          <Card className="p-5 border-line space-y-4">
-            <div className="flex items-center justify-between border-b border-line pb-3">
+          <Card className="p-5 border-line-subtle space-y-4">
+            <div className="flex items-center justify-between border-b border-line-subtle pb-3">
               <div>
-                <h3 className="text-sm font-bold text-ink flex items-center gap-2">
-                  <TrendingUp className="size-4 text-success" />
+                <h3 className="text-body-sm font-bold text-ink flex items-center gap-2">
+                  <TrendingUp className="size-4 text-good" />
                   模型利润率与盈亏监控
                 </h3>
-                <p className="mt-1 text-xs text-ink-muted">
+                <p className="mt-1 text-body-xs text-ink-muted">
                   对比各规范模型的 Credits 消耗折算营收、物理 API 成本以及毛利率。毛利率低于设定红线（默认 30%）将触发高亮预警。
                 </p>
               </div>
-              <span className="text-xs text-ink-muted">
+              <span className="text-body-xs text-ink-muted">
                 预警模型: <strong className="text-danger font-mono">{summary.marginAlertCount || 0}</strong> 个
               </span>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="border-b border-line bg-wash text-ink-muted uppercase tracking-wider">
+              <table className="w-full text-left text-body-xs">
+                <thead className="border-b border-line-subtle bg-well text-ink-muted uppercase tracking-wider">
                   <tr>
                     <th className="px-4 py-3">规范模型</th>
                     <th className="px-4 py-3">业务类型</th>
@@ -174,12 +174,12 @@ export default function ProfitCenterClient({ initialData, models = [] }) {
                     return (
                       <tr
                         key={m.modelId}
-                        className={`transition-colors ${
+                        className={`transition-colors duration-fast ${
                           isLoss
-                            ? 'bg-red-500/[0.04] hover:bg-red-500/[0.08]'
+                            ? 'bg-danger-soft hover:bg-danger-hover'
                             : isAlert
-                            ? 'bg-amber-500/[0.03] hover:bg-amber-500/[0.06]'
-                            : 'hover:bg-white/[0.02]'
+                            ? 'bg-warning-soft hover:bg-wash'
+                            : 'hover:bg-wash'
                         }`}
                       >
                         <td className="px-4 py-3">
@@ -199,13 +199,13 @@ export default function ProfitCenterClient({ initialData, models = [] }) {
                         </td>
                         <td
                           className={`px-4 py-3 text-right font-mono font-bold ${
-                            isLoss ? 'text-red-400' : 'text-emerald-400'
+                            isLoss ? 'text-danger' : 'text-good'
                           }`}
                         >
                           ${m.grossProfitUsd.toFixed(2)}
                         </td>
                         <td className="px-4 py-3 text-right font-mono font-bold">
-                          <span className={isAlert ? 'text-danger' : 'text-success'}>
+                          <span className={isAlert ? 'text-danger' : 'text-good'}>
                             {m.grossMarginRate.toFixed(1)}%
                           </span>
                           <span className="ml-1 text-micro text-ink-subtle font-normal">
@@ -214,15 +214,15 @@ export default function ProfitCenterClient({ initialData, models = [] }) {
                         </td>
                         <td className="px-4 py-3 text-center">
                           {isLoss ? (
-                            <span className="inline-flex items-center rounded-full bg-danger-soft border border-danger-line px-2.5 py-0.5 text-[11px] font-medium text-danger">
+                            <span className="inline-flex items-center rounded-full bg-danger-soft border border-danger-line px-2.5 py-0.5 text-micro font-medium text-danger">
                               <AlertTriangle className="mr-1 size-3" /> 严重亏损
                             </span>
                           ) : isAlert ? (
-                            <span className="inline-flex items-center rounded-full bg-warning-soft border border-warning-line px-2.5 py-0.5 text-[11px] font-medium text-warning">
+                            <span className="inline-flex items-center rounded-full bg-warn-soft border border-warn-line px-2.5 py-0.5 text-micro font-medium text-warn">
                               毛利过低
                             </span>
                           ) : (
-                            <span className="inline-flex items-center rounded-full bg-success-soft border border-success-line px-2.5 py-0.5 text-[11px] font-medium text-success">
+                            <span className="inline-flex items-center rounded-full bg-good-soft border border-good-line px-2.5 py-0.5 text-micro font-medium text-good">
                               健康
                             </span>
                           )}
@@ -243,18 +243,18 @@ export default function ProfitCenterClient({ initialData, models = [] }) {
           </Card>
 
           {/* 每日利润流水趋势 */}
-          <Card className="p-5 border-line space-y-4">
-            <div className="flex items-center justify-between border-b border-line pb-3">
-              <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+          <Card className="p-5 border-line-subtle space-y-4">
+            <div className="flex items-center justify-between border-b border-line-subtle pb-3">
+              <h3 className="text-body-sm font-bold text-ink flex items-center gap-2">
                 <Calendar className="size-4 text-brand" />
                 每日营收与毛利润明细
               </h3>
-              <span className="text-xs text-ink-muted font-mono">USD</span>
+              <span className="text-body-xs text-ink-muted font-mono">USD</span>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="border-b border-line bg-wash text-ink-muted">
+              <table className="w-full text-left text-body-xs">
+                <thead className="border-b border-line-subtle bg-well text-ink-muted">
                   <tr>
                     <th className="px-4 py-2.5">日期</th>
                     <th className="px-4 py-2.5">完成任务数</th>
@@ -267,7 +267,7 @@ export default function ProfitCenterClient({ initialData, models = [] }) {
                 </thead>
                 <tbody className="divide-y divide-line-subtle">
                   {(data?.dailyTrends || []).map((d) => (
-                    <tr key={d.date} className="hover:bg-wash">
+                    <tr key={d.date} className="hover:bg-wash transition-colors duration-fast">
                       <td className="px-4 py-2.5 font-mono text-ink">{d.date}</td>
                       <td className="px-4 py-2.5 font-mono text-ink">{d.totalGenerations}</td>
                       <td className="px-4 py-2.5 font-mono text-brand">{d.creditsConsumed.toLocaleString()}</td>
@@ -275,7 +275,7 @@ export default function ProfitCenterClient({ initialData, models = [] }) {
                       <td className="px-4 py-2.5 text-right font-mono text-ink-muted">${d.costUsd.toFixed(4)}</td>
                       <td
                         className={`px-4 py-2.5 text-right font-mono font-bold ${
-                          d.grossProfitUsd >= 0 ? 'text-emerald-400' : 'text-red-400'
+                          d.grossProfitUsd >= 0 ? 'text-good' : 'text-danger'
                         }`}
                       >
                         ${d.grossProfitUsd.toFixed(2)}

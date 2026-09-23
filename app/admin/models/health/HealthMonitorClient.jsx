@@ -10,8 +10,8 @@ const PROBE_KIND_LABEL = {
 };
 
 const FEEDBACK_TONE = {
-  good: 'bg-success-soft text-success border border-success-line',
-  warn: 'bg-warning-soft text-warning border border-warning-line',
+  good: 'bg-good-soft text-good border border-good-line',
+  warn: 'bg-warn-soft text-warn border border-warn-line',
   danger: 'bg-danger-soft text-danger border border-danger-line',
 };
 
@@ -170,7 +170,7 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Activity className="size-4 text-brand" />
-          <h2 className="text-base font-semibold text-ink">通道健康与熔断器状态</h2>
+          <h2 className="text-body-md font-semibold text-ink">通道健康与熔断器状态</h2>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -178,7 +178,7 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
             size="sm"
             disabled={isRefreshing}
             onClick={refreshList}
-            className="text-xs border-line hover:bg-wash"
+            className="h-control-sm text-body-xs border-line-subtle bg-raised hover:bg-raised-hover text-label"
           >
             <RefreshCw className={`mr-1.5 size-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
             刷新状态
@@ -187,7 +187,7 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
             size="sm"
             disabled={isScanning || isRefreshing}
             onClick={handleProbeAll}
-            className="bg-brand-active hover:bg-brand text-ink-on-accent text-xs font-semibold"
+            className="h-control-sm rounded-md bg-brand hover:bg-brand-hover active:bg-brand-active text-ink-on-accent text-body-xs font-semibold px-3 transition-colors"
           >
             {isScanning ? (
               <Loader2 className="mr-1.5 size-3.5 animate-spin" />
@@ -201,20 +201,20 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
 
       {/* 本轮扫描汇总 */}
       {scan?.error && (
-        <div className="flex items-center gap-2 rounded-lg border border-danger-line bg-danger-soft p-3 text-xs text-danger">
+        <div className="flex items-center gap-2 rounded-lg border border-danger-line bg-danger-soft p-3 text-body-xs text-danger">
           <AlertTriangle className="size-3.5 shrink-0" />
           {scan.error}
         </div>
       )}
       {scan?.summary && (
-        <div className="rounded-lg border border-line-subtle bg-wash p-3 text-xs text-ink-muted">
+        <div className="rounded-lg border border-line-subtle bg-well p-3 text-body-xs text-ink-muted">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <span className="flex items-center gap-1.5 font-semibold text-ink">
               <ShieldCheck className="size-3.5 text-brand" />
               本轮探测 {scan.summary.probed} 个渠道
             </span>
-            <span className="text-success">健康 {scan.summary.healthy}</span>
-            <span className="text-warning">待处理 {scan.summary.degraded}</span>
+            <span className="text-good">健康 {scan.summary.healthy}</span>
+            <span className="text-warn">待处理 {scan.summary.degraded}</span>
             <span className="text-danger">故障 {scan.summary.unhealthy}</span>
             {scan.summary.credentialOnly > 0 && (
               <span className="text-ink-subtle">
@@ -240,21 +240,21 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
           return (
             <Card
               key={c.id}
-              className={`p-5 border-line transition-all space-y-4 ${
+              className={`p-5 border space-y-4 transition-colors ${
                 isOpen
-                  ? 'border-red-500/40 bg-red-950/10'
+                  ? 'border-danger-line bg-danger-soft/20'
                   : isHalfOpen
-                  ? 'border-amber-500/30 bg-amber-950/10'
-                  : 'hover:border-white/[0.14]'
+                  ? 'border-warn-line bg-warn-soft/20'
+                  : 'border-line-subtle bg-surface hover:border-line'
               }`}
             >
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-ink-muted">[{c.id}]</span>
-                    <h3 className="text-base font-semibold text-ink">{c.name}</h3>
+                    <span className="font-mono text-body-xs text-ink-muted">[{c.id}]</span>
+                    <h3 className="text-body-md font-semibold text-ink">{c.name}</h3>
                   </div>
-                  <p className="mt-1 text-xs text-ink-muted font-mono truncate max-w-xs">
+                  <p className="mt-1 text-body-xs text-ink-muted font-mono truncate max-w-xs">
                     {c.baseUrl || '官方默认 Endpoint'}
                   </p>
                 </div>
@@ -267,17 +267,16 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
               </div>
 
               {/* 指标矩阵 */}
-              <div className="grid grid-cols-3 gap-2 rounded-xl border border-line-subtle bg-wash p-3 text-xs">
+              <div className="grid grid-cols-3 gap-2 rounded-lg border border-line-subtle bg-well p-3 text-body-xs">
                 <div>
                   <p className="text-ink-subtle">24h 成功率</p>
-                  {/* 没有样本不是 0%，也不是 100%：空表冒填会让管理员误判渠道健康。 */}
                   <p
                     className={`mt-1 font-mono font-bold ${
                       c.successRate24h === null
                         ? 'text-ink-subtle'
                         : c.successRate24h >= 95
-                          ? 'text-success'
-                          : 'text-warning'
+                          ? 'text-good'
+                          : 'text-warn'
                     }`}
                   >
                     {c.successRate24h === null ? '—' : `${c.successRate24h}%`}
@@ -304,13 +303,13 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
 
               {/* 探测信息反馈 */}
               {msg && (
-                <div className={`rounded-lg p-2.5 text-xs ${FEEDBACK_TONE[msg.type] || FEEDBACK_TONE.danger}`}>
+                <div className={`rounded-md p-2.5 text-body-xs ${FEEDBACK_TONE[msg.type] || FEEDBACK_TONE.danger}`}>
                   {msg.text}
                 </div>
               )}
 
               {/* 底部操作 */}
-              <div className="flex items-center justify-between border-t border-line-subtle pt-3 text-xs">
+              <div className="flex items-center justify-between border-t border-line-subtle pt-3 text-body-xs">
                 <span className="text-ink-subtle flex items-center gap-1">
                   <Clock className="size-3" />
                   {probeSummary(c)}
@@ -323,7 +322,7 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
                       size="sm"
                       disabled={isResetting}
                       onClick={() => handleResetCircuit(c.id)}
-                      className="text-xs border-warning-line text-warning hover:bg-warning-soft"
+                      className="h-control-sm text-body-xs border-warn-line text-warn hover:bg-warn-soft"
                     >
                       {isResetting ? <Loader2 className="mr-1 size-3 animate-spin" /> : null}
                       复位熔断器
@@ -335,7 +334,7 @@ export default function HealthMonitorClient({ initialChannels = [] }) {
                     size="sm"
                     disabled={isProbing}
                     onClick={() => handleProbe(c.id)}
-                    className="text-xs border-line hover:bg-wash"
+                    className="h-control-sm text-body-xs border-line-subtle bg-raised hover:bg-raised-hover text-label"
                   >
                     {isProbing ? (
                       <>

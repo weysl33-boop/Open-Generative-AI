@@ -52,7 +52,7 @@ export default function AdminRoleModifier() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-xs font-medium text-ink-muted mb-1.5">
+        <label className="block text-label font-medium text-ink-muted mb-1.5">
           目标用户内部记录 ID (usr_xxx)
         </label>
         <Input
@@ -66,13 +66,13 @@ export default function AdminRoleModifier() {
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-ink-muted mb-1.5">
+        <label className="block text-label font-medium text-ink-muted mb-1.5">
           分配管理角色
         </label>
         <select
           value={role}
           onChange={(e) => setRole(e.target.value)}
-          className="h-[38px] w-full rounded-lg border border-line bg-base px-3 text-xs text-ink outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
+          className="h-control-md w-full rounded-md border border-line-subtle bg-well px-3 text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
         >
           <option value="operations_admin">运营管理员 (内容、生成、用户)</option>
           <option value="finance_admin">财务管理员 (订阅、订单、调额、套餐)</option>
@@ -84,7 +84,7 @@ export default function AdminRoleModifier() {
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-ink-muted mb-1.5">
+        <label className="block text-label font-medium text-ink-muted mb-1.5">
           你的超级管理员登录密码（再认证）
         </label>
         <Input
@@ -103,15 +103,21 @@ export default function AdminRoleModifier() {
         size="md"
         disabled={busy}
         loading={busy}
-        className="w-full mt-2 font-semibold"
+        fullWidth
       >
-        {busy ? '正在执行角色变更…' : '确认变更角色并强制其会话刷新'}
+        {busy ? '正在提交…' : '提交变更并重置该管理员会话'}
       </Button>
 
       {message && (
-        <p className={`text-xs ${isError ? 'text-danger' : 'text-brand'}`}>
+        <div
+          className={`rounded-md p-3 text-caption ${
+            isError
+              ? 'border border-danger-line bg-danger-soft text-danger'
+              : 'border border-brand-line bg-brand-soft text-brand'
+          }`}
+        >
           {message}
-        </p>
+        </div>
       )}
     </form>
   );

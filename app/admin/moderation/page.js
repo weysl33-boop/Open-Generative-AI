@@ -123,7 +123,7 @@ export default async function ModerationPage({ searchParams }) {
           <select
             name="status"
             defaultValue={params.get('status') || ''}
-            className="rounded-xl border border-line bg-canvas px-4 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
+            className="rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
           >
             <option value="">全部审核状态</option>
             <option value="pending">待审核 (Pending)</option>
@@ -132,10 +132,18 @@ export default async function ModerationPage({ searchParams }) {
           </select>
           <button
             type="submit"
-            className="rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-ink-on-accent hover:bg-brand"
+            className="h-control-md rounded-md bg-brand px-5 text-body-sm font-semibold text-ink-on-accent transition-colors duration-fast hover:bg-brand-hover"
           >
             筛选队列
           </button>
+          {Array.from(params.keys()).length > 0 && (
+            <a
+              href="/admin/moderation"
+              className="h-control-md inline-flex items-center rounded-md border border-line-subtle bg-raised px-3 text-body-sm text-ink-muted transition-[border-color,background-color,color] duration-fast hover:border-line hover:bg-overlay hover:text-ink"
+            >
+              重置
+            </a>
+          )}
         </form>
       </Card>
 

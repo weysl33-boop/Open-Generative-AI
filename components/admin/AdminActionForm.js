@@ -63,24 +63,24 @@ export default function AdminActionForm({
             type={field.type || 'text'}
             defaultValue={field.defaultValue || ''}
             placeholder={field.placeholder}
-            className="min-w-[140px] flex-1 rounded-xl border border-line bg-scrim px-3.5 py-2 text-xs text-ink outline-none focus:border-brand-ring"
+            className="min-w-[140px] flex-1 rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
           />
         ))}
         <button
           disabled={busy}
-          className={`rounded-xl px-4 py-2 text-xs font-semibold transition-colors ${
+          className={`h-control-md rounded-md px-4 text-body-sm font-medium transition-[background-color,border-color,color] duration-fast ${
             tone === 'primary'
-              ? 'bg-brand text-ink-on-accent hover:bg-brand'
+              ? 'bg-brand text-ink-on-accent hover:bg-brand-hover'
               : tone === 'danger'
-              ? 'border border-danger-ring bg-danger-soft text-danger hover:bg-danger-hover'
-              : 'border border-line-strong bg-wash text-ink hover:bg-wash-press'
+              ? 'border border-danger-line bg-danger-soft text-danger hover:bg-danger-hover'
+              : 'border border-line-subtle bg-raised text-ink hover:border-line hover:bg-overlay'
           } disabled:opacity-50`}
         >
           {busy ? '处理中…' : label}
         </button>
       </div>
       {message && (
-        <p className={`text-xs ${isError ? 'text-danger' : 'text-brand-hover'}`}>
+        <p className={`text-caption ${isError ? 'text-danger' : 'text-brand'}`}>
           {message}
         </p>
       )}

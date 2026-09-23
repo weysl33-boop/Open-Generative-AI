@@ -221,7 +221,7 @@ export default function UserDetailTabs({ detail }) {
                 <select
                   value={selectedTag}
                   onChange={(e) => setSelectedTag(e.target.value)}
-                  className="flex-1 rounded-xl border border-line bg-canvas px-3 py-2 text-xs text-ink outline-none focus:border-brand-ring"
+                  className="flex-1 rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                 >
                   <option value="">选择要添加的标签…</option>
                   {allTags
@@ -239,27 +239,27 @@ export default function UserDetailTabs({ detail }) {
                     handleTagAction(selectedTag, 'add');
                     setSelectedTag('');
                   }}
-                  className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-ink-on-accent transition hover:bg-brand disabled:opacity-40"
+                  className="h-control-md rounded-md bg-brand px-4 text-body-sm font-semibold text-ink-on-accent transition-colors duration-fast hover:bg-brand-hover disabled:opacity-40"
                 >
                   打标
                 </button>
               </div>
 
               {tagMsg && (
-                <p className="mt-2 text-xs text-brand-hover">{tagMsg}</p>
+                <p className="mt-2 text-caption text-brand">{tagMsg}</p>
               )}
             </Card>
 
             {/* 高风险账户控制 */}
             <Card>
-              <h3 className="text-sm font-bold text-ink mb-2">高风险账户控制</h3>
-              <p className="text-xs text-ink-subtle mb-4">
+              <h3 className="text-card-title font-semibold text-ink mb-1.5">高风险账户控制</h3>
+              <p className="text-body-sm text-ink-subtle mb-4">
                 修改账户状态或角色会立即撤销该用户的所有会话，强制其重新登录。
               </p>
 
               <div className="space-y-4">
-                <div className="rounded-xl border border-line bg-black/20 p-4">
-                  <p className="text-xs font-semibold text-ink mb-1.5">账户封禁状态切换</p>
+                <div className="rounded-lg border border-line-subtle bg-well p-4">
+                  <p className="text-body-sm font-medium text-ink mb-2">账户封禁状态切换</p>
                   <AdminActionForm
                     action={`/api/admin/users/${user.id}`}
                     method="PATCH"
@@ -276,8 +276,8 @@ export default function UserDetailTabs({ detail }) {
                   />
                 </div>
 
-                <div className="rounded-xl border border-line bg-black/20 p-4">
-                  <p className="text-xs font-semibold text-ink mb-2">变更管理角色</p>
+                <div className="rounded-lg border border-line-subtle bg-well p-4">
+                  <p className="text-body-sm font-medium text-ink mb-2">变更管理角色</p>
                   <AdminActionForm
                     action={`/api/admin/users/${user.id}/role`}
                     method="PATCH"
@@ -299,7 +299,7 @@ export default function UserDetailTabs({ detail }) {
                     ]}
                     submitLabel="保存角色分配"
                     confirmText="修改角色后将强制撤销会话，确定修改？"
-                    tone="attention"
+                    tone="primary"
                   />
                 </div>
               </div>
@@ -365,7 +365,7 @@ export default function UserDetailTabs({ detail }) {
       {tab === 'billing' && (
         <div className="space-y-6">
           <Card>
-            <h3 className="text-sm font-bold text-ink mb-4">订阅记录</h3>
+            <h3 className="text-card-title font-semibold text-ink mb-4">订阅记录</h3>
             <DataTable
               columns={[
                 { key: 'plan_id', label: '套餐 Plan' },
@@ -383,7 +383,7 @@ export default function UserDetailTabs({ detail }) {
           </Card>
 
           <Card>
-            <h3 className="text-sm font-bold text-ink mb-4">充值与消费订单</h3>
+            <h3 className="text-card-title font-semibold text-ink mb-4">充值与消费订单</h3>
             <DataTable
               columns={[
                 { key: 'id', label: '订单号', render: (row) => <CopyableId id={row.id} /> },
@@ -395,7 +395,7 @@ export default function UserDetailTabs({ detail }) {
                 {
                   key: 'status',
                   label: '状态',
-                  render: (row) => <StatusBadge tone={row.status === 'succeeded' ? 'good' : 'attention'}>{row.status}</StatusBadge>,
+                  render: (row) => <StatusBadge tone={row.status === 'succeeded' ? 'good' : 'warn'}>{row.status}</StatusBadge>,
                 },
                 { key: 'created_at', label: '创建时间', render: (row) => formatDate(row.created_at) },
               ]}
@@ -409,16 +409,16 @@ export default function UserDetailTabs({ detail }) {
       {/* 5. 生成记录 */}
       {tab === 'creations' && (
         <Card>
-          <h3 className="text-sm font-bold text-ink mb-4">AI 生成记录</h3>
+          <h3 className="text-card-title font-semibold text-ink mb-4">AI 生成记录</h3>
           <DataTable
             columns={[
               { key: 'studio_id', label: '所属模块' },
               { key: 'label', label: '生成概要' },
-              { key: 'credit_cost', label: '扣减额度', render: (row) => <span className="font-mono text-brand-hover">{row.credit_cost}</span> },
+              { key: 'credit_cost', label: '扣减额度', render: (row) => <span className="font-mono text-brand font-medium">{row.credit_cost}</span> },
               {
                 key: 'status',
                 label: '状态',
-                render: (row) => <StatusBadge tone={['succeeded', 'completed', 'success'].includes(row.status) ? 'good' : 'attention'}>{row.status}</StatusBadge>,
+                render: (row) => <StatusBadge tone={['succeeded', 'completed', 'success'].includes(row.status) ? 'good' : 'warn'}>{row.status}</StatusBadge>,
               },
               { key: 'created_at', label: '时间', render: (row) => formatDate(row.created_at) },
             ]}
@@ -432,7 +432,7 @@ export default function UserDetailTabs({ detail }) {
       {tab === 'sessions' && (
         <Card>
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-bold text-ink">活跃会话 (Sessions)</h3>
+            <h3 className="text-card-title font-semibold text-ink">活跃会话 (Sessions)</h3>
             <AdminActionForm
               action={`/api/admin/users/${user.id}/sessions`}
               method="DELETE"
@@ -457,7 +457,7 @@ export default function UserDetailTabs({ detail }) {
       {tab === 'notes' && (
         <div className="space-y-6">
           <Card>
-            <h3 className="text-sm font-bold text-ink mb-2">添加运营/客服备注</h3>
+            <h3 className="text-card-title font-semibold text-ink mb-2">添加运营/客服备注</h3>
             <AdminActionForm
               action={`/api/admin/users/${user.id}/notes`}
               method="POST"
@@ -469,15 +469,15 @@ export default function UserDetailTabs({ detail }) {
             />
           </Card>
           <Card>
-            <h3 className="text-sm font-bold text-ink mb-4">历史管理备注</h3>
+            <h3 className="text-card-title font-semibold text-ink mb-4">历史管理备注</h3>
             <div className="space-y-3">
               {detail.notes.length === 0 ? (
-                <p className="text-xs text-ink-subtle">暂无备注</p>
+                <p className="text-body-sm text-ink-subtle">暂无备注</p>
               ) : (
                 detail.notes.map((n) => (
-                  <div key={n.id} className="rounded-xl border border-line-subtle bg-black/20 p-3 text-xs">
+                  <div key={n.id} className="rounded-lg border border-line-subtle bg-well p-3 text-body-sm">
                     <p className="text-ink">{n.body}</p>
-                    <p className="mt-2 text-[11px] text-ink-subtle">
+                    <p className="mt-2 text-caption text-ink-subtle">
                       由 {n.author_email || '管理员'} 记录于 {formatDate(n.created_at)}
                     </p>
                   </div>
@@ -491,7 +491,7 @@ export default function UserDetailTabs({ detail }) {
       {/* 8. 审计流水 */}
       {tab === 'audit' && (
         <Card>
-          <h3 className="text-sm font-bold text-ink mb-4">安全审计日志</h3>
+          <h3 className="text-card-title font-semibold text-ink mb-4">安全审计日志</h3>
           <DataTable
             columns={[
               { key: 'action', label: '动作事件' },
@@ -500,7 +500,7 @@ export default function UserDetailTabs({ detail }) {
                 key: 'risk_level',
                 label: '风险级别',
                 render: (row) => (
-                  <StatusBadge tone={row.risk_level === 'high' ? 'danger' : row.risk_level === 'medium' ? 'attention' : 'neutral'}>
+                  <StatusBadge tone={row.risk_level === 'high' ? 'danger' : row.risk_level === 'medium' ? 'warn' : 'neutral'}>
                     {row.risk_level}
                   </StatusBadge>
                 ),

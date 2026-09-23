@@ -234,7 +234,7 @@ function NavTooltip({ label }) {
   return (
     <span
       role="tooltip"
-      className="pointer-events-none absolute left-full top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-md border border-line-subtle bg-surface px-2.5 py-1.5 text-caption font-medium text-ink shadow-elevation-3 group-hover:block"
+      className="pointer-events-none absolute left-full top-1/2 z-popover hidden -translate-y-1/2 whitespace-nowrap rounded-md border border-line-subtle bg-surface px-2.5 py-1.5 text-caption font-medium text-ink shadow-elevation-2 group-hover:block"
     >
       {label}
     </span>

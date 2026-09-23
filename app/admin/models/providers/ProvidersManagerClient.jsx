@@ -284,46 +284,46 @@ export default function ProvidersManagerClient({ initialProviders = [] }) {
 
       {/* 编辑 / 新增弹窗 */}
       {editingProvider && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-line bg-base p-6 shadow-elevation-4">
-            <h3 className="text-lg font-bold text-ink">
+        <div className="fixed inset-0 z-modal flex items-center justify-center bg-scrim p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-xl border border-line bg-surface p-6 shadow-elevation-4">
+            <h3 className="text-section-title font-semibold text-ink">
               {isCreating ? '新增 AI 供应商' : `编辑供应商: ${editingProvider.name}`}
             </h3>
-            <p className="mt-1 text-xs text-ink-muted">
+            <p className="mt-1 text-body-sm text-ink-muted">
               配置驱动连接参数，API Key 写入后将通过 AES-256-GCM 独立加密。
             </p>
 
             <form onSubmit={handleSaveProvider} className="mt-5 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-ink">供应商 ID (Slug)</label>
+                <label className="block text-label font-medium text-ink mb-1.5">供应商 ID (Slug)</label>
                 <input
                   name="id"
                   defaultValue={editingProvider.id}
                   disabled={!isCreating}
                   required
                   placeholder="例如: kling, openai, custom-gateway"
-                  className="mt-1.5 w-full rounded-lg border border-line bg-wash px-3 py-2 text-sm text-ink focus:border-brand disabled:opacity-50 font-mono"
+                  className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast disabled:opacity-50 font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-ink">显示名称</label>
+                <label className="block text-label font-medium text-ink mb-1.5">显示名称</label>
                 <input
                   name="name"
                   defaultValue={editingProvider.name}
                   required
                   placeholder="例如: 快手可灵官方 API"
-                  className="mt-1.5 w-full rounded-lg border border-line bg-wash px-3 py-2 text-sm text-ink focus:border-brand"
+                  className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-ink">类型 (Provider Type)</label>
+                  <label className="block text-label font-medium text-ink mb-1.5">类型 (Provider Type)</label>
                   <select
                     name="providerType"
                     defaultValue={editingProvider.provider_type || 'aggregator'}
-                    className="mt-1.5 w-full rounded-lg border border-line bg-raised px-3 py-2 text-sm text-ink focus:border-brand"
+                    className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                   >
                     <option value="aggregator">Aggregator (聚合网关)</option>
                     <option value="official">Official (原厂官方 API)</option>
@@ -331,33 +331,33 @@ export default function ProvidersManagerClient({ initialProviders = [] }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-ink">路由基础优先级 (0-200)</label>
+                  <label className="block text-label font-medium text-ink mb-1.5">路由基础优先级 (0-200)</label>
                   <input
                     type="number"
                     name="priority"
                     defaultValue={editingProvider.priority ?? 100}
-                    className="mt-1.5 w-full rounded-lg border border-line bg-wash px-3 py-2 text-sm text-ink focus:border-brand"
+                    className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-ink">Base URL (留空使用驱动默认)</label>
+                <label className="block text-label font-medium text-ink mb-1.5">Base URL (留空使用驱动默认)</label>
                 <input
                   name="baseUrl"
                   defaultValue={editingProvider.base_url || ''}
                   placeholder="https://api.example.com/v1"
-                  className="mt-1.5 w-full rounded-lg border border-line bg-wash px-3 py-2 text-sm text-ink focus:border-brand font-mono"
+                  className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast font-mono"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-ink">调用模式 (API Mode)</label>
+                  <label className="block text-label font-medium text-ink mb-1.5">调用模式 (API Mode)</label>
                   <select
                     name="apiMode"
                     defaultValue={editingProvider.api_mode || 'async'}
-                    className="mt-1.5 w-full rounded-lg border border-line bg-raised px-3 py-2 text-sm text-ink focus:border-brand"
+                    className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                   >
                     <option value="async">异步轮询 (Async)</option>
                     <option value="sync">同步直出 (Sync)</option>
@@ -365,12 +365,12 @@ export default function ProvidersManagerClient({ initialProviders = [] }) {
                   </select>
                 </div>
                 <div className="flex items-end pb-2">
-                  <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
+                  <label className="flex items-center gap-2 text-body-sm text-ink cursor-pointer">
                     <input
                       type="checkbox"
                       name="enabled"
                       defaultChecked={editingProvider.enabled !== false}
-                      className="size-4 rounded border-line-strong bg-wash text-brand-active focus:ring-0"
+                      className="size-4 rounded-xs border-line-subtle bg-well text-brand focus:ring-brand-ring"
                     />
                     启用该供应商
                   </label>
@@ -378,36 +378,37 @@ export default function ProvidersManagerClient({ initialProviders = [] }) {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-ink">
-                  API Key / Secret Token {editingProvider.hasApiKey && <span className="text-ink-subtle">(已配置，输入新值以覆盖)</span>}
+                <label className="block text-label font-medium text-ink mb-1.5">
+                  API Key / Secret Token {editingProvider.hasApiKey && <span className="text-caption text-ink-subtle">(已配置，输入新值以覆盖)</span>}
                 </label>
                 <input
                   type="password"
                   name="apiKey"
                   placeholder={editingProvider.hasApiKey ? '••••••••••••••••' : '输入供应商 API Key'}
-                  className="mt-1.5 w-full rounded-lg border border-line bg-wash px-3 py-2 text-sm text-ink focus:border-brand font-mono"
+                  className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast font-mono"
                 />
               </div>
 
-              <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-line">
+              <div className="mt-6 flex justify-end gap-2.5 pt-3 border-t border-line-subtle">
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="secondary"
+                  size="md"
                   onClick={() => {
                     setEditingProvider(null);
                     setIsCreating(false);
                   }}
-                  className="text-ink-muted hover:text-ink"
                 >
                   取消
                 </Button>
                 <Button
                   type="submit"
+                  variant="primary"
+                  size="md"
                   disabled={isSaving}
-                  className="bg-brand-active hover:bg-brand text-ink-on-accent font-semibold"
+                  loading={isSaving}
                 >
-                  {isSaving ? <Loader2 className="mr-1.5 size-4 animate-spin" /> : null}
-                  保存配置
+                  保存供应商
                 </Button>
               </div>
             </form>

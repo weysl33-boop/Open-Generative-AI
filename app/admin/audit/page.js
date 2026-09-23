@@ -79,7 +79,7 @@ export default async function AuditPage({ searchParams }) {
       render: (row) => (
         <div className="max-w-[280px] font-mono text-[11px]">
           {row.after ? (
-            <pre className="truncate rounded-md bg-scrim p-1.5 text-ink-muted" title={JSON.stringify(row.after, null, 2)}>
+            <pre className="truncate rounded border border-line-subtle bg-well p-1.5 text-ink-muted" title={JSON.stringify(row.after, null, 2)}>
               {JSON.stringify(row.after)}
             </pre>
           ) : (
@@ -109,13 +109,13 @@ export default async function AuditPage({ searchParams }) {
             name="q"
             defaultValue={params.get('q') || ''}
             placeholder="搜索管理员邮箱、动作名称或目标 ID…"
-            className="min-w-[260px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
+            className="min-w-[260px] flex-1 h-control-md rounded-md border border-line-subtle bg-well px-3 text-body-sm text-ink placeholder:text-ink-subtle focus-visible:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring"
           />
 
           <select
             name="risk"
             defaultValue={params.get('risk') || ''}
-            className="rounded-xl border border-line bg-canvas px-3.5 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
+            className="h-control-md rounded-md border border-line-subtle bg-well px-3 text-body-sm text-ink focus-visible:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring"
           >
             <option value="">全部风险级别</option>
             <option value="high">High (高危操作)</option>
@@ -125,7 +125,7 @@ export default async function AuditPage({ searchParams }) {
 
           <button
             type="submit"
-            className="rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-ink-on-accent hover:bg-brand"
+            className="h-control-md rounded-md bg-brand hover:bg-brand-hover active:bg-brand-active px-4 text-body-sm font-semibold text-ink-on-accent transition-colors"
           >
             筛选日志
           </button>

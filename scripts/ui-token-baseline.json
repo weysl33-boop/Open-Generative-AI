@@ -1,707 +1,282 @@
 {
   "app/account/AccountClient.js": {
+    "alpha-on-var-colour": 1,
     "ad-hoc-shadow": 1,
     "ad-hoc-z-index": 1,
-    "alpha-on-var-colour": 1,
-    "hard-coded-hex": 5,
-    "off-system-palette": 6,
-    "off-system-type-ramp": 4,
-    "other-arbitrary-value": 5,
-    "pure-white-black": 15,
-    "transition-all": 1
+    "transition-all": 1,
+    "off-system-type-ramp": 4
   },
   "app/account/HistoryPanel.js": {
-    "off-system-palette": 6,
-    "off-system-type-ramp": 13,
-    "pure-white-black": 13
+    "off-system-type-ramp": 13
   },
   "app/account/UsagePanel.js": {
     "ad-hoc-shadow": 1,
     "arbitrary-type": 1,
-    "off-system-palette": 8,
-    "off-system-type-ramp": 13,
-    "pure-white-black": 11
-  },
-  "app/admin/admins/AdminRoleModifier.js": {
-    "arbitrary-geometry": 1,
-    "arbitrary-type": 1,
-    "hard-coded-hex": 2,
-    "off-system-palette": 4,
-    "off-system-type-ramp": 4,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 1
+    "off-system-type-ramp": 13
   },
   "app/admin/admins/page.js": {
-    "arbitrary-type": 3,
-    "hard-coded-hex": 4,
-    "off-system-palette": 2,
-    "off-system-type-ramp": 5,
-    "other-arbitrary-value": 2,
-    "pure-white-black": 3,
-    "transition-all": 1
+    "other-arbitrary-value": 1
   },
   "app/admin/audit/page.js": {
     "arbitrary-geometry": 2,
     "arbitrary-type": 2,
-    "hard-coded-hex": 1,
-    "off-system-palette": 4,
-    "off-system-type-ramp": 6,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 12
+    "off-system-type-ramp": 3
   },
   "app/admin/content/analytics/BannerAnalyticsClient.js": {
     "arbitrary-geometry": 1,
-    "arbitrary-type": 15,
-    "off-system-palette": 26,
-    "off-system-type-ramp": 10,
-    "pure-white-black": 35,
-    "transition-all": 4
+    "arbitrary-type": 11,
+    "off-system-type-ramp": 8,
+    "off-system-palette": 4
   },
   "app/admin/content/banners/BannerManagerClient.js": {
-    "ad-hoc-shadow": 4,
-    "arbitrary-type": 30,
-    "hard-coded-hex": 7,
-    "off-system-palette": 61,
-    "off-system-type-ramp": 26,
-    "other-arbitrary-value": 9,
-    "pure-white-black": 91,
-    "transition-all": 2
+    "arbitrary-type": 12,
+    "other-arbitrary-value": 1,
+    "off-system-type-ramp": 11,
+    "off-system-palette": 10,
+    "pure-white-black": 1
   },
   "app/admin/content/branding/BrandingManagerClient.js": {
-    "arbitrary-geometry": 4,
-    "arbitrary-type": 9,
     "div-onclick-not-keyboard": 1,
-    "off-system-palette": 155,
-    "off-system-type-ramp": 55,
-    "outline-stripped": 3,
-    "pure-white-black": 36,
-    "transition-all": 3
+    "arbitrary-geometry": 4,
+    "arbitrary-type": 2,
+    "off-system-type-ramp": 28
   },
   "app/admin/content/effects/MotionManagerClient.js": {
     "arbitrary-geometry": 3,
-    "arbitrary-type": 9,
-    "hard-coded-hex": 2,
-    "off-system-palette": 19,
-    "off-system-type-ramp": 10,
-    "other-arbitrary-value": 3,
-    "pure-white-black": 41,
-    "transition-all": 3
-  },
-  "app/admin/coupons/CouponGeneratorClient.js": {
-    "arbitrary-type": 4,
-    "hard-coded-hex": 1,
-    "off-system-palette": 13,
-    "off-system-type-ramp": 10,
     "other-arbitrary-value": 1,
-    "pure-white-black": 21
-  },
-  "app/admin/coupons/page.js": {
-    "off-system-palette": 1,
-    "pure-white-black": 1
+    "off-system-palette": 1
   },
   "app/admin/credits/page.js": {
     "arbitrary-geometry": 1,
     "arbitrary-type": 4,
-    "off-system-palette": 26,
-    "off-system-type-ramp": 9,
-    "pure-white-black": 9
+    "off-system-type-ramp": 1,
+    "off-system-palette": 3
   },
   "app/admin/error.js": {
     "alpha-on-var-colour": 1,
     "arbitrary-geometry": 1,
-    "arbitrary-type": 2,
-    "hard-coded-hex": 1,
-    "off-system-palette": 12,
-    "off-system-type-ramp": 4,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 9,
-    "transition-all": 2
+    "arbitrary-type": 1,
+    "transition-all": 2,
+    "off-system-type-ramp": 4
   },
   "app/admin/generations/failures/page.js": {
-    "arbitrary-type": 1,
-    "off-system-palette": 5,
-    "off-system-type-ramp": 7,
-    "pure-white-black": 11
+    "off-system-type-ramp": 2
   },
   "app/admin/generations/page.js": {
     "arbitrary-geometry": 2,
-    "arbitrary-type": 4,
-    "hard-coded-hex": 1,
-    "off-system-palette": 15,
-    "off-system-type-ramp": 8,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 12
+    "arbitrary-type": 3,
+    "off-system-type-ramp": 3
   },
   "app/admin/health/LiveLogViewer.jsx": {
-    "arbitrary-geometry": 1,
-    "hard-coded-hex": 1,
-    "off-system-palette": 1,
-    "off-system-type-ramp": 5,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 9
-  },
-  "app/admin/health/page.js": {
-    "arbitrary-type": 1,
-    "off-system-type-ramp": 4,
-    "pure-white-black": 10
-  },
-  "app/admin/i18n/LanguageManagementClient.js": {
-    "arbitrary-type": 2,
-    "hard-coded-hex": 2,
-    "off-system-palette": 8,
-    "off-system-type-ramp": 14,
-    "other-arbitrary-value": 2,
-    "pure-white-black": 24
+    "arbitrary-geometry": 1
   },
   "app/admin/layout.js": {
     "alpha-on-var-colour": 1,
     "arbitrary-geometry": 2,
     "arbitrary-type": 3,
-    "hard-coded-hex": 2,
-    "off-system-palette": 5,
-    "off-system-type-ramp": 5,
-    "other-arbitrary-value": 4,
-    "pure-white-black": 8,
-    "transition-all": 2
-  },
-  "app/admin/system/login/SmsProvidersClient.js": {
-    "alpha-on-var-colour": 1,
-    "off-system-type-ramp": 1
-  },
-  "app/admin/system/login/SocialProviderCard.js": {
-    "alpha-on-var-colour": 3,
-    "arbitrary-geometry": 3,
-    "arbitrary-type": 16,
-    "hard-coded-hex": 5,
-    "off-system-palette": 48,
-    "off-system-type-ramp": 16,
-    "other-arbitrary-value": 9,
-    "pure-white-black": 27,
-    "transition-all": 2
+    "other-arbitrary-value": 2,
+    "transition-all": 2,
+    "off-system-type-ramp": 5
   },
   "app/admin/models/catalog/CatalogManagerClient.jsx": {
-    "alpha-on-var-colour": 1,
     "arbitrary-type": 1,
-    "hard-coded-hex": 4,
-    "off-system-palette": 41,
-    "off-system-type-ramp": 23,
-    "other-arbitrary-value": 4,
-    "outline-stripped": 8,
-    "pure-white-black": 44
+    "off-system-type-ramp": 6
   },
   "app/admin/models/cost-center/CostCenterClient.jsx": {
     "arbitrary-geometry": 1,
-    "arbitrary-type": 5,
-    "hard-coded-hex": 3,
-    "off-system-palette": 32,
-    "off-system-type-ramp": 16,
-    "other-arbitrary-value": 3,
-    "outline-stripped": 2,
-    "pure-white-black": 29
-  },
-  "app/admin/models/health/HealthMonitorClient.jsx": {
-    "arbitrary-type": 3,
-    "off-system-palette": 13,
-    "off-system-type-ramp": 13,
-    "pure-white-black": 11
+    "arbitrary-type": 4,
+    "off-system-type-ramp": 1
   },
   "app/admin/models/pricing/PricingManagerClient.jsx": {
-    "alpha-on-var-colour": 1,
-    "arbitrary-type": 3,
-    "hard-coded-hex": 3,
-    "off-system-palette": 27,
-    "off-system-type-ramp": 6,
-    "other-arbitrary-value": 3,
-    "outline-stripped": 5,
-    "pure-white-black": 29
+    "arbitrary-type": 1,
+    "off-system-type-ramp": 3
   },
   "app/admin/models/profit-center/ProfitCenterClient.jsx": {
-    "arbitrary-type": 5,
-    "hard-coded-hex": 2,
-    "off-system-palette": 34,
-    "off-system-type-ramp": 10,
-    "other-arbitrary-value": 2,
-    "outline-stripped": 1,
-    "pure-white-black": 19
+    "arbitrary-type": 1,
+    "off-system-type-ramp": 1
   },
   "app/admin/models/providers/ProvidersManagerClient.jsx": {
-    "hard-coded-hex": 3,
-    "off-system-palette": 31,
-    "off-system-type-ramp": 25,
-    "other-arbitrary-value": 3,
-    "outline-stripped": 7,
-    "pure-white-black": 39,
-    "transition-all": 1
-  },
-  "app/admin/models/routing/RoutingManagerClient.jsx": {
-    "arbitrary-type": 1,
-    "hard-coded-hex": 6,
-    "off-system-palette": 51,
-    "off-system-type-ramp": 19,
-    "other-arbitrary-value": 6,
-    "outline-stripped": 9,
-    "pure-white-black": 67,
-    "transition-all": 1
+    "transition-all": 1,
+    "off-system-type-ramp": 8
   },
   "app/admin/moderation/page.js": {
-    "hard-coded-hex": 1,
-    "off-system-palette": 6,
-    "off-system-type-ramp": 5,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 8
+    "off-system-type-ramp": 3
   },
   "app/admin/orders/page.js": {
     "arbitrary-geometry": 1,
     "arbitrary-type": 1,
-    "hard-coded-hex": 2,
-    "off-system-palette": 6,
-    "off-system-type-ramp": 6,
-    "other-arbitrary-value": 2,
-    "pure-white-black": 13
+    "off-system-type-ramp": 2
   },
   "app/admin/page.js": {
     "arbitrary-geometry": 1,
-    "arbitrary-type": 24,
-    "off-system-palette": 39,
-    "off-system-type-ramp": 23,
-    "other-arbitrary-value": 3,
-    "pure-white-black": 34,
-    "transition-all": 7
+    "other-arbitrary-value": 2,
+    "off-system-type-ramp": 3
   },
   "app/admin/plans/PlanCardEditor.js": {
-    "alpha-on-var-colour": 1,
-    "arbitrary-type": 18,
-    "hard-coded-hex": 1,
-    "off-system-palette": 30,
-    "off-system-type-ramp": 26,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 80
-  },
-  "app/admin/providers/ProviderCard.js": {
-    "alpha-on-var-colour": 3,
-    "arbitrary-geometry": 4,
-    "arbitrary-type": 12,
-    "hard-coded-hex": 5,
-    "off-system-palette": 28,
-    "off-system-type-ramp": 13,
-    "other-arbitrary-value": 9,
-    "pure-white-black": 19,
-    "transition-all": 3
-  },
-  "app/admin/providers/ai/page.js": {
-    "off-system-palette": 6,
-    "off-system-type-ramp": 3,
+    "arbitrary-type": 4,
+    "off-system-type-ramp": 12,
     "pure-white-black": 3
   },
   "app/admin/providers/models/ModelsManagerClient.jsx": {
-    "arbitrary-geometry": 1,
-    "arbitrary-type": 4,
-    "off-system-palette": 19,
-    "off-system-type-ramp": 13,
-    "pure-white-black": 26
+    "arbitrary-geometry": 1
   },
   "app/admin/security/sessions/page.js": {
-    "arbitrary-geometry": 1,
-    "off-system-palette": 3,
-    "off-system-type-ramp": 2,
-    "pure-white-black": 5
+    "arbitrary-geometry": 1
   },
   "app/admin/settings/SettingsEditor.js": {
-    "arbitrary-type": 5,
-    "hard-coded-hex": 1,
-    "off-system-palette": 28,
-    "off-system-type-ramp": 62,
-    "other-arbitrary-value": 2,
-    "pure-white-black": 41,
-    "transition-all": 2
+    "off-system-type-ramp": 2
   },
   "app/admin/subscription-faq/SubscriptionFaqManagerClient.js": {
-    "arbitrary-type": 4,
-    "hard-coded-hex": 4,
-    "off-system-palette": 62,
-    "off-system-type-ramp": 21,
-    "other-arbitrary-value": 3,
-    "outline-stripped": 9,
-    "pure-white-black": 60
+    "arbitrary-type": 1,
+    "off-system-type-ramp": 1
   },
   "app/admin/subscriptions/page.js": {
-    "arbitrary-geometry": 1,
-    "hard-coded-hex": 1,
-    "off-system-palette": 5,
-    "off-system-type-ramp": 3,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 7
+    "arbitrary-geometry": 1
   },
-  "app/admin/users/[id]/UserDetailTabs.js": {
-    "arbitrary-type": 3,
-    "hard-coded-hex": 1,
-    "off-system-palette": 25,
-    "off-system-type-ramp": 28,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 57
-  },
-  "app/admin/users/[id]/page.js": {
-    "arbitrary-type": 3,
-    "off-system-palette": 1,
-    "off-system-type-ramp": 8,
-    "pure-white-black": 13
+  "app/admin/system/login/SocialProviderCard.js": {
+    "arbitrary-type": 8,
+    "off-system-type-ramp": 1
   },
   "app/admin/users/page.js": {
-    "arbitrary-geometry": 1,
-    "arbitrary-type": 3,
-    "hard-coded-hex": 4,
-    "off-system-palette": 29,
-    "off-system-type-ramp": 11,
-    "other-arbitrary-value": 4,
-    "pure-white-black": 31
+    "arbitrary-geometry": 1
+  },
+  "app/admin/users/[id]/page.js": {
+    "off-system-type-ramp": 3
+  },
+  "app/admin/users/[id]/UserDetailTabs.js": {
+    "arbitrary-type": 1,
+    "off-system-type-ramp": 12,
+    "off-system-palette": 7
   },
   "app/admin/webhooks/page.js": {
     "arbitrary-geometry": 1,
-    "hard-coded-hex": 1,
-    "off-system-palette": 4,
-    "off-system-type-ramp": 5,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 4
-  },
-  "app/agents/[agent_id]/AgentChatClient.js": {
-    "pure-white-black": 1
-  },
-  "app/agents/layout.js": {
-    "pure-white-black": 1
+    "off-system-type-ramp": 3
   },
   "app/call-api/page.jsx": {
-    "ad-hoc-radius": 1,
     "alpha-on-var-colour": 1,
     "arbitrary-geometry": 10,
-    "arbitrary-type": 3,
-    "hard-coded-hex": 4,
-    "off-system-palette": 45,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 3,
+    "transition-all": 4,
     "off-system-type-ramp": 14,
-    "other-arbitrary-value": 6,
-    "pure-white-black": 22,
-    "transition-all": 4
+    "off-system-palette": 7
   },
   "app/content-policy/page.js": {
     "alpha-on-var-colour": 4,
-    "hard-coded-hex": 5,
-    "off-system-palette": 10,
-    "off-system-type-ramp": 9,
-    "other-arbitrary-value": 5,
-    "pure-white-black": 11
+    "off-system-type-ramp": 9
   },
   "app/error.js": {
     "alpha-on-var-colour": 1,
     "arbitrary-geometry": 1,
-    "hard-coded-hex": 1,
-    "off-system-palette": 7,
-    "off-system-type-ramp": 4,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 8
+    "off-system-type-ramp": 4
   },
   "app/global-error.js": {
     "arbitrary-type": 2,
-    "hard-coded-hex": 1,
-    "off-system-palette": 9,
-    "off-system-type-ramp": 4,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 13
+    "off-system-type-ramp": 4
   },
   "app/privacy/page.js": {
     "alpha-on-var-colour": 5,
-    "hard-coded-hex": 6,
-    "off-system-palette": 11,
-    "off-system-type-ramp": 10,
-    "other-arbitrary-value": 6,
-    "pure-white-black": 13
+    "off-system-type-ramp": 10
   },
   "app/refund/page.js": {
     "alpha-on-var-colour": 4,
-    "hard-coded-hex": 5,
-    "off-system-palette": 10,
-    "off-system-type-ramp": 9,
-    "other-arbitrary-value": 5,
-    "pure-white-black": 11
+    "off-system-type-ramp": 9
   },
   "app/terms/page.js": {
     "alpha-on-var-colour": 5,
-    "hard-coded-hex": 6,
-    "off-system-palette": 11,
-    "off-system-type-ramp": 10,
-    "other-arbitrary-value": 6,
-    "pure-white-black": 13
-  },
-  "components/ApiKeyModal.js": {
-    "ad-hoc-z-index": 1,
-    "hard-coded-hex": 1,
-    "off-system-palette": 11,
-    "off-system-type-ramp": 5,
-    "other-arbitrary-value": 1,
-    "outline-stripped": 1,
-    "pure-white-black": 5
-  },
-  "components/ChinaIpGate.js": {
-    "arbitrary-type": 2,
-    "hard-coded-hex": 1,
-    "off-system-palette": 9,
-    "off-system-type-ramp": 5,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 15
-  },
-  "components/GlobalSiteBanner.js": {
-    "ad-hoc-shadow": 4,
-    "ad-hoc-z-index": 1,
-    "alpha-on-var-colour": 1,
-    "arbitrary-type": 4,
-    "hard-coded-hex": 1,
-    "off-system-palette": 5,
-    "off-system-type-ramp": 1,
-    "other-arbitrary-value": 2,
-    "pure-white-black": 14,
-    "transition-all": 4
-  },
-  "components/HeadshotStudio.js": {
-    "arbitrary-type": 3,
-    "hard-coded-hex": 1,
-    "off-system-palette": 4,
-    "off-system-type-ramp": 3,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 10
-  },
-  "components/LanguageSwitcher.js": {
-    "ad-hoc-radius": 1,
-    "off-system-palette": 10,
-    "off-system-type-ramp": 2,
-    "pure-white-black": 3,
-    "transition-all": 1
-  },
-  "components/MaintenanceGate.js": {
-    "arbitrary-type": 2,
-    "hard-coded-hex": 1,
-    "off-system-palette": 10,
-    "off-system-type-ramp": 5,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 11
-  },
-  "components/StandaloneShell.js": {
-    "div-onclick-not-keyboard": 1
-  },
-  "components/StudioResourceBoundary.jsx": {
-    "arbitrary-type": 2,
-    "hard-coded-hex": 5,
-    "off-system-palette": 1,
-    "off-system-type-ramp": 5,
-    "other-arbitrary-value": 5,
-    "pure-white-black": 6
+    "off-system-type-ramp": 10
   },
   "components/account/AccountLayout.js": {
-    "ad-hoc-radius": 1,
-    "ad-hoc-shadow": 1,
-    "alpha-on-var-colour": 2,
-    "arbitrary-geometry": 10,
-    "arbitrary-type": 7,
     "div-onclick-not-keyboard": 1,
-    "hard-coded-hex": 4,
-    "off-system-palette": 13,
-    "other-arbitrary-value": 4,
-    "outline-stripped": 1,
-    "pure-white-black": 17,
-    "transition-all": 3
-  },
-  "components/account/AccountModal.js": {
-    "ad-hoc-z-index": 1
+    "alpha-on-var-colour": 2,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 10,
+    "arbitrary-type": 4,
+    "transition-all": 3,
+    "off-system-palette": 1
   },
   "components/account/DualCurrencyCards.js": {
     "alpha-on-var-colour": 2,
-    "arbitrary-type": 4,
-    "hard-coded-hex": 2,
-    "off-system-palette": 17,
-    "off-system-type-ramp": 7,
-    "other-arbitrary-value": 2,
-    "pure-white-black": 9,
-    "transition-all": 3
+    "arbitrary-type": 2,
+    "transition-all": 3,
+    "off-system-type-ramp": 6
   },
   "components/account/RechargeModal.js": {
-    "ad-hoc-shadow": 2,
-    "ad-hoc-z-index": 1,
     "alpha-on-var-colour": 1,
-    "arbitrary-geometry": 1,
-    "arbitrary-type": 1,
-    "div-onclick-not-keyboard": 1,
-    "hard-coded-hex": 21,
-    "off-system-palette": 49,
     "off-system-type-ramp": 21,
-    "other-arbitrary-value": 19,
-    "outline-stripped": 1,
-    "pure-white-black": 33,
-    "transition-all": 5
+    "pure-white-black": 2
   },
   "components/account/tabs/ActivityTab.js": {
-    "ad-hoc-radius": 9,
-    "ad-hoc-z-index": 1,
     "alpha-on-var-colour": 1,
-    "arbitrary-geometry": 6,
-    "arbitrary-type": 5,
-    "hard-coded-hex": 7,
-    "off-system-palette": 52,
-    "off-system-type-ramp": 21,
-    "other-arbitrary-value": 7,
-    "pure-white-black": 34,
-    "transition-all": 3
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 5,
+    "arbitrary-type": 2,
+    "transition-all": 2,
+    "off-system-type-ramp": 20,
+    "off-system-palette": 1
   },
   "components/account/tabs/AgentApiKeyTab.js": {
-    "ad-hoc-radius": 1,
     "arbitrary-geometry": 3,
     "arbitrary-type": 1,
-    "hard-coded-hex": 2,
-    "off-system-palette": 15,
-    "off-system-type-ramp": 9,
-    "other-arbitrary-value": 2,
-    "pure-white-black": 13
+    "off-system-type-ramp": 9
   },
   "components/account/tabs/InvoicesTab.js": {
-    "ad-hoc-radius": 1,
     "arbitrary-geometry": 1,
-    "hard-coded-hex": 1,
-    "off-system-palette": 9,
-    "off-system-type-ramp": 9,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 13
+    "off-system-type-ramp": 9
   },
   "components/account/tabs/MembershipTab.js": {
     "alpha-on-var-colour": 5,
-    "arbitrary-type": 12,
-    "hard-coded-hex": 9,
-    "off-system-palette": 37,
-    "off-system-type-ramp": 16,
-    "other-arbitrary-value": 5,
-    "pure-white-black": 25,
-    "transition-all": 1
-  },
-  "components/account/tabs/PriceDetailsTab.js": {
-    "ad-hoc-radius": 1,
-    "alpha-on-var-colour": 2,
-    "arbitrary-type": 6,
-    "hard-coded-hex": 5,
-    "off-system-palette": 9,
-    "off-system-type-ramp": 5,
-    "other-arbitrary-value": 5,
-    "pure-white-black": 15
+    "arbitrary-type": 7,
+    "transition-all": 1,
+    "off-system-type-ramp": 16
   },
   "components/account/tabs/ProfileTab.js": {
-    "ad-hoc-radius": 4,
-    "ad-hoc-z-index": 1,
-    "arbitrary-geometry": 1,
-    "arbitrary-type": 4,
-    "hard-coded-hex": 19,
-    "off-system-palette": 84,
-    "off-system-type-ramp": 40,
-    "other-arbitrary-value": 19,
-    "pure-white-black": 83,
-    "transition-all": 2
+    "off-system-type-ramp": 36
   },
   "components/account/tabs/SettingsTab.js": {
-    "ad-hoc-radius": 1,
     "ad-hoc-z-index": 1,
     "arbitrary-geometry": 3,
-    "arbitrary-type": 1,
-    "hard-coded-hex": 3,
-    "off-system-palette": 8,
-    "off-system-type-ramp": 10,
-    "other-arbitrary-value": 3,
     "outline-stripped": 2,
-    "pure-white-black": 14
+    "off-system-type-ramp": 10,
+    "pure-white-black": 2
   },
   "components/account/tabs/UsageTab.js": {
     "alpha-on-var-colour": 2,
     "arbitrary-geometry": 1,
-    "arbitrary-type": 8,
-    "hard-coded-hex": 5,
-    "off-system-palette": 34,
-    "off-system-type-ramp": 15,
-    "other-arbitrary-value": 3,
-    "pure-white-black": 9
+    "arbitrary-type": 4,
+    "off-system-type-ramp": 15
   },
   "components/account/tabs/WalletTab.js": {
-    "ad-hoc-radius": 1,
-    "arbitrary-type": 2,
-    "hard-coded-hex": 3,
-    "off-system-palette": 10,
-    "off-system-type-ramp": 12,
-    "other-arbitrary-value": 2,
-    "pure-white-black": 15,
-    "transition-all": 3
+    "transition-all": 3,
+    "off-system-type-ramp": 12
   },
   "components/admin/AdminActionForm.js": {
-    "arbitrary-geometry": 1,
-    "off-system-palette": 7,
-    "off-system-type-ramp": 2,
-    "pure-white-black": 8
+    "arbitrary-geometry": 1
   },
   "components/admin/AdminBreadcrumbs.js": {
     "off-system-type-ramp": 2
   },
-  "components/admin/AdminNav.js": {
-    "arbitrary-geometry": 3,
-    "arbitrary-type": 3,
-    "off-system-palette": 12,
-    "other-arbitrary-value": 3,
-    "pure-white-black": 10,
-    "transition-all": 3
-  },
   "components/admin/AdminScrollableTabs.js": {
-    "ad-hoc-shadow": 1,
     "alpha-on-var-colour": 4,
-    "arbitrary-type": 1,
-    "hard-coded-hex": 6,
-    "off-system-palette": 15,
-    "off-system-type-ramp": 1,
-    "other-arbitrary-value": 7,
-    "pure-white-black": 8,
-    "transition-all": 3
+    "transition-all": 2
   },
   "components/admin/AdminShell.js": {
-    "alpha-on-var-colour": 1,
-    "arbitrary-geometry": 2,
-    "arbitrary-type": 3,
-    "div-onclick-not-keyboard": 1,
-    "hard-coded-hex": 4,
-    "off-system-palette": 16,
-    "other-arbitrary-value": 4,
-    "pure-white-black": 16
+    "div-onclick-not-keyboard": 1
   },
   "components/admin/AdminUi.js": {
-    "alpha-on-var-colour": 3,
-    "arbitrary-geometry": 2,
-    "arbitrary-type": 11,
-    "hard-coded-hex": 3,
-    "off-system-palette": 28,
-    "off-system-type-ramp": 13,
-    "other-arbitrary-value": 4,
-    "pure-white-black": 16,
-    "transition-all": 3
-  },
-  "components/admin/AdminUiClient.js": {
-    "arbitrary-type": 2,
-    "hard-coded-hex": 2,
-    "off-system-palette": 10,
-    "off-system-type-ramp": 5,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 2
-  },
-  "components/admin/ExportButton.js": {
     "arbitrary-geometry": 1,
-    "arbitrary-type": 1,
-    "off-system-type-ramp": 1,
-    "pure-white-black": 5
+    "arbitrary-type": 5
   },
   "components/admin/branding/LogoCropper.js": {
-    "arbitrary-geometry": 3,
-    "arbitrary-type": 3,
-    "off-system-palette": 43,
-    "off-system-type-ramp": 9,
-    "pure-white-black": 8,
     "range-without-utility": 1,
-    "transition-all": 2
+    "arbitrary-geometry": 3,
+    "arbitrary-type": 1,
+    "transition-all": 2,
+    "off-system-type-ramp": 9,
+    "off-system-palette": 8
+  },
+  "components/admin/ExportButton.js": {
+    "arbitrary-geometry": 1
   },
   "components/admin/model-center/BulkActionBar.jsx": {
     "arbitrary-geometry": 3
@@ -724,7 +299,7 @@
     "arbitrary-type": 1
   },
   "components/admin/model-center/ModelList.jsx": {
-    "arbitrary-geometry": 5,
+    "arbitrary-geometry": 3,
     "arbitrary-type": 1
   },
   "components/admin/model-center/ModelStates.jsx": {
@@ -733,305 +308,242 @@
   "components/admin/model-center/ModelToolbar.jsx": {
     "arbitrary-geometry": 4
   },
+  "components/ApiKeyModal.js": {
+    "ad-hoc-z-index": 1,
+    "outline-stripped": 1,
+    "off-system-type-ramp": 5
+  },
   "components/assets/AssetCard.js": {
-    "ad-hoc-shadow": 1,
-    "alpha-on-var-colour": 3,
-    "arbitrary-geometry": 1,
-    "arbitrary-type": 7,
     "div-onclick-not-keyboard": 1,
-    "hard-coded-hex": 7,
-    "off-system-palette": 9,
+    "hard-coded-hex": 1,
+    "alpha-on-var-colour": 3,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 1,
+    "transition-all": 1,
     "off-system-type-ramp": 2,
-    "other-arbitrary-value": 3,
-    "pure-white-black": 37,
-    "transition-all": 1
+    "off-system-palette": 3
   },
   "components/assets/AssetDetailModal.js": {
+    "div-onclick-not-keyboard": 1,
+    "hard-coded-hex": 1,
     "ad-hoc-shadow": 1,
     "arbitrary-geometry": 1,
-    "arbitrary-type": 16,
-    "div-onclick-not-keyboard": 1,
-    "hard-coded-hex": 8,
-    "off-system-palette": 9,
-    "off-system-type-ramp": 7,
-    "other-arbitrary-value": 4,
-    "pure-white-black": 53,
-    "transition-all": 1
+    "arbitrary-type": 7,
+    "transition-all": 1,
+    "off-system-type-ramp": 7
   },
   "components/assets/AssetLibraryClient.js": {
-    "ad-hoc-shadow": 2,
+    "hard-coded-hex": 1,
     "alpha-on-var-colour": 3,
-    "arbitrary-type": 4,
-    "hard-coded-hex": 16,
-    "off-system-palette": 2,
-    "off-system-type-ramp": 13,
-    "other-arbitrary-value": 12,
-    "outline-stripped": 2,
-    "pure-white-black": 46,
-    "transition-all": 4
+    "ad-hoc-shadow": 1,
+    "arbitrary-type": 1,
+    "transition-all": 4,
+    "off-system-type-ramp": 13
   },
   "components/assets/CreateFolderModal.js": {
-    "ad-hoc-shadow": 1,
     "div-onclick-not-keyboard": 1,
-    "hard-coded-hex": 6,
-    "off-system-palette": 3,
+    "hard-coded-hex": 2,
+    "ad-hoc-shadow": 1,
+    "other-arbitrary-value": 1,
+    "transition-all": 2,
     "off-system-type-ramp": 8,
-    "other-arbitrary-value": 5,
-    "outline-stripped": 1,
-    "pure-white-black": 22,
-    "transition-all": 2
+    "pure-white-black": 1
   },
   "components/assets/FolderTree.js": {
-    "ad-hoc-shadow": 4,
-    "alpha-on-var-colour": 3,
-    "arbitrary-type": 18,
     "div-onclick-not-keyboard": 2,
-    "hard-coded-hex": 20,
-    "off-system-palette": 11,
+    "alpha-on-var-colour": 3,
+    "arbitrary-type": 8,
+    "transition-all": 5,
     "off-system-type-ramp": 5,
-    "other-arbitrary-value": 11,
-    "pure-white-black": 41,
-    "transition-all": 5
+    "off-system-palette": 2
   },
   "components/assets/MoveToFolderModal.js": {
-    "ad-hoc-shadow": 1,
-    "alpha-on-var-colour": 7,
-    "arbitrary-geometry": 1,
-    "arbitrary-type": 9,
     "div-onclick-not-keyboard": 1,
-    "hard-coded-hex": 18,
-    "off-system-palette": 3,
-    "off-system-type-ramp": 8,
-    "other-arbitrary-value": 10,
-    "pure-white-black": 30,
-    "transition-all": 4
+    "hard-coded-hex": 1,
+    "alpha-on-var-colour": 7,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 1,
+    "transition-all": 4,
+    "off-system-type-ramp": 8
   },
   "components/auth/LoginSuccessOverlay.js": {
-    "ad-hoc-shadow": 2,
-    "ad-hoc-z-index": 1,
     "arbitrary-geometry": 1,
-    "arbitrary-type": 1,
-    "hard-coded-hex": 1,
-    "off-system-palette": 13,
-    "off-system-type-ramp": 3,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 3
+    "off-system-type-ramp": 3
   },
   "components/auth/LoginSummaryModal.js": {
-    "ad-hoc-shadow": 1,
-    "ad-hoc-z-index": 1,
     "alpha-on-var-colour": 3,
+    "ad-hoc-shadow": 1,
     "arbitrary-geometry": 4,
-    "arbitrary-type": 1,
-    "hard-coded-hex": 6,
-    "off-system-palette": 20,
-    "off-system-type-ramp": 8,
-    "other-arbitrary-value": 7,
-    "pure-white-black": 13,
-    "transition-all": 3
+    "other-arbitrary-value": 1,
+    "off-system-type-ramp": 8
   },
   "components/auth/UserOnboardingModal.js": {
-    "ad-hoc-shadow": 5,
-    "ad-hoc-z-index": 1,
     "arbitrary-geometry": 5,
-    "arbitrary-type": 8,
-    "hard-coded-hex": 3,
-    "off-system-palette": 41,
-    "off-system-type-ramp": 15,
-    "other-arbitrary-value": 4,
-    "pure-white-black": 25,
-    "transition-all": 4
+    "arbitrary-type": 5,
+    "other-arbitrary-value": 1,
+    "transition-all": 4,
+    "off-system-type-ramp": 15
   },
   "components/billing/CreditBadge.js": {
-    "off-system-type-ramp": 1,
-    "pure-white-black": 3
+    "off-system-type-ramp": 1
   },
   "components/billing/PlanCard.js": {
-    "arbitrary-type": 1,
-    "off-system-palette": 1,
-    "off-system-type-ramp": 6,
-    "pure-white-black": 10
+    "off-system-type-ramp": 6
   },
   "components/call-api/CreativeGallery.jsx": {
-    "arbitrary-type": 4,
-    "hard-coded-hex": 4,
-    "off-system-palette": 14,
+    "arbitrary-type": 1,
+    "transition-all": 2,
     "off-system-type-ramp": 7,
-    "other-arbitrary-value": 3,
-    "pure-white-black": 11,
-    "transition-all": 2
+    "pure-white-black": 1
   },
   "components/call-api/DeveloperEcosystem.jsx": {
     "alpha-on-var-colour": 1,
     "arbitrary-type": 4,
-    "hard-coded-hex": 5,
-    "off-system-palette": 47,
+    "transition-all": 4,
     "off-system-type-ramp": 25,
-    "other-arbitrary-value": 5,
-    "pure-white-black": 35,
-    "transition-all": 4
+    "off-system-palette": 1
   },
   "components/call-api/InteractiveCanvasPreview.jsx": {
     "alpha-on-var-colour": 1,
     "arbitrary-geometry": 2,
-    "arbitrary-type": 8,
-    "hard-coded-hex": 3,
-    "off-system-palette": 32,
+    "arbitrary-type": 3,
+    "transition-all": 2,
     "off-system-type-ramp": 9,
-    "other-arbitrary-value": 3,
-    "pure-white-black": 28,
-    "transition-all": 2
+    "off-system-palette": 2,
+    "pure-white-black": 2
   },
   "components/call-api/InteractiveCodeTerminal.jsx": {
     "alpha-on-var-colour": 1,
     "arbitrary-type": 1,
-    "hard-coded-hex": 2,
-    "off-system-palette": 8,
-    "off-system-type-ramp": 4,
-    "other-arbitrary-value": 2,
-    "pure-white-black": 10
+    "off-system-type-ramp": 4
   },
   "components/call-api/PremiumFooter.jsx": {
-    "ad-hoc-radius": 1,
     "arbitrary-geometry": 4,
-    "arbitrary-type": 3,
-    "hard-coded-hex": 2,
-    "off-system-palette": 62,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 1,
+    "transition-all": 2,
     "off-system-type-ramp": 18,
-    "other-arbitrary-value": 3,
-    "outline-stripped": 1,
-    "pure-white-black": 25,
-    "transition-all": 2
+    "off-system-palette": 6
   },
   "components/call-api/StudioFeatureGrid.jsx": {
     "alpha-on-var-colour": 1,
-    "arbitrary-type": 2,
-    "hard-coded-hex": 1,
-    "off-system-palette": 24,
+    "arbitrary-type": 1,
+    "transition-all": 2,
     "off-system-type-ramp": 8,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 6,
-    "transition-all": 2
+    "off-system-palette": 3
   },
   "components/call-api/SupplierMarquee.jsx": {
     "alpha-on-var-colour": 3,
     "arbitrary-geometry": 1,
-    "arbitrary-type": 10,
-    "hard-coded-hex": 5,
-    "off-system-palette": 63,
+    "arbitrary-type": 5,
+    "transition-all": 2,
     "off-system-type-ramp": 11,
-    "other-arbitrary-value": 5,
-    "pure-white-black": 13,
-    "transition-all": 2
+    "off-system-palette": 19
+  },
+  "components/ChinaIpGate.js": {
+    "arbitrary-type": 2,
+    "off-system-type-ramp": 5
   },
   "components/community/CommunityClient.js": {
-    "ad-hoc-radius": 2,
-    "ad-hoc-shadow": 2,
     "alpha-on-var-colour": 16,
+    "ad-hoc-shadow": 1,
     "arbitrary-geometry": 4,
     "arbitrary-type": 2,
-    "hard-coded-hex": 6,
-    "off-system-palette": 7,
+    "other-arbitrary-value": 2,
+    "transition-all": 4,
     "off-system-type-ramp": 20,
-    "other-arbitrary-value": 8,
-    "outline-stripped": 1,
-    "pure-white-black": 35,
-    "transition-all": 4
+    "pure-white-black": 3
   },
   "components/community/CommunityDetailModal.js": {
-    "ad-hoc-shadow": 2,
+    "div-onclick-not-keyboard": 1,
+    "hard-coded-hex": 11,
+    "alpha-on-var-colour": 58,
     "ad-hoc-z-index": 1,
-    "alpha-on-var-colour": 11,
-    "arbitrary-geometry": 2,
-    "arbitrary-type": 5,
-    "div-onclick-not-keyboard": 1,
-    "hard-coded-hex": 1,
-    "off-system-palette": 21,
-    "off-system-type-ramp": 18,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 1,
-    "transition-all": 2
-  },
-  "components/community/ShareToCommunityModal.js": {
-    "alpha-on-var-colour": 8,
-    "arbitrary-geometry": 1,
-    "div-onclick-not-keyboard": 1,
-    "off-system-type-ramp": 8
-  },
-  "components/creations/CreationsClient.js": {
-    "ad-hoc-radius": 7,
-    "alpha-on-var-colour": 6,
     "arbitrary-geometry": 7,
     "arbitrary-type": 6,
+    "other-arbitrary-value": 14,
+    "transition-all": 8,
+    "outline-stripped": 1,
+    "off-system-type-ramp": 30,
+    "off-system-palette": 2,
+    "pure-white-black": 43
+  },
+  "components/community/ShareToCommunityModal.js": {
     "div-onclick-not-keyboard": 1,
-    "hard-coded-hex": 17,
-    "off-system-palette": 20,
-    "off-system-type-ramp": 29,
-    "other-arbitrary-value": 17,
-    "pure-white-black": 96,
-    "transition-all": 4
+    "alpha-on-var-colour": 8,
+    "arbitrary-geometry": 1,
+    "off-system-type-ramp": 8
   },
   "components/credits/CreditsClient.js": {
-    "alpha-on-var-colour": 16,
-    "arbitrary-type": 48,
-    "hard-coded-hex": 26,
-    "off-system-palette": 241,
-    "off-system-type-ramp": 91,
-    "other-arbitrary-value": 26,
+    "alpha-on-var-colour": 4,
+    "arbitrary-type": 22,
+    "transition-all": 3,
     "outline-stripped": 1,
-    "pure-white-black": 114,
-    "transition-all": 12
+    "off-system-type-ramp": 49,
+    "off-system-palette": 9,
+    "pure-white-black": 3
+  },
+  "components/GlobalSiteBanner.js": {
+    "alpha-on-var-colour": 1,
+    "ad-hoc-z-index": 1,
+    "transition-all": 3,
+    "off-system-type-ramp": 1,
+    "pure-white-black": 2
+  },
+  "components/HeadshotStudio.js": {
+    "arbitrary-type": 1,
+    "off-system-type-ramp": 3
+  },
+  "components/LanguageSwitcher.js": {
+    "transition-all": 1,
+    "off-system-type-ramp": 2,
+    "off-system-palette": 2,
+    "pure-white-black": 1
+  },
+  "components/MaintenanceGate.js": {
+    "arbitrary-type": 2,
+    "off-system-type-ramp": 5
   },
   "components/pricing/PricingClient.js": {
-    "arbitrary-type": 16,
-    "div-onclick-not-keyboard": 1,
-    "hard-coded-hex": 3,
-    "off-system-palette": 35,
-    "off-system-type-ramp": 32,
-    "other-arbitrary-value": 3,
-    "pure-white-black": 61
+    "other-arbitrary-value": 1,
+    "off-system-type-ramp": 25,
+    "pure-white-black": 6
   },
   "components/profile/UserProfileClient.js": {
-    "ad-hoc-radius": 4,
-    "ad-hoc-z-index": 1,
     "alpha-on-var-colour": 1,
-    "arbitrary-type": 4,
-    "hard-coded-hex": 6,
-    "off-system-palette": 29,
-    "off-system-type-ramp": 17,
-    "other-arbitrary-value": 7,
-    "pure-white-black": 29,
-    "transition-all": 1
+    "ad-hoc-z-index": 1,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 1,
+    "transition-all": 1,
+    "off-system-type-ramp": 17
   },
   "components/site/StudioHeader.js": {
     "arbitrary-geometry": 2,
-    "arbitrary-type": 2,
-    "hard-coded-hex": 1,
-    "off-system-palette": 7,
-    "off-system-type-ramp": 8,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 11
+    "arbitrary-type": 1,
+    "off-system-type-ramp": 8
   },
-  "components/subscription/SubscriptionModal.jsx": {
-    "ad-hoc-shadow": 4,
-    "ad-hoc-z-index": 1,
-    "arbitrary-type": 17,
-    "hard-coded-hex": 12,
-    "off-system-palette": 47,
-    "other-arbitrary-value": 12,
-    "pure-white-black": 39,
-    "transition-all": 5
+  "components/StandaloneShell.js": {
+    "div-onclick-not-keyboard": 1
+  },
+  "components/StudioResourceBoundary.jsx": {
+    "hard-coded-hex": 1,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 1,
+    "off-system-type-ramp": 5
   },
   "packages/Open-AI-Design-Agent/client/app/page.js": {
+    "div-onclick-not-keyboard": 2,
     "ad-hoc-shadow": 4,
     "ad-hoc-z-index": 1,
     "arbitrary-geometry": 1,
-    "arbitrary-type": 10,
-    "div-onclick-not-keyboard": 2,
-    "off-system-palette": 3,
+    "arbitrary-type": 1,
     "other-arbitrary-value": 3,
-    "pure-white-black": 9,
-    "transition-all": 10
+    "transition-all": 10,
+    "off-system-palette": 3,
+    "pure-white-black": 4
   },
   "packages/Open-AI-Design-Agent/client/components/Navbar.js": {
     "arbitrary-geometry": 4,
@@ -1043,28 +555,24 @@
     "div-onclick-not-keyboard": 1,
     "off-system-type-ramp": 1
   },
-  "packages/Open-AI-Design-Agent/packages/design-agent/src/CreativeCanvas.jsx": {
-    "ad-hoc-shadow": 3,
-    "ad-hoc-z-index": 3,
-    "alpha-on-var-colour": 25,
-    "arbitrary-geometry": 7,
-    "arbitrary-type": 52,
-    "div-onclick-not-keyboard": 2,
-    "off-system-palette": 7,
-    "off-system-type-ramp": 13,
-    "other-arbitrary-value": 10,
-    "outline-stripped": 2,
-    "pure-white-black": 19,
-    "transition-all": 20
-  },
   "packages/Open-AI-Design-Agent/packages/design-agent/src/components/PlanVisualizer.jsx": {
     "alpha-on-var-colour": 1,
     "arbitrary-geometry": 1,
-    "arbitrary-type": 10,
+    "arbitrary-type": 5,
     "transition-all": 2
   },
-  "packages/Open-Poe-AI/client/app/agents/[agent_id]/profile/page.js": {
-    "pure-white-black": 1
+  "packages/Open-AI-Design-Agent/packages/design-agent/src/CreativeCanvas.jsx": {
+    "div-onclick-not-keyboard": 2,
+    "alpha-on-var-colour": 25,
+    "ad-hoc-shadow": 3,
+    "ad-hoc-z-index": 3,
+    "arbitrary-geometry": 7,
+    "arbitrary-type": 20,
+    "other-arbitrary-value": 10,
+    "transition-all": 20,
+    "off-system-type-ramp": 13,
+    "off-system-palette": 7,
+    "pure-white-black": 8
   },
   "packages/Open-Poe-AI/client/app/agents/create/page.js": {
     "pure-white-black": 1
@@ -1074,553 +582,448 @@
   },
   "packages/Open-Poe-AI/client/app/agents/loading.js": {
     "arbitrary-geometry": 1,
-    "off-system-palette": 2
+    "off-system-palette": 1
   },
   "packages/Open-Poe-AI/client/app/agents/page.js": {
-    "ad-hoc-shadow": 1,
+    "hard-coded-hex": 1,
     "arbitrary-geometry": 1,
-    "arbitrary-type": 9,
-    "hard-coded-hex": 2,
-    "off-system-palette": 54,
-    "other-arbitrary-value": 3,
-    "pure-white-black": 8,
-    "transition-all": 5
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 2,
+    "transition-all": 5,
+    "off-system-palette": 30,
+    "pure-white-black": 6
+  },
+  "packages/Open-Poe-AI/client/app/agents/[agent_id]/profile/page.js": {
+    "pure-white-black": 1
   },
   "packages/Open-Poe-AI/client/app/page.js": {
     "arbitrary-geometry": 8,
     "arbitrary-type": 1,
-    "off-system-palette": 38,
     "other-arbitrary-value": 6,
-    "pure-white-black": 6,
-    "transition-all": 5
+    "transition-all": 5,
+    "off-system-palette": 28,
+    "pure-white-black": 5
   },
   "packages/Open-Poe-AI/packages/agents/src/AgentProfile.jsx": {
-    "off-system-palette": 1,
-    "transition-all": 1
+    "transition-all": 1,
+    "off-system-palette": 1
   },
   "packages/Open-Poe-AI/packages/agents/src/AiAgent.jsx": {
+    "div-onclick-not-keyboard": 3,
     "ad-hoc-z-index": 4,
     "arbitrary-geometry": 11,
-    "arbitrary-type": 51,
-    "div-onclick-not-keyboard": 3,
-    "off-system-palette": 15,
-    "off-system-type-ramp": 23,
+    "arbitrary-type": 42,
     "other-arbitrary-value": 62,
-    "outline-stripped": 1,
-    "pure-white-black": 29,
-    "transition-all": 27
-  },
-  "packages/Open-Poe-AI/packages/agents/src/CreatePage.jsx": {
-    "off-system-palette": 1,
-    "transition-all": 1
-  },
-  "packages/Open-Poe-AI/packages/agents/src/EditPage.jsx": {
-    "off-system-palette": 1,
-    "transition-all": 1
+    "transition-all": 27,
+    "off-system-type-ramp": 23,
+    "off-system-palette": 14,
+    "pure-white-black": 22
   },
   "packages/Open-Poe-AI/packages/agents/src/components/CreateAgent.jsx": {
     "arbitrary-geometry": 4,
-    "off-system-palette": 17,
-    "off-system-type-ramp": 7,
     "other-arbitrary-value": 1,
+    "transition-all": 2,
     "outline-stripped": 1,
-    "pure-white-black": 7,
-    "transition-all": 2
+    "off-system-type-ramp": 7,
+    "off-system-palette": 12,
+    "pure-white-black": 4
   },
   "packages/Open-Poe-AI/packages/agents/src/components/EditAgent.jsx": {
+    "div-onclick-not-keyboard": 2,
     "ad-hoc-radius": 3,
     "ad-hoc-z-index": 3,
     "arbitrary-geometry": 16,
-    "arbitrary-type": 1,
-    "div-onclick-not-keyboard": 2,
-    "off-system-palette": 166,
-    "off-system-type-ramp": 58,
     "other-arbitrary-value": 7,
-    "pure-white-black": 75,
-    "transition-all": 24
+    "transition-all": 24,
+    "off-system-type-ramp": 58,
+    "off-system-palette": 115,
+    "pure-white-black": 44
   },
   "packages/Open-Poe-AI/packages/agents/src/components/ProfileAgent.jsx": {
     "arbitrary-type": 7,
-    "off-system-palette": 76,
+    "other-arbitrary-value": 1,
+    "transition-all": 5,
     "off-system-type-ramp": 18,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 21,
-    "transition-all": 5
+    "off-system-palette": 36,
+    "pure-white-black": 15
   },
-  "packages/Vibe-Workflow/client/app/page.js": {
-    "ad-hoc-shadow": 3,
-    "arbitrary-geometry": 8,
-    "hard-coded-hex": 1,
-    "off-system-palette": 20,
-    "other-arbitrary-value": 3,
-    "pure-white-black": 24,
-    "transition-all": 3
+  "packages/Open-Poe-AI/packages/agents/src/CreatePage.jsx": {
+    "transition-all": 1,
+    "off-system-palette": 1
   },
-  "packages/Vibe-Workflow/client/app/workflow/WorkflowListingClient.js": {
-    "ad-hoc-shadow": 3,
-    "ad-hoc-z-index": 1,
-    "arbitrary-geometry": 1,
-    "arbitrary-type": 2,
-    "div-onclick-not-keyboard": 2,
-    "hard-coded-hex": 5,
-    "off-system-palette": 20,
-    "other-arbitrary-value": 6,
-    "outline-stripped": 1,
-    "pure-white-black": 28,
-    "transition-all": 7
-  },
-  "packages/Vibe-Workflow/client/app/workflow/[id]/page.js": {
-    "pure-white-black": 1
-  },
-  "packages/Vibe-Workflow/client/app/workflow/page.js": {
-    "arbitrary-geometry": 8,
-    "hard-coded-hex": 1,
-    "off-system-palette": 3,
-    "other-arbitrary-value": 3,
-    "pure-white-black": 1
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/ApiNode.jsx": {
-    "ad-hoc-shadow": 1,
-    "alpha-on-var-colour": 2,
-    "arbitrary-geometry": 2,
-    "arbitrary-type": 7,
-    "hard-coded-hex": 5,
-    "off-system-palette": 23,
-    "off-system-type-ramp": 3,
-    "other-arbitrary-value": 7,
-    "pure-white-black": 19,
-    "transition-all": 2
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/AudioNode.jsx": {
-    "ad-hoc-shadow": 1,
-    "alpha-on-var-colour": 2,
-    "arbitrary-geometry": 2,
-    "arbitrary-type": 5,
-    "hard-coded-hex": 4,
-    "off-system-palette": 22,
-    "off-system-type-ramp": 3,
-    "other-arbitrary-value": 7,
-    "pure-white-black": 22,
-    "transition-all": 3
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/AudioPlayer.jsx": {
-    "ad-hoc-shadow": 1,
-    "arbitrary-geometry": 1,
-    "arbitrary-type": 2,
-    "hard-coded-hex": 3,
-    "off-system-palette": 5,
-    "other-arbitrary-value": 3,
-    "pure-white-black": 6,
-    "range-without-utility": 2,
-    "transition-all": 5
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/ChatWidget.jsx": {
-    "ad-hoc-shadow": 1,
-    "alpha-on-var-colour": 2,
-    "arbitrary-geometry": 8,
-    "arbitrary-type": 9,
-    "hard-coded-hex": 5,
-    "off-system-palette": 57,
-    "off-system-type-ramp": 14,
-    "other-arbitrary-value": 6,
-    "pure-white-black": 46,
-    "transition-all": 5
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/ImageNode.jsx": {
-    "ad-hoc-shadow": 1,
-    "alpha-on-var-colour": 2,
-    "arbitrary-geometry": 2,
-    "arbitrary-type": 6,
-    "hard-coded-hex": 4,
-    "off-system-palette": 22,
-    "off-system-type-ramp": 5,
-    "other-arbitrary-value": 7,
-    "pure-white-black": 24,
-    "transition-all": 2
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/NodeFlow.jsx": {
-    "ad-hoc-z-index": 1,
-    "alpha-on-var-colour": 2,
-    "arbitrary-geometry": 8,
-    "arbitrary-type": 5,
-    "div-onclick-not-keyboard": 6,
-    "hard-coded-hex": 25,
-    "off-system-palette": 85,
-    "off-system-type-ramp": 36,
-    "other-arbitrary-value": 27,
-    "outline-stripped": 3,
-    "pure-white-black": 86,
-    "transition-all": 13
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/NodeOptionsMenu.jsx": {
-    "ad-hoc-z-index": 1,
-    "alpha-on-var-colour": 1,
-    "arbitrary-type": 4,
-    "hard-coded-hex": 1,
-    "off-system-palette": 7,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 12,
-    "transition-all": 1
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/NodeSendButton.jsx": {
-    "div-onclick-not-keyboard": 1,
-    "hard-coded-hex": 1,
-    "off-system-palette": 3,
-    "off-system-type-ramp": 1,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 4,
-    "transition-all": 1
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/NodesNavbar.jsx": {
-    "arbitrary-geometry": 1,
-    "arbitrary-type": 3,
-    "div-onclick-not-keyboard": 2,
-    "hard-coded-hex": 8,
-    "off-system-palette": 15,
-    "off-system-type-ramp": 7,
-    "other-arbitrary-value": 8,
-    "outline-stripped": 1,
-    "pure-white-black": 8
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/PromptConcate.jsx": {
-    "ad-hoc-shadow": 1,
-    "alpha-on-var-colour": 1,
-    "arbitrary-type": 1,
-    "hard-coded-hex": 3,
-    "off-system-palette": 13,
-    "off-system-type-ramp": 2,
-    "other-arbitrary-value": 4,
-    "pure-white-black": 1,
-    "transition-all": 1
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/RenderApiField.jsx": {
-    "arbitrary-geometry": 5,
-    "arbitrary-type": 1,
-    "off-system-palette": 37,
-    "off-system-type-ramp": 13,
-    "other-arbitrary-value": 3,
-    "outline-stripped": 1,
-    "pure-white-black": 29,
-    "range-without-utility": 1,
-    "transition-all": 7
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/RenderField.jsx": {
-    "arbitrary-geometry": 4,
-    "arbitrary-type": 4,
-    "hard-coded-hex": 1,
-    "off-system-palette": 38,
-    "off-system-type-ramp": 13,
-    "other-arbitrary-value": 5,
-    "outline-stripped": 1,
-    "pure-white-black": 32,
-    "range-without-utility": 1,
-    "transition-all": 8
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/TextNode.jsx": {
-    "ad-hoc-shadow": 1,
-    "alpha-on-var-colour": 2,
-    "arbitrary-geometry": 7,
-    "arbitrary-type": 5,
-    "hard-coded-hex": 4,
-    "off-system-palette": 28,
-    "off-system-type-ramp": 4,
-    "other-arbitrary-value": 6,
-    "pure-white-black": 21,
-    "transition-all": 4
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/UploadNode.jsx": {
-    "arbitrary-geometry": 1,
-    "arbitrary-type": 2,
-    "off-system-palette": 8,
-    "off-system-type-ramp": 6,
-    "pure-white-black": 12,
-    "transition-all": 2
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/VideoCombiner.jsx": {
-    "ad-hoc-shadow": 1,
-    "alpha-on-var-colour": 2,
-    "arbitrary-geometry": 2,
-    "arbitrary-type": 4,
-    "hard-coded-hex": 4,
-    "off-system-palette": 22,
-    "off-system-type-ramp": 3,
-    "other-arbitrary-value": 6,
-    "pure-white-black": 11,
-    "transition-all": 2
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/VideoNode.jsx": {
-    "ad-hoc-shadow": 1,
-    "alpha-on-var-colour": 2,
-    "arbitrary-geometry": 2,
-    "arbitrary-type": 4,
-    "hard-coded-hex": 4,
-    "off-system-palette": 22,
-    "off-system-type-ramp": 3,
-    "other-arbitrary-value": 7,
-    "pure-white-black": 18,
-    "transition-all": 2
-  },
-  "packages/Vibe-Workflow/packages/workflow-builder/src/components/VideoPlayer.jsx": {
-    "arbitrary-type": 1,
-    "div-onclick-not-keyboard": 1,
-    "pure-white-black": 14,
-    "range-without-utility": 2,
-    "transition-all": 2
+  "packages/Open-Poe-AI/packages/agents/src/EditPage.jsx": {
+    "transition-all": 1,
+    "off-system-palette": 1
   },
   "packages/studio/src/components/AgentStudio.jsx": {
+    "div-onclick-not-keyboard": 2,
+    "hard-coded-hex": 3,
     "alpha-on-var-colour": 9,
     "arbitrary-geometry": 5,
-    "arbitrary-type": 25,
-    "div-onclick-not-keyboard": 2,
-    "hard-coded-hex": 27,
-    "off-system-palette": 4,
+    "arbitrary-type": 6,
+    "other-arbitrary-value": 5,
+    "transition-all": 7,
     "off-system-type-ramp": 19,
-    "other-arbitrary-value": 23,
-    "outline-stripped": 5,
-    "pure-white-black": 86,
-    "transition-all": 7
+    "off-system-palette": 2,
+    "pure-white-black": 2
   },
   "packages/studio/src/components/AiInfluencerStudio.jsx": {
     "arbitrary-geometry": 6,
-    "arbitrary-type": 16,
-    "hard-coded-hex": 7,
-    "off-system-palette": 30,
+    "arbitrary-type": 11,
+    "other-arbitrary-value": 1,
+    "transition-all": 7,
     "off-system-type-ramp": 3,
-    "other-arbitrary-value": 8,
-    "pure-white-black": 44,
-    "transition-all": 7
+    "off-system-palette": 11,
+    "pure-white-black": 2
   },
   "packages/studio/src/components/AppsStudio.jsx": {
-    "ad-hoc-radius": 1,
-    "ad-hoc-z-index": 1,
-    "alpha-on-var-colour": 8,
-    "arbitrary-geometry": 1,
-    "arbitrary-type": 14,
     "div-onclick-not-keyboard": 1,
-    "hard-coded-hex": 22,
-    "off-system-palette": 1,
+    "alpha-on-var-colour": 8,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 1,
+    "arbitrary-type": 3,
+    "transition-all": 5,
     "off-system-type-ramp": 15,
-    "other-arbitrary-value": 15,
-    "pure-white-black": 36,
-    "transition-all": 5
+    "pure-white-black": 1
   },
   "packages/studio/src/components/AudioStudio.jsx": {
     "div-onclick-not-keyboard": 1
   },
   "packages/studio/src/components/CinemaStudio.jsx": {
-    "ad-hoc-shadow": 6,
-    "ad-hoc-z-index": 2,
-    "alpha-on-var-colour": 9,
-    "arbitrary-geometry": 13,
-    "arbitrary-type": 15,
     "div-onclick-not-keyboard": 3,
-    "hard-coded-hex": 32,
-    "off-system-palette": 3,
+    "hard-coded-hex": 3,
+    "alpha-on-var-colour": 9,
+    "ad-hoc-shadow": 4,
+    "ad-hoc-z-index": 2,
+    "arbitrary-geometry": 13,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 7,
+    "transition-all": 16,
     "off-system-type-ramp": 23,
-    "other-arbitrary-value": 28,
-    "pure-white-black": 69,
-    "transition-all": 16
+    "off-system-palette": 1
   },
   "packages/studio/src/components/ClippingStudio.jsx": {
-    "ad-hoc-shadow": 2,
-    "alpha-on-var-colour": 11,
-    "arbitrary-geometry": 6,
-    "arbitrary-type": 20,
-    "div-onclick-not-keyboard": 2,
-    "hard-coded-hex": 7,
-    "off-system-palette": 40,
-    "off-system-type-ramp": 22,
-    "other-arbitrary-value": 8,
-    "outline-stripped": 1,
-    "pure-white-black": 64,
     "range-without-utility": 1,
-    "transition-all": 12
-  },
-  "packages/studio/src/components/DesignAgentStudio.jsx": {
-    "pure-white-black": 1
+    "div-onclick-not-keyboard": 2,
+    "hard-coded-hex": 1,
+    "alpha-on-var-colour": 11,
+    "ad-hoc-shadow": 2,
+    "arbitrary-geometry": 6,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 5,
+    "transition-all": 12,
+    "outline-stripped": 1,
+    "off-system-type-ramp": 22,
+    "off-system-palette": 6
   },
   "packages/studio/src/components/DrawModal.jsx": {
+    "range-without-utility": 1,
+    "hard-coded-hex": 2,
+    "alpha-on-var-colour": 18,
     "ad-hoc-shadow": 2,
     "ad-hoc-z-index": 1,
-    "alpha-on-var-colour": 18,
     "arbitrary-geometry": 18,
-    "arbitrary-type": 12,
-    "hard-coded-hex": 47,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 2,
+    "transition-all": 13,
     "off-system-type-ramp": 15,
-    "other-arbitrary-value": 46,
-    "pure-white-black": 78,
-    "range-without-utility": 1,
-    "transition-all": 13
+    "pure-white-black": 2
   },
   "packages/studio/src/components/ImageStudio.jsx": {
-    "ad-hoc-radius": 9,
-    "ad-hoc-z-index": 1,
-    "alpha-on-var-colour": 10,
-    "arbitrary-geometry": 16,
-    "arbitrary-type": 40,
     "div-onclick-not-keyboard": 4,
-    "hard-coded-hex": 6,
-    "off-system-palette": 62,
+    "alpha-on-var-colour": 10,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 16,
+    "arbitrary-type": 11,
+    "other-arbitrary-value": 8,
+    "transition-all": 25,
+    "outline-stripped": 1,
     "off-system-type-ramp": 44,
-    "other-arbitrary-value": 10,
-    "outline-stripped": 5,
-    "pure-white-black": 168,
-    "transition-all": 25
+    "off-system-palette": 5
   },
   "packages/studio/src/components/LayersStudio.jsx": {
-    "ad-hoc-shadow": 13,
-    "alpha-on-var-colour": 26,
-    "arbitrary-geometry": 34,
-    "arbitrary-type": 74,
-    "div-onclick-not-keyboard": 2,
-    "hard-coded-hex": 175,
-    "off-system-palette": 7,
-    "off-system-type-ramp": 100,
-    "other-arbitrary-value": 163,
-    "outline-stripped": 3,
-    "pure-white-black": 300,
     "range-without-utility": 22,
-    "transition-all": 22
+    "div-onclick-not-keyboard": 2,
+    "hard-coded-hex": 23,
+    "alpha-on-var-colour": 26,
+    "ad-hoc-shadow": 11,
+    "arbitrary-geometry": 34,
+    "arbitrary-type": 23,
+    "other-arbitrary-value": 32,
+    "transition-all": 22,
+    "off-system-type-ramp": 100
   },
   "packages/studio/src/components/LipSyncStudio.jsx": {
-    "ad-hoc-z-index": 1,
-    "alpha-on-var-colour": 5,
-    "arbitrary-geometry": 4,
-    "arbitrary-type": 9,
     "div-onclick-not-keyboard": 3,
-    "hard-coded-hex": 6,
-    "off-system-palette": 2,
-    "off-system-type-ramp": 10,
-    "other-arbitrary-value": 7,
-    "pure-white-black": 35,
-    "transition-all": 10
+    "alpha-on-var-colour": 5,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 4,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 5,
+    "transition-all": 10,
+    "off-system-type-ramp": 10
   },
   "packages/studio/src/components/MarketingStudio.jsx": {
+    "div-onclick-not-keyboard": 8,
+    "hard-coded-hex": 1,
+    "alpha-on-var-colour": 7,
     "ad-hoc-shadow": 1,
     "ad-hoc-z-index": 2,
-    "alpha-on-var-colour": 7,
     "arbitrary-geometry": 11,
-    "arbitrary-type": 8,
-    "div-onclick-not-keyboard": 8,
-    "hard-coded-hex": 10,
-    "off-system-palette": 3,
+    "other-arbitrary-value": 7,
+    "transition-all": 16,
     "off-system-type-ramp": 13,
-    "other-arbitrary-value": 13,
-    "pure-white-black": 64,
-    "transition-all": 16
+    "pure-white-black": 3
   },
   "packages/studio/src/components/McpCliStudio.jsx": {
-    "arbitrary-type": 8,
-    "hard-coded-hex": 2,
-    "off-system-type-ramp": 8,
-    "other-arbitrary-value": 1,
-    "pure-white-black": 29
+    "arbitrary-type": 6,
+    "off-system-type-ramp": 8
   },
   "packages/studio/src/components/MobileGenerationActions.jsx": {
+    "div-onclick-not-keyboard": 1,
     "alpha-on-var-colour": 1,
     "arbitrary-geometry": 1,
-    "arbitrary-type": 2,
-    "div-onclick-not-keyboard": 1,
-    "hard-coded-hex": 5,
-    "off-system-palette": 3,
-    "off-system-type-ramp": 1,
-    "other-arbitrary-value": 3,
-    "pure-white-black": 15,
-    "transition-all": 2
+    "transition-all": 2,
+    "off-system-type-ramp": 1
   },
   "packages/studio/src/components/ModelParameterControls.jsx": {
-    "arbitrary-geometry": 2,
-    "arbitrary-type": 5,
-    "hard-coded-hex": 3,
-    "off-system-palette": 2,
-    "other-arbitrary-value": 2,
-    "pure-white-black": 12
+    "arbitrary-geometry": 1
   },
   "packages/studio/src/components/MotionControlStudio.jsx": {
-    "ad-hoc-z-index": 1,
+    "range-without-utility": 1,
+    "div-onclick-not-keyboard": 3,
+    "hard-coded-hex": 1,
     "alpha-on-var-colour": 14,
     "arbitrary-geometry": 6,
-    "arbitrary-type": 25,
-    "div-onclick-not-keyboard": 3,
-    "hard-coded-hex": 42,
-    "off-system-palette": 6,
-    "off-system-type-ramp": 22,
-    "other-arbitrary-value": 35,
-    "outline-stripped": 1,
-    "pure-white-black": 97,
-    "range-without-utility": 1,
-    "transition-all": 15
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 7,
+    "transition-all": 15,
+    "off-system-type-ramp": 22
   },
   "packages/studio/src/components/RecastStudio.jsx": {
-    "ad-hoc-z-index": 1,
-    "alpha-on-var-colour": 8,
-    "arbitrary-geometry": 7,
-    "arbitrary-type": 10,
     "div-onclick-not-keyboard": 3,
-    "hard-coded-hex": 13,
-    "off-system-palette": 3,
-    "off-system-type-ramp": 16,
-    "other-arbitrary-value": 12,
-    "pure-white-black": 49,
-    "transition-all": 11
+    "alpha-on-var-colour": 8,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 7,
+    "other-arbitrary-value": 5,
+    "transition-all": 11,
+    "off-system-type-ramp": 16
   },
   "packages/studio/src/components/VibeMotionStudio.jsx": {
-    "ad-hoc-z-index": 1,
+    "div-onclick-not-keyboard": 3,
     "alpha-on-var-colour": 12,
     "arbitrary-geometry": 4,
-    "arbitrary-type": 14,
-    "div-onclick-not-keyboard": 3,
-    "hard-coded-hex": 15,
-    "off-system-palette": 11,
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 4,
+    "transition-all": 10,
     "off-system-type-ramp": 16,
-    "other-arbitrary-value": 13,
-    "pure-white-black": 46,
-    "transition-all": 10
+    "off-system-palette": 6
   },
   "packages/studio/src/components/VideoModelControls.jsx": {
+    "hard-coded-hex": 1,
     "alpha-on-var-colour": 3,
     "arbitrary-geometry": 1,
-    "arbitrary-type": 6,
-    "hard-coded-hex": 7,
-    "off-system-type-ramp": 5,
-    "other-arbitrary-value": 4,
-    "pure-white-black": 8
+    "arbitrary-type": 2,
+    "other-arbitrary-value": 1,
+    "off-system-type-ramp": 5
   },
   "packages/studio/src/components/VideoStudio.jsx": {
-    "ad-hoc-z-index": 1,
-    "alpha-on-var-colour": 13,
-    "arbitrary-geometry": 13,
-    "arbitrary-type": 27,
     "div-onclick-not-keyboard": 2,
-    "hard-coded-hex": 10,
-    "off-system-palette": 14,
+    "alpha-on-var-colour": 13,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 13,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 5,
+    "transition-all": 13,
     "off-system-type-ramp": 20,
-    "other-arbitrary-value": 7,
-    "outline-stripped": 1,
-    "pure-white-black": 101,
-    "transition-all": 13
+    "off-system-palette": 5
   },
   "packages/studio/src/components/WorkflowStudio.jsx": {
-    "ad-hoc-shadow": 3,
-    "ad-hoc-z-index": 2,
-    "alpha-on-var-colour": 6,
-    "arbitrary-geometry": 8,
-    "arbitrary-type": 33,
     "div-onclick-not-keyboard": 3,
-    "hard-coded-hex": 35,
-    "off-system-palette": 13,
-    "off-system-type-ramp": 23,
-    "other-arbitrary-value": 27,
-    "outline-stripped": 4,
-    "pure-white-black": 95,
-    "transition-all": 8
-  },
-  "packages/studio/src/components/WorkflowUI.jsx": {
-    "pure-white-black": 1
+    "hard-coded-hex": 4,
+    "alpha-on-var-colour": 6,
+    "ad-hoc-z-index": 2,
+    "arbitrary-geometry": 8,
+    "arbitrary-type": 10,
+    "other-arbitrary-value": 8,
+    "transition-all": 8,
+    "off-system-type-ramp": 27,
+    "off-system-palette": 17,
+    "pure-white-black": 58
   },
   "packages/studio/src/providerLogos.js": {
     "alpha-on-var-colour": 2,
-    "off-system-palette": 66
+    "off-system-palette": 39
+  },
+  "packages/Vibe-Workflow/client/app/page.js": {
+    "ad-hoc-shadow": 2,
+    "arbitrary-geometry": 8,
+    "other-arbitrary-value": 2,
+    "transition-all": 3,
+    "off-system-palette": 17,
+    "pure-white-black": 21
+  },
+  "packages/Vibe-Workflow/client/app/workflow/page.js": {
+    "arbitrary-geometry": 8,
+    "other-arbitrary-value": 2,
+    "off-system-palette": 3
+  },
+  "packages/Vibe-Workflow/client/app/workflow/WorkflowListingClient.js": {
+    "div-onclick-not-keyboard": 2,
+    "ad-hoc-shadow": 3,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 1,
+    "other-arbitrary-value": 1,
+    "transition-all": 7,
+    "off-system-palette": 11,
+    "pure-white-black": 20
+  },
+  "packages/Vibe-Workflow/client/app/workflow/[id]/page.js": {
+    "pure-white-black": 1
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/ApiNode.jsx": {
+    "alpha-on-var-colour": 2,
+    "arbitrary-geometry": 2,
+    "other-arbitrary-value": 2,
+    "transition-all": 2,
+    "off-system-type-ramp": 3,
+    "off-system-palette": 18,
+    "pure-white-black": 8
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/AudioNode.jsx": {
+    "alpha-on-var-colour": 2,
+    "arbitrary-geometry": 2,
+    "other-arbitrary-value": 3,
+    "transition-all": 3,
+    "off-system-type-ramp": 3,
+    "off-system-palette": 17,
+    "pure-white-black": 12
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/AudioPlayer.jsx": {
+    "range-without-utility": 2,
+    "arbitrary-geometry": 1,
+    "transition-all": 5,
+    "off-system-palette": 2,
+    "pure-white-black": 4
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/ChatWidget.jsx": {
+    "alpha-on-var-colour": 2,
+    "ad-hoc-shadow": 1,
+    "arbitrary-geometry": 8,
+    "arbitrary-type": 4,
+    "other-arbitrary-value": 1,
+    "transition-all": 5,
+    "off-system-type-ramp": 14,
+    "off-system-palette": 33,
+    "pure-white-black": 35
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/ImageNode.jsx": {
+    "alpha-on-var-colour": 2,
+    "arbitrary-geometry": 2,
+    "other-arbitrary-value": 3,
+    "transition-all": 2,
+    "off-system-type-ramp": 5,
+    "off-system-palette": 17,
+    "pure-white-black": 12
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/NodeFlow.jsx": {
+    "div-onclick-not-keyboard": 6,
+    "alpha-on-var-colour": 2,
+    "ad-hoc-z-index": 1,
+    "arbitrary-geometry": 8,
+    "arbitrary-type": 1,
+    "other-arbitrary-value": 3,
+    "transition-all": 13,
+    "outline-stripped": 1,
+    "off-system-type-ramp": 36,
+    "off-system-palette": 60,
+    "pure-white-black": 48
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/NodeOptionsMenu.jsx": {
+    "alpha-on-var-colour": 1,
+    "ad-hoc-z-index": 1,
+    "arbitrary-type": 4,
+    "transition-all": 1,
+    "off-system-palette": 3,
+    "pure-white-black": 8
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/NodeSendButton.jsx": {
+    "div-onclick-not-keyboard": 1,
+    "transition-all": 1,
+    "off-system-type-ramp": 1,
+    "off-system-palette": 2,
+    "pure-white-black": 2
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/NodesNavbar.jsx": {
+    "div-onclick-not-keyboard": 2,
+    "arbitrary-geometry": 1,
+    "off-system-type-ramp": 7,
+    "off-system-palette": 5
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/PromptConcate.jsx": {
+    "alpha-on-var-colour": 1,
+    "other-arbitrary-value": 1,
+    "transition-all": 1,
+    "off-system-type-ramp": 2,
+    "off-system-palette": 9
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/RenderApiField.jsx": {
+    "range-without-utility": 1,
+    "arbitrary-geometry": 5,
+    "other-arbitrary-value": 3,
+    "transition-all": 7,
+    "off-system-type-ramp": 13,
+    "off-system-palette": 29,
+    "pure-white-black": 18
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/RenderField.jsx": {
+    "range-without-utility": 1,
+    "arbitrary-geometry": 4,
+    "other-arbitrary-value": 4,
+    "transition-all": 8,
+    "off-system-type-ramp": 13,
+    "off-system-palette": 32,
+    "pure-white-black": 20
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/TextNode.jsx": {
+    "alpha-on-var-colour": 2,
+    "arbitrary-geometry": 7,
+    "other-arbitrary-value": 2,
+    "transition-all": 4,
+    "off-system-type-ramp": 4,
+    "off-system-palette": 20,
+    "pure-white-black": 14
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/UploadNode.jsx": {
+    "arbitrary-geometry": 1,
+    "transition-all": 2,
+    "off-system-type-ramp": 6,
+    "off-system-palette": 6,
+    "pure-white-black": 5
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/VideoCombiner.jsx": {
+    "alpha-on-var-colour": 2,
+    "arbitrary-geometry": 2,
+    "other-arbitrary-value": 2,
+    "transition-all": 2,
+    "off-system-type-ramp": 3,
+    "off-system-palette": 17,
+    "pure-white-black": 5
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/VideoNode.jsx": {
+    "alpha-on-var-colour": 2,
+    "arbitrary-geometry": 2,
+    "other-arbitrary-value": 3,
+    "transition-all": 2,
+    "off-system-type-ramp": 3,
+    "off-system-palette": 17,
+    "pure-white-black": 10
+  },
+  "packages/Vibe-Workflow/packages/workflow-builder/src/components/VideoPlayer.jsx": {
+    "range-without-utility": 2,
+    "div-onclick-not-keyboard": 1,
+    "transition-all": 2,
+    "pure-white-black": 6
   },
   "src/components/AgentStudio.js": {
     "off-system-type-ramp": 2,
@@ -1631,64 +1034,64 @@
     "pure-white-black": 2
   },
   "src/components/CameraControls.js": {
-    "ad-hoc-radius": 3,
+    "hard-coded-hex": 5,
     "alpha-on-var-colour": 2,
+    "ad-hoc-radius": 3,
     "arbitrary-geometry": 6,
     "arbitrary-type": 4,
-    "hard-coded-hex": 5,
-    "off-system-type-ramp": 1,
     "other-arbitrary-value": 9,
-    "pure-white-black": 8,
-    "transition-all": 2
+    "transition-all": 2,
+    "off-system-type-ramp": 1,
+    "pure-white-black": 8
   },
   "src/components/CinemaStudio.js": {
+    "hard-coded-hex": 8,
     "ad-hoc-radius": 1,
     "arbitrary-geometry": 13,
     "arbitrary-type": 9,
-    "hard-coded-hex": 8,
-    "off-system-type-ramp": 10,
     "other-arbitrary-value": 9,
+    "transition-all": 5,
     "outline-stripped": 1,
-    "pure-white-black": 54,
-    "transition-all": 5
+    "off-system-type-ramp": 10,
+    "pure-white-black": 54
   },
   "src/components/Header.js": {
     "arbitrary-type": 3,
     "pure-white-black": 14
   },
   "src/components/ImageStudio.js": {
+    "range-without-utility": 4,
+    "hard-coded-hex": 2,
+    "alpha-on-var-colour": 4,
     "ad-hoc-radius": 3,
     "ad-hoc-z-index": 1,
-    "alpha-on-var-colour": 4,
     "arbitrary-geometry": 7,
     "arbitrary-type": 5,
-    "hard-coded-hex": 2,
-    "off-system-type-ramp": 15,
     "other-arbitrary-value": 3,
+    "transition-all": 19,
     "outline-stripped": 1,
-    "pure-white-black": 47,
-    "range-without-utility": 4,
-    "transition-all": 19
+    "off-system-type-ramp": 15,
+    "pure-white-black": 47
   },
   "src/components/LipSyncStudio.js": {
+    "hard-coded-hex": 3,
+    "alpha-on-var-colour": 12,
     "ad-hoc-radius": 2,
     "ad-hoc-z-index": 2,
-    "alpha-on-var-colour": 12,
     "arbitrary-geometry": 5,
     "arbitrary-type": 1,
-    "hard-coded-hex": 3,
-    "off-system-type-ramp": 20,
     "other-arbitrary-value": 4,
-    "pure-white-black": 45,
-    "transition-all": 19
+    "transition-all": 19,
+    "off-system-type-ramp": 20,
+    "pure-white-black": 45
   },
   "src/components/LocalModelManager.js": {
     "alpha-on-var-colour": 5,
     "arbitrary-type": 9,
-    "off-system-palette": 8,
+    "transition-all": 6,
     "off-system-type-ramp": 9,
-    "pure-white-black": 20,
-    "transition-all": 6
+    "off-system-palette": 8,
+    "pure-white-black": 20
   },
   "src/components/McpCliStudio.js": {
     "arbitrary-type": 4,
@@ -1697,31 +1100,31 @@
   },
   "src/components/Sidebar.js": {
     "arbitrary-type": 1,
-    "pure-white-black": 3,
-    "transition-all": 1
+    "transition-all": 1,
+    "pure-white-black": 3
   },
   "src/components/UploadPicker.js": {
     "alpha-on-var-colour": 5,
     "arbitrary-geometry": 5,
     "arbitrary-type": 3,
-    "off-system-palette": 2,
+    "transition-all": 6,
     "off-system-type-ramp": 4,
-    "pure-white-black": 14,
-    "transition-all": 6
+    "off-system-palette": 2,
+    "pure-white-black": 14
   },
   "src/components/VideoStudio.js": {
+    "hard-coded-hex": 2,
+    "alpha-on-var-colour": 6,
     "ad-hoc-radius": 3,
     "ad-hoc-z-index": 1,
-    "alpha-on-var-colour": 6,
     "arbitrary-geometry": 8,
     "arbitrary-type": 11,
-    "hard-coded-hex": 2,
-    "off-system-palette": 10,
-    "off-system-type-ramp": 13,
     "other-arbitrary-value": 3,
+    "transition-all": 18,
     "outline-stripped": 1,
-    "pure-white-black": 49,
-    "transition-all": 18
+    "off-system-type-ramp": 13,
+    "off-system-palette": 10,
+    "pure-white-black": 49
   },
   "src/components/WorkflowStudio.js": {
     "off-system-type-ramp": 2,

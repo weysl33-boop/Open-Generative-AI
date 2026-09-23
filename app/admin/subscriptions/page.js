@@ -66,13 +66,13 @@ export default async function SubscriptionsPage({ searchParams }) {
             name="q"
             defaultValue={params.get('q') || ''}
             placeholder="搜索用户 UID、邮箱或订阅 ID…"
-            className="min-w-[240px] flex-1 rounded-xl border border-line bg-scrim px-4 py-2.5 text-xs text-ink outline-none focus:border-brand-ring"
+            className="min-w-[240px] flex-1 rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
           />
 
           <select
             name="status"
             defaultValue={params.get('status') || ''}
-            className="rounded-xl border border-line bg-canvas px-3 py-2.5 text-xs text-ink-muted outline-none focus:border-brand-ring"
+            className="rounded-md border border-line-subtle bg-well px-3 h-control-md text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
           >
             <option value="">全部状态</option>
             <option value="active">Active (正常)</option>
@@ -83,10 +83,19 @@ export default async function SubscriptionsPage({ searchParams }) {
 
           <button
             type="submit"
-            className="rounded-xl bg-brand px-5 py-2.5 text-xs font-bold text-ink-on-accent hover:bg-brand"
+            className="h-control-md rounded-md bg-brand px-5 text-body-sm font-semibold text-ink-on-accent transition-colors duration-fast hover:bg-brand-hover"
           >
             筛选
           </button>
+
+          {Array.from(params.keys()).length > 0 && (
+            <a
+              href="/admin/subscriptions"
+              className="h-control-md inline-flex items-center rounded-md border border-line-subtle bg-raised px-3 text-body-sm text-ink-muted transition-[border-color,background-color,color] duration-fast hover:border-line hover:bg-overlay hover:text-ink"
+            >
+              重置
+            </a>
+          )}
         </form>
       </Card>
 

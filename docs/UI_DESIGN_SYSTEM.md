@@ -1,11 +1,12 @@
 # KOYO Studio Design System — 主规范（Master Spec）
 
-**版本**：3.3.0 · **取代** 3.2.0（2026-09-21 08:18）
+**版本**：3.4.0 · **取代** 3.3.0（2026-09-23 深度吸收 OiiOii 与即梦设计语言）
 **地位**：本文是 KOYO Studio 全站 Web UI 开发的最高优先级视觉规范。任何新增页面、组件、工作室必须无条件遵守；禁止在业务组件中自行发明颜色、字体层级、圆角、阴影、发光或尺寸规则。
 
 > **Token 的唯一事实来源是 `app/globals.css` 的 `:root` 块。**
 > 本文引用它的值，不定义它。两者冲突时以 `app/globals.css` 为准，并立即修正本文。
 > `tailwind.config.js` 是纯 `var()` 映射层，经校验**不含任何颜色字面量**；新增颜色只能进 `globals.css`。
+> 本次 3.4.0 升级深度吸收了 OiiOii.tv 与即梦 (Jimeng) 的高转化商业化模态、一站式扫码、胶囊分段导航、点阵工程底纹与 Switch 设置表单规范，且**严格保留既有中性冷黑与青色品牌调色板**。
 
 | 文档 | 职责 |
 | :--- | :--- |
@@ -114,7 +115,20 @@
 
 保留的硬约束：所有未登录场景必须复用 `<AuthModal>`（模态与 `isInline` 内嵌双模式），禁止手写分裂表单。
 
-**删除的旧约束**：点阵纹理 + 洋红主按钮（`bg-[#b71676] hover:bg-[#c91882]`）。该色值从未进入 `globals.css`，从未上线，且与 §1"禁止不同页面不同视觉系统"和 §2.3"唯一饱和色"直接冲突。认证主按钮一律 `Button variant="primary"`。
+**删除的旧约束**：认证卡片强加洋红主按钮（`bg-[#b71676]`）已废止；认证主按钮一律使用 `Button variant="primary"`（品牌青色）。
+
+### 2.8 工程底纹与氛围遮罩（Dot-Grid Canvas & Atmospheric Masking）
+
+吸收自 OiiOii 等专业级 AI Creative Studio 顶栏与画布底板的工程精密感，消除大面积纯黑背景的沉闷感，同时恪守"内容退居幕后、文字可读第一"原则：
+
+1. **工程点阵底纹（`.bg-dot-grid`）**：
+   - 步长网格契约：`--dot-grid-size: 24px`（严格服从 4px 基准网格）。
+   - 圆点尺寸与颜色：1px 纯正圆点，颜色严格绑定 `--border-strong`（在 `#0a0b0d` 暗底上形成极微弱的约 10% 通透反光）。
+   - **禁止**：手写 `background-image`、使用非系统彩色圆点、或者透明度 > 16% 形成视觉干扰。
+   - 适用场景：顶栏背景、工作室 Canvas 画布底层、Hero 背景、空状态占位区。
+2. **Hero 氛围图暗化遮罩（`.hero-atmospheric-mask`）**：
+   - 吸收自 OiiOii 会员定价页顶部电影感氛围图（月夜红枫）：当页面头部引入艺术插画或电影调性宽幅背景时，底部**必须**使用渐变遮罩自然融入画布。
+   - 契约：从顶部 40% 起平滑衰减，至 100% 处完全融入 `--bg-canvas`。严禁在下方卡片区出现明显的图片切边硬边缘。
 
 ---
 
@@ -182,12 +196,100 @@
 > 上一版这里写的是"`boxShadow` 整体替换，默认阶梯不生成任何 CSS，属于静默死类"——**该结论不成立**，配置在 `extend` 下，产物可查；本轮由 `scripts/ui-dead-classes.mjs`（对照真实构建产物）纠正。同理，`fontSize` 也在 `extend` 下，`text-xs` 等默认字号照样生成 CSS 并**与语义字号阶梯打架**——实测 `text-(xs|sm|base|lg|xl|2xl…)` 在 `app`/`components`/`packages/studio` 里出现 **1697 次**（`text-xs` 独占 1115），而 `leading-[3-9]` 为 0 次，所以新增守卫规则 `off-system-type-ramp` 把默认字号冻结在基线里。
 迁移期保留的旧名（`subtle`→1 · `card`→2 · `overlay`→3 · `modal`→4 · `glow`→2 · `3xl`→4）**已去发光**，仅供未迁移文件调用，新代码一律写 `shadow-elevation-N`。
 禁止 `shadow-[0_0_15px_#22d3ee]` 之类霓虹发光。
-
 ### 4.7 Motion
 时长 `duration-fast` 120ms · `duration-base` 180ms · `duration-slow` 240ms · `duration-page` 300ms。
 缓动 `--ease-standard` / `--ease-enter` / `--ease-exit`。
 **禁止 `transition-all`**：它会把 `scale`/`box-shadow` 一起动画化，是"廉价感"的主要来源。必须写 `transition-[background-color,border-color,color]` 或用具名 recipe。
 `@media (prefers-reduced-motion: reduce)` 已全局就位。
+
+### 4.8 顶栏营销通告条契约（Announcement Bar Contract）
+
+吸收自 OiiOii 顶部活动通告横幅，用于运营大促、算力倍增活动与版本更新播报：
+
+| 属性 | 契约值 | 语义说明 |
+| :--- | :--- | :--- |
+| 高度 | `--announcement-h: 36px` | 极紧凑单行高度，不压缩主视口空间；`h-announcement-h` |
+| 背景与色彩 | 统一走自有调色板：<br/>- 常规通报：`bg-surface text-ink-muted border-b border-line-subtle`<br/>- 营销高光：`bg-brand-soft text-brand border-b border-brand-line` 或反色底 `bg-surface-inverse text-ink-inverse` | **严禁**把 OiiOii 的荧光黄绿（`#ccff00`）搬入项目；保持冷黑与青色核心视觉 |
+| 排版结构 | 居中单行：`text-body-sm`，强调数字加粗 `font-semibold`；右侧紧凑关闭动作 `IconButton size="xs"` | 严禁多行折行破坏 36px 契约 |
+| 交互与记忆 | 用户关闭后记录 `localStorage` 状态，同活动周期不再弹起 | 避免阻碍专业工具使用 |
+
+### 4.9 胶囊分段控制器契约（Pill Segmented Control Contract）
+
+吸收自 OiiOii 顶部场景分类（“个人/自媒体·短漫剧·MV·游戏·电商·广告”）与计费周期双层切换，用于紧凑场景/周期选择：
+
+| 结构 | 尺寸与样式 | 交互态规范 |
+| :--- | :--- | :--- |
+| **轨槽 (Track)** | 高度 32px (`control-sm`) / 36px / 40px，圆角 `rounded-full`<br/>背景 `bg-well` (`#101216`)，内边距 `p-1` (3~4px) | 固定宽度或内容自适应；内部项目水平排列，gap 为 2px |
+| **未选项目** | `px-3.5 py-1 text-label text-ink-muted rounded-full` | `hover:text-ink hover:bg-wash duration-fast` |
+| **选中滑块 (Active)** | 纯白反色底：`bg-surface-inverse text-ink-inverse font-medium rounded-full shadow-elevation-1`<br/>或品牌主色底：`bg-brand text-ink-on-accent font-medium rounded-full shadow-elevation-brand` | 带有 `duration-fast ease-standard` 平滑位移；高对比保证阅读效率 |
+| **双层嵌套结构** | 上层场景分类（个人/团队/企业）+ 下层周期折扣（年付/季付/月付） | 组间垂直间距 `gap-space-3` (12px)，上下层对齐居中 |
+
+### 4.10 商业化模态与卡片层级规范（Commercial Checkout & Tier Matrix）
+
+商业化充值与购买必须保持极高的信任度与极短的转化链路。统一沉淀为两套经典架构与一套定价矩阵：
+
+#### 4.10.1 模态架构 A：资产状态条 + 通用/专属双层充值网格（OiiOii 范式）
+用于复杂代币体系与模型专属算力包选购：
+1. **用户资产状态条（Asset Status Strip）**：
+   - 位于模态顶部，`h-12` (48px)，圆角 `rounded-xl`，背景 `bg-surface`，边框 `border-line-subtle`。
+   - 左侧：圆形头像 + `text-micro` 角色等级 Tag（如 `FREE`）+ 醒目跳转链接 `升级会员 →`。
+   - 右侧：当前通用算力余额（大字粗体，如 `通用算力 ✦ 60`）。
+2. **通用算力包网格（Generic Pack Grid）**：
+   - 4 列等宽卡片，底色 `bg-surface-raised`，圆角 `rounded-xl`，边框 `border-line`。
+   - 卡片内容：币种图标 + 额度（大号粗体 `text-page-title`）+ 售价（`text-body-sm text-ink-muted`）。
+   - 选中态：青色轮廓高亮 `border-brand ring-1 ring-brand`，卡片内微提亮 `bg-brand-soft`。
+3. **专属模型算力包（Exclusive Pack Grid）**：
+   - 4 列等宽卡片，顶部内嵌黄色激励胶囊（`首购加赠 100%`，见 §4.11）。
+   - 卡片内容：模型徽标与名称（如 `GPT Image 2.5`）+ 划线原额度与大字增赠额度对比（`1,400 2,800`）+ 价格 + `仅限会员` 标识。
+4. **模态底部主操作**：
+   - 底部提示小字（说明、客服支持、规则跳转）居中或左对齐；
+   - 全宽主 CTA：药丸形 `rounded-full h-control-lg`，品牌青色实心按钮 `Button variant="primary"`。
+
+#### 4.10.2 模态架构 B：一站式左选档右扫码分栏模态（即梦范式）
+用于极致消除转化漏斗摩擦的即时快捷充值：
+1. **高度整合紧凑头部**：
+   - 单行排布：左侧头像 + 用户名 + 会员到期时间，右侧余额 `我的算力 ✦ 20` + 垂直分割线 `|` + 关闭按钮 `×`。
+   - 节省 50% 顶部纵深，让充值主体第一时间进入视口。
+2. **左右双栏分块布局**：
+   - **左栏（选档网格，宽 360px）**：2 列 × 3 行卡片网格。卡片内大字额度（`✦ 1,500`）与价格（`¥ 150`），选中态为高对比纯白外框与微亮底色。
+   - **右栏（即时支付卡片，宽 240px）**：中间垂直 1px 细分割线 `border-line-subtle`。右侧直接内嵌白色圆角二维码方块（Padding 12px，纯白底黑码保证高扫描率）；下方水平陈列支持的支付方式图标（微信支付、支付宝）以及“请扫码完成支付”提示。
+   - **交互原则**：左侧点击任一档位，右侧二维码**无闪烁即时刷新**，无需经历“确认档位 → 弹出二级收银台”的繁琐流程。
+
+#### 4.10.3 订阅层级四档卡片矩阵（Pricing Tier Matrix）
+用于 `/pricing` 订阅定价主页：
+1. **四档标准分级**：`BASE`、`STAR`、`PRO`、`APEX`。
+2. **卡片结构统一**：
+   - 顶部：等级名大写粗体 + 紧凑折扣胶囊（如 `限时 6.5折`）。
+   - 价格区：超大主价格 `¥ 88 / 月`，伴随中划线划线原价 `¥ 133`。
+   - 价值折算锚点：`text-body-sm text-ink-muted` 标注每月总算力与每单元折算单价（如 `1积分 ≈ ¥0.067`），增强购买确定性。
+   - 赠送明细与信息 Tooltip 图标。
+   - 按钮规范：普通档位统一采用白色反色实心按钮（深色界面下具备极佳层次）；**最高档 APEX 采用青色边框强化高亮，主按钮为品牌青色实心 `Button variant="primary"`**。
+   - 下方权益清单：`✓` 对勾符号对齐，模型特权列表，右侧带支持级别胶囊标签（如 `最低4.2折`）。
+
+### 4.11 极精细微徽章与加赠标签系统（Micro Badges & Incentive Pills）
+
+商业化与模型列表中充满紧凑微标签，严禁业务层手写随机 padding 与圆角。建立 4 级语义微标签：
+
+| 标签类型 | 类名与排版 | 视觉示例 | 适用场景 |
+| :--- | :--- | :--- | :--- |
+| **折扣徽章** | `px-2 py-0.5 rounded-full text-micro font-medium bg-wash-strong text-ink` | `限时 6.7折` | 定价卡片顶部折扣提示 |
+| **加赠激励徽章** | `px-2 py-0.5 rounded-full text-micro font-medium bg-warning-soft text-warning border border-warning-line` | `首购加赠 100%` | 充值包专属加赠角标 |
+| **特权折扣徽章** | `px-1.5 py-0.5 rounded-xs text-micro text-ink-muted bg-surface border border-line-subtle` | `最低4.2折` | 功能特权列表右侧标注 |
+| **门槛限定徽章** | `text-caption text-ink-subtle select-none` | `仅限会员` | 购买卡片底部约束提示 |
+
+### 4.12 设置与合规表单 Switch 复合行规范（Settings Dialog & Switch Row）
+
+吸收自即梦 AI 合规与偏好设置模态，用于长文本说明与功能开关联动表单：
+
+1. **模态几何**：宽度规范 560px，背景 `bg-overlay`，深度阴影 `shadow-elevation-4`，内边距 `p-6` (24px)。
+2. **合规说明段落排版**：
+   - 标题：`text-section-title font-semibold text-ink mb-4`。
+   - 正文：段落间距 `space-y-3`，字体 `text-body-sm`，颜色 `text-ink-muted`，行高 1.6，禁止使用主色高亮正文干扰阅读。
+3. **Switch 复合控件行（`SwitchRow`）**：
+   - 布局：左对齐 Switch 控件，右侧紧邻主标题（`text-body font-medium text-ink`）；
+   - 下方紧随两行辅助解释说明（`text-caption text-ink-subtle leading-normal mt-1`），解释开关影响及撤回路径；
+   - 无障碍支持：必须绑定 `htmlFor` 与 `id`，开关必须具备 `aria-checked` 状态并响应 Space/Enter 键盘切换。
+4. **底部操作栏**：单向右对齐主按钮 `保存设置`（`Button variant="primary"` 或反色白色按钮），内边距紧凑。
 
 ---
 
@@ -309,6 +411,11 @@ VISUAL_BASE_URL=http://localhost:<port> npm run test:visual
 | 滚动条 | `scrollbar-none`、隐藏 webkit 滚动条 | 全局滚动条或 `.scrollbar-rail` |
 | 文案 | JSX 里硬编码中文（`正在生成中...`、`11/张`） | `messages/<locale>/*.json` + copy key |
 | 布局 | 依赖 `overflow-hidden` 裁掉超宽控件 | 让控件换行或用响应式收纳（见 §10） |
+| **通告条** | 引入第三方荧光黄绿（`#ccff00`）、高度随机（`h-10`/`h-[42px]`） | `h-announcement-h` (36px)，使用 `bg-brand-soft` 或 `bg-surface-inverse` 反色 |
+| **分段器** | 手写方角 Tab、无轨槽单选框 | 胶囊轨槽（`rounded-full bg-well p-1`）+ 高对比实心药丸滑块 |
+| **底纹网格** | 手写外链大图、高对比亮白圆点网格 | `.bg-dot-grid`（24px 步长，1px 圆点，`--border-strong`） |
+| **充值模态** | 多级跳转收银台、无资产条的生硬表单 | 架构 A（资产条+通用/专属双层网格）或架构 B（左选档右扫码即时联动） |
+| **微徽章** | 任意小字（`text-[9px]`）、任意圆角（`rounded-[3px]`） | 4 级语义微标签（`text-micro`，`rounded-xs` 或 `rounded-full`） |
 
 ---
 

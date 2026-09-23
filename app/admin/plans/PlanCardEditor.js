@@ -61,7 +61,7 @@ export default function PlanCardEditor({ plan }) {
   };
 
   return (
-    <Card className="flex flex-col justify-between border-line bg-surface/80 backdrop-blur-md">
+    <Card className="flex flex-col justify-between border-line-subtle">
       <div>
         <div className="flex items-center justify-between border-b border-line pb-3 mb-4">
           <div className="flex items-center gap-2">
@@ -161,46 +161,46 @@ export default function PlanCardEditor({ plan }) {
             {/* 价格配置 */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-semibold text-ink-subtle mb-1">连续包月 (CNY)</label>
+                <label className="block text-label font-medium text-ink-muted mb-1">连续包月 (CNY)</label>
                 <input
                   type="number"
                   required
                   value={monthlyCny}
                   onChange={(e) => setMonthlyCny(e.target.value)}
-                  className="w-full rounded-lg border border-line-strong bg-scrim px-3 py-1.5 text-xs text-ink outline-none focus:border-brand-ring"
+                  className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-sm text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-ink-subtle mb-1">包月 USD</label>
+                <label className="block text-label font-medium text-ink-muted mb-1">包月 USD</label>
                 <input
                   type="number"
                   required
                   value={monthlyUsd}
                   onChange={(e) => setMonthlyUsd(e.target.value)}
-                  className="w-full rounded-lg border border-line-strong bg-scrim px-3 py-1.5 text-xs text-ink outline-none focus:border-brand-ring"
+                  className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-sm text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-semibold text-ink-subtle mb-1">连续包年 (CNY)</label>
+                <label className="block text-label font-medium text-ink-muted mb-1">连续包年 (CNY)</label>
                 <input
                   type="number"
                   required
                   value={yearlyCny}
                   onChange={(e) => setYearlyCny(e.target.value)}
-                  className="w-full rounded-lg border border-line-strong bg-scrim px-3 py-1.5 text-xs text-ink outline-none focus:border-brand-ring"
+                  className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-sm text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-ink-subtle mb-1">包年 USD</label>
+                <label className="block text-label font-medium text-ink-muted mb-1">包年 USD</label>
                 <input
                   type="number"
                   required
                   value={yearlyUsd}
                   onChange={(e) => setYearlyUsd(e.target.value)}
-                  className="w-full rounded-lg border border-line-strong bg-scrim px-3 py-1.5 text-xs text-ink outline-none focus:border-brand-ring"
+                  className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-sm text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                 />
               </div>
             </div>
@@ -208,23 +208,23 @@ export default function PlanCardEditor({ plan }) {
             {/* 额度配置 */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-semibold text-ink-subtle mb-1">每月基础额度</label>
+                <label className="block text-label font-medium text-ink-muted mb-1">每月基础额度</label>
                 <input
                   type="number"
                   required
                   value={quotaBase}
                   onChange={(e) => setQuotaBase(e.target.value)}
-                  className="w-full rounded-lg border border-line-strong bg-scrim px-3 py-1.5 text-xs font-mono text-brand-hover outline-none focus:border-brand-ring"
+                  className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-sm text-body-sm font-mono text-brand outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-ink-subtle mb-1">额外赠送额度</label>
+                <label className="block text-label font-medium text-ink-muted mb-1">额外赠送额度</label>
                 <input
                   type="number"
                   required
                   value={quotaBonus}
                   onChange={(e) => setQuotaBonus(e.target.value)}
-                  className="w-full rounded-lg border border-line-strong bg-scrim px-3 py-1.5 text-xs font-mono text-success outline-none focus:border-brand-ring"
+                  className="w-full rounded-md border border-line-subtle bg-well px-3 h-control-sm text-body-sm font-mono text-success outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                 />
               </div>
             </div>
@@ -232,41 +232,41 @@ export default function PlanCardEditor({ plan }) {
             {/* 并发与人像容量 */}
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="block text-[11px] font-semibold text-ink-subtle mb-1">单模型并发</label>
+                <label className="block text-label font-medium text-ink-muted mb-1">单模型并发</label>
                 <input
                   type="number"
                   value={concurrency}
                   onChange={(e) => setConcurrency(e.target.value)}
-                  className="w-full rounded-lg border border-line-strong bg-scrim px-2 py-1.5 text-xs font-mono text-ink outline-none focus:border-brand-ring"
+                  className="w-full rounded-md border border-line-subtle bg-well px-2.5 h-control-sm text-body-sm font-mono text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-ink-subtle mb-1">异步并发池</label>
+                <label className="block text-label font-medium text-ink-muted mb-1">异步并发池</label>
                 <input
                   type="number"
                   value={asyncConcurrency}
                   onChange={(e) => setAsyncConcurrency(e.target.value)}
-                  className="w-full rounded-lg border border-line-strong bg-scrim px-2 py-1.5 text-xs font-mono text-ink outline-none focus:border-brand-ring"
+                  className="w-full rounded-md border border-line-subtle bg-well px-2.5 h-control-sm text-body-sm font-mono text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-ink-subtle mb-1">人像容量</label>
+                <label className="block text-label font-medium text-ink-muted mb-1">人像容量</label>
                 <input
                   type="number"
                   value={portraitCapacity}
                   onChange={(e) => setPortraitCapacity(e.target.value)}
-                  className="w-full rounded-lg border border-line-strong bg-scrim px-2 py-1.5 text-xs font-mono text-ink outline-none focus:border-brand-ring"
+                  className="w-full rounded-md border border-line-subtle bg-well px-2.5 h-control-sm text-body-sm font-mono text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-ink-subtle mb-1">权益列表（每行一项）</label>
+              <label className="block text-label font-medium text-ink-muted mb-1">权益列表（每行一项）</label>
               <textarea
                 rows={5}
                 value={features}
                 onChange={(e) => setFeatures(e.target.value)}
-                className="w-full rounded-lg border border-line-strong bg-scrim p-2 text-xs text-ink outline-none focus:border-brand-ring font-sans"
+                className="w-full rounded-md border border-line-subtle bg-well p-2.5 text-body-sm text-ink outline-none focus-visible:ring-1 focus-visible:ring-brand-ring focus:border-brand-ring transition-[border-color,box-shadow] duration-fast font-sans"
               />
             </div>
 
@@ -276,9 +276,9 @@ export default function PlanCardEditor({ plan }) {
                 id={`enabled_${plan.id}`}
                 checked={enabled}
                 onChange={(e) => setEnabled(e.target.checked)}
-                className="rounded border-line-strong bg-scrim"
+                className="size-4 rounded-xs border-line-subtle bg-well text-brand focus:ring-brand-ring"
               />
-              <label htmlFor={`enabled_${plan.id}`} className="text-xs text-ink-muted">
+              <label htmlFor={`enabled_${plan.id}`} className="text-body-sm text-ink-muted">
                 在前台展示此套餐
               </label>
             </div>
@@ -287,14 +287,14 @@ export default function PlanCardEditor({ plan }) {
               <button
                 type="button"
                 onClick={() => setEditing(false)}
-                className="rounded-lg border border-line px-3 py-1.5 text-xs text-ink-muted hover:bg-wash-press"
+                className="h-control-sm inline-flex items-center rounded-md border border-line-subtle bg-raised px-3 text-label font-medium text-ink-muted hover:border-line hover:bg-overlay hover:text-ink transition-[border-color,background-color,color] duration-fast"
               >
                 取消
               </button>
               <button
                 type="submit"
                 disabled={busy}
-                className="rounded-lg bg-brand px-4 py-1.5 text-xs font-bold text-ink-on-accent hover:bg-brand transition-colors shadow-elevation-2 shadow-brand-soft"
+                className="h-control-sm inline-flex items-center rounded-md bg-brand px-4 text-label font-semibold text-ink-on-accent transition-colors duration-fast hover:bg-brand-hover shadow-elevation-1"
               >
                 {busy ? '保存中…' : '保存更新'}
               </button>
@@ -308,7 +308,7 @@ export default function PlanCardEditor({ plan }) {
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="rounded-xl border border-line-strong bg-wash px-4 py-1.5 text-xs font-semibold text-ink hover:bg-wash-press hover:text-ink transition"
+            className="h-control-sm inline-flex items-center rounded-md border border-line-subtle bg-raised px-3 text-label font-medium text-ink transition-[border-color,background-color,color] duration-fast hover:border-brand-line hover:text-brand"
           >
             编辑定价与额度属性
           </button>
