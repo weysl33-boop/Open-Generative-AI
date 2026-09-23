@@ -13,6 +13,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/admin/permissions';
 import { toSearchParams } from '@/lib/admin/pagination';
 import { getEmailSendStats, getEmailSmtpOverview, listEmailSendLogs } from '@/lib/emailAdmin';
 import EmailSettingsClient from './EmailSettingsClient';
+import MarketingEmailSection from './MarketingEmailSection';
 
 export const dynamic = 'force-dynamic';
 
@@ -230,23 +231,17 @@ export default async function EmailSettingsPage({ searchParams }) {
           <Pagination meta={logs.meta} searchParams={params} />
         </section>
 
-        <Card>
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h2 className="flex items-center gap-2 text-card-title text-ink">
-                邮件营销系统
-                <StatusBadge tone="neutral">待定计划</StatusBadge>
-              </h2>
-              <p className="mt-1 max-w-2xl text-body-sm text-ink-muted">
-                后续在此页扩展群发能力：受众分群（复用用户运营的运营标签）、模板与主题排期、按域名限速与退订链接、投递回执回流到上方明细表。
-                当前 <code className="rounded bg-wash px-1.5 py-0.5 text-caption text-ink">marketing</code> 类型已在明细表结构中预留，接入群发任务后无需再次改表。
-              </p>
-            </div>
-            <Link href="/admin/users" className="h-9 shrink-0 rounded-lg border border-line bg-wash px-4 inline-flex items-center text-label text-ink hover:bg-wash-press">
-              查看用户分群
-            </Link>
-          </div>
-        </Card>
+        {/* 邮件营销系统：已支持精美 HTML 模板编辑与测试发信；大规模受众分群与定时群发任务为待定计划 */}
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-card-title text-ink">
+            邮件营销系统
+            <StatusBadge tone="neutral">待定计划</StatusBadge>
+          </h2>
+          <span className="text-caption text-ink-muted">已接入 HTML 模板实时编辑与测试发信</span>
+        </div>
+        <MarketingEmailSection
+          canWrite={hasPermission(user.role, PERMISSIONS.providersWrite)}
+        />
       </div>
     </>
   );
