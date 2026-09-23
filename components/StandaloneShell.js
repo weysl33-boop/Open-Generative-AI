@@ -671,11 +671,20 @@ export default function StandaloneShell({ locale = 'en' }) {
     if (typeof window === 'undefined') return;
     const searchParams = new URLSearchParams(window.location.search);
     const remixPrompt = searchParams.get('remixPrompt');
+    const referenceImage = searchParams.get('referenceImage') || searchParams.get('refImage');
+    if (referenceImage) {
+      pushNotification({
+        type: 'info',
+        tabId: activeTab,
+        label: '智能参考图',
+        message: '已自动绑定作品参考图，支持图生图与风格迁移',
+      });
+    }
     if (remixPrompt) {
       pushNotification({
         type: 'success',
         tabId: activeTab,
-        label: '即梦社区同款',
+        label: '即梦作品同款',
         message: `已自动载入同款提示词: "${remixPrompt.slice(0, 25)}..."`,
       });
       setTimeout(() => {

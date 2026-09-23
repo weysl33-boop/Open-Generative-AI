@@ -10,6 +10,14 @@ const nextConfig = {
   // server runtime. This is the effective project config; next.config.js is
   // retained by the workspace but is not loaded when next.config.mjs exists.
   serverExternalPackages: ['pg', 'postgres-interval', 'xtend'],
+  async rewrites() {
+    return [
+      {
+        source: '/ai-tool/work-detail/:id',
+        destination: '/community/:id',
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);

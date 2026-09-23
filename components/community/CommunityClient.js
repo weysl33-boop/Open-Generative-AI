@@ -280,7 +280,22 @@ export default function CommunityClient({ initialPostId = null, locale: localePr
           )}
         </section>
       </div>
-      {activePostId && <CommunityDetailModal postId={activePostId} initialPost={posts.find((post) => post.id === activePostId)} onClose={() => setActivePostId(null)} onLikeChange={(id, liked, count) => setPosts((current) => current.map((post) => post.id === id ? { ...post, is_liked: liked, likes_count: count } : post))} />}
+      {activePostId && (
+        <CommunityDetailModal
+          postId={activePostId}
+          posts={posts}
+          initialPost={posts.find((post) => post.id === activePostId)}
+          onClose={() => setActivePostId(null)}
+          onNavigate={(nextId) => setActivePostId(nextId)}
+          onLikeChange={(id, liked, count) =>
+            setPosts((current) =>
+              current.map((post) =>
+                post.id === id ? { ...post, is_liked: liked, likes_count: count } : post
+              )
+            )
+          }
+        />
+      )}
     </main>
   );
 }
