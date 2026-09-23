@@ -39,7 +39,7 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { cn } from 'studio/ui/cn';
+import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
   { id: 'all', labelZh: '全部作品', labelEn: 'All Assets', icon: Sparkles },
