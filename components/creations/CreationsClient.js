@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { resolveClientLocale } from '@/lib/locales';
 import {
+  AlertTriangle,
   AudioLines,
   Clapperboard,
   Copy,
@@ -129,7 +130,7 @@ function CreationCard({ item, isZh, onPreview, onRemix, onShare, onCopy, onDelet
         </div>
 
         {item.is_shared && (
-          <span className="absolute right-3 top-3 rounded-full border border-line-strong bg-wash-press px-2.5 py-0.5 text-micro font-medium text-ink backdrop-blur-md">
+          <span className="absolute right-3 top-3 rounded-full border border-line-strong bg-wash-press px-2.5 py-0.5 text-caption font-medium text-ink backdrop-blur-md">
             {isZh ? '已公开' : 'Public'}
           </span>
         )}
@@ -166,7 +167,7 @@ function CreationCard({ item, isZh, onPreview, onRemix, onShare, onCopy, onDelet
       <div className="flex items-center justify-between gap-3 p-3.5 border-t border-line-subtle">
         <div className="min-w-0">
           <p className="truncate text-body-sm font-semibold text-ink">{prompt || (isZh ? '未命名作品' : 'Untitled Creation')}</p>
-          <p className="mt-0.5 truncate text-mono text-micro text-ink-subtle">
+          <p className="mt-0.5 truncate text-mono text-caption text-ink-subtle">
             {item.model || item.studio_id || 'AI Model'}
           </p>
         </div>
@@ -300,7 +301,7 @@ export default function CreationsClient({ locale: localeProp = null }) {
       <div className="flex-1 mx-auto w-full max-w-7xl px-6 sm:px-8 lg:px-12 py-8 sm:py-10 flex flex-col gap-8">
         {/* 未登录引导卡片 vs 创作者概览卡片 */}
         {!user ? (
-          <div className="rounded-2xl border border-line bg-surface p-8 sm:p-12 shadow-elevation-3 text-center flex flex-col items-center justify-center">
+          <div className="rounded-2xl border border-line bg-surface p-8 sm:p-12 shadow-elevation-3 text-center flex flex-col items-center justify-center relative overflow-hidden bg-dot-grid">
             <div className="flex size-16 items-center justify-center rounded-2xl border border-line bg-wash text-brand mb-4 shadow-elevation-1">
               <User className="size-8" />
             </div>
@@ -378,24 +379,37 @@ export default function CreationsClient({ locale: localeProp = null }) {
 
         {/* 分类过滤器与总计条 */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-line-subtle pb-5">
-          <div className="inline-flex flex-wrap items-center gap-1 p-1 rounded-full bg-well border border-line-subtle">
+          <div className="inline-flex flex-wrap items-center gap-1.5 p-1 rounded-full bg-well border border-line-subtle shadow-elevation-1">
             {CATEGORIES.map(({ id, labelZh, labelEn, icon: Icon }) => {
               const isSelected = selectedCategory === id;
               const label = isZh ? labelZh : labelEn;
+              const count = id === 'all'
+                ? creations.length
+                : creations.filter((item) => getType(item) === id).length;
               return (
                 <button
                   key={id}
                   type="button"
                   onClick={() => setSelectedCategory(id)}
                   className={cn(
-                    'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-label font-medium transition-colors duration-fast',
+                    'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-label font-medium transition duration-fast focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-ring',
                     isSelected
                       ? 'bg-surface-inverse text-ink-inverse shadow-elevation-1'
-                      : 'text-ink-muted hover:text-ink hover:bg-wash'
+                      : 'text-ink-muted hover:text-ink hover:bg-wash active:bg-wash-strong'
                   )}
                 >
                   <Icon className="size-3.5" />
                   <span>{label}</span>
+                  {count > 0 && (
+                    <span
+                      className={cn(
+                        'ml-1 rounded-full px-1.5 py-0.2 text-caption text-mono font-medium',
+                        isSelected ? 'bg-wash-press text-ink-inverse' : 'bg-wash text-ink-subtle'
+                      )}
+                    >
+                      {count}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -439,7 +453,7 @@ export default function CreationsClient({ locale: localeProp = null }) {
               </div>
             </div>
           ) : filteredCreations.length === 0 ? (
-            <div className="flex-1 min-h-96 rounded-2xl border border-line-subtle bg-surface p-12 sm:p-20 text-center flex flex-col items-center justify-center shadow-elevation-2">
+            <div className="flex-1 min-h-96 rounded-2xl border border-line-subtle bg-surface p-12 sm:p-20 text-center flex flex-col items-center justify-center shadow-elevation-2 relative overflow-hidden bg-dot-grid">
               <div className="flex size-14 items-center justify-center rounded-2xl border border-line bg-wash text-ink shadow-elevation-1">
                 <Sparkles className="size-6 text-ink" />
               </div>
@@ -589,24 +603,30 @@ export default function CreationsClient({ locale: localeProp = null }) {
 
       {/* 删除确认框 */}
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {isZh ? '确定要删除这条作品记录吗？' : 'Delete this creation?'}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {isZh
-                ? '删除后无法恢复。若该作品已发布到社区，也将一并从社区画廊中下架。'
-                : 'This action cannot be undone. If this creation has been published to the community, it will also be unlisted.'}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>
+        <AlertDialogContent size="sm" className="sm:max-w-md p-6">
+          <div className="flex flex-col items-center text-center">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-danger-soft text-danger mb-3 shadow-elevation-1">
+              <AlertTriangle className="size-6 text-danger" />
+            </div>
+            <AlertDialogHeader className="items-center text-center">
+              <AlertDialogTitle className="text-section-title font-semibold text-ink">
+                {isZh ? '确定要删除这条作品记录吗？' : 'Delete this creation?'}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-body-sm text-ink-muted mt-2 max-w-sm leading-relaxed">
+                {isZh
+                  ? '此操作无法撤销。作品资产将从云端彻底移除；若已发布到创作者社区，也将同步从公共画廊永久下架。'
+                  : 'This action cannot be undone. The creative asset will be permanently deleted and unlisted from the community gallery.'}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+          </div>
+          <AlertDialogFooter className="mt-4 sm:space-x-3">
+            <AlertDialogCancel disabled={deleting} className="text-label font-medium">
               {isZh ? '取消' : 'Cancel'}
             </AlertDialogCancel>
             <AlertDialogAction
               variant="danger"
               disabled={deleting}
+              className="text-label font-medium"
               onClick={() => {
                 if (deleteTarget) {
                   handleDelete(deleteTarget.id);
