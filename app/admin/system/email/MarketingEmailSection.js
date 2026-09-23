@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, StatusBadge } from '@/components/admin/AdminUi';
-import { MARKETING_TEMPLATES, renderMarketingTemplate } from '@/lib/emailMarketing';
+import { MARKETING_TEMPLATES, renderMarketingTemplate } from '@/lib/emailMarketingTemplates';
 
 const TEMPLATE_KEYS = ['welcome', 'newsletter', 'credit_alert', 'winback'];
 
@@ -388,3 +388,4 @@ export default function MarketingEmailSection({ canWrite }) {
     </Card>
   );
 }
+
