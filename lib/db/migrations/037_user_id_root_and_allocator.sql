@@ -1,7 +1,24 @@
 -- Promote the existing six-digit public UID to the sole local user key.
 -- All work is transactional; refuse to guess if any existing UID is invalid.
+
+-- 1. 为可能存在的存量 NULL 或非 6 位纯数字的用户安全分配唯一的 6 位数字 UID (100000-999999)
 DO $$
+DECLARE
+  r RECORD;
+  new_num TEXT;
+  exists_count INT;
 BEGIN
+  FOR r IN SELECT id FROM auth_usr.users WHERE user_number IS NULL OR user_number !~ '^[1-9][0-9]{5}$' LOOP
+    LOOP
+      new_num := FLOOR(100000 + random() * 900000)::TEXT;
+      SELECT COUNT(*) INTO exists_count FROM auth_usr.users WHERE user_number = new_num;
+      IF exists_count = 0 THEN
+        UPDATE auth_usr.users SET user_number = new_num WHERE id = r.id;
+        EXIT;
+      END IF;
+    END LOOP;
+  END LOOP;
+
   IF EXISTS (
     SELECT 1 FROM auth_usr.users
     WHERE user_number IS NULL OR user_number !~ '^[1-9][0-9]{5}$'
@@ -30,7 +47,7 @@ CREATE TEMP TABLE user_id_root_map ON COMMIT DROP AS
 SELECT id::text AS old_id, user_number::text AS new_id
 FROM auth_usr.users;
 
-CREATE TABLE auth_usr.user_id_allocations (
+CREATE TABLE IF NOT EXISTS auth_usr.user_id_allocations (
   user_id VARCHAR(64) PRIMARY KEY,
   digit_length SMALLINT NOT NULL,
   allocated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -48,9 +65,10 @@ COMMENT ON TABLE auth_usr.user_id_allocations IS
 INSERT INTO auth_usr.user_id_allocations (user_id, digit_length, allocated_at)
 SELECT new_id, length(new_id)::smallint, COALESCE(u.created_at, now())
 FROM user_id_root_map m
-JOIN auth_usr.users u ON u.id::text = m.old_id;
+JOIN auth_usr.users u ON u.id::text = m.old_id
+ON CONFLICT (user_id) DO NOTHING;
 
-CREATE INDEX user_id_allocations_length_idx
+CREATE INDEX IF NOT EXISTS user_id_allocations_length_idx
   ON auth_usr.user_id_allocations(digit_length);
 
 CREATE TEMP TABLE user_id_root_fks ON COMMIT DROP AS
@@ -153,6 +171,5 @@ ALTER TABLE auth_usr.users
     FOREIGN KEY (id) REFERENCES auth_usr.user_id_allocations(user_id) ON DELETE RESTRICT;
 
 ALTER TABLE auth_usr.users
-  DROP COLUMN uuid,
-  DROP COLUMN user_number;
-
+  DROP COLUMN IF EXISTS uuid,
+  DROP COLUMN IF EXISTS user_number;

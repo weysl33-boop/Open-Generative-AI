@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Hash, AlertTriangle, Camera, UploadCloud, Loader2, Globe2, UserRound } from 'lucide-react';
+import { Hash, AlertTriangle, Camera, UploadCloud, Loader2, Globe2, UserRound, Copy, Check } from 'lucide-react';
 import { COUNTRY_CODES, GENDER_OPTIONS } from '@/lib/onboarding/schema';
 import { DouyinIcon, GoogleIcon, QQIcon, TikTokIcon, WeChatIcon, XIcon, PhoneIcon, MailIcon } from '@/components/SocialIcons';
 import { completePhoneCaptchaChallenge } from '@/lib/auth/phone-captcha-client';
@@ -266,6 +266,13 @@ export default function ProfileTab({
   const [unbindError, setUnbindError] = useState('');
 
   const userId = user?.userNumber || user?.id || '';
+  const [copiedId, setCopiedId] = useState(false);
+  const handleCopyId = useCallback(() => {
+    if (!userId) return;
+    navigator.clipboard?.writeText?.(String(userId));
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 2000);
+  }, [userId]);
   const visibleSocialProviderIds = [...new Set([
     ...(socialOptions?.providers || []).map((provider) => provider.id),
     ...currentProviders,
@@ -529,10 +536,20 @@ export default function ProfileTab({
             <h3 className="text-card-title font-semibold text-ink">个人基本信息</h3>
             <p className="mt-0.5 text-xs text-ink-muted">数字 ID 全站唯一、终身不变，可用于登录与客服核对。</p>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5 px-3 py-1 rounded-full border border-success-line bg-success-soft text-success text-xs font-mono">
+          <button
+            type="button"
+            onClick={handleCopyId}
+            className="flex shrink-0 items-center gap-1.5 px-3 py-1 rounded-full border border-success-line bg-success-soft text-success text-xs font-mono hover:bg-success-soft transition-colors cursor-pointer"
+            title="点击复制用户 ID"
+          >
             <Hash className="size-3.5" />
-            <span>UID: {userId}</span>
-          </div>
+            <span>用户 ID：{userId}</span>
+            {copiedId ? (
+              <Check className="size-3 text-success ml-0.5" />
+            ) : (
+              <Copy className="size-3 text-success ml-0.5" />
+            )}
+          </button>
         </div>
         <div>
           <form onSubmit={onSaveProfile} className="flex max-w-xl flex-col gap-4">
@@ -619,17 +636,39 @@ export default function ProfileTab({
               </div>
             </div>
 
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-ink">
+            <div className="flex flex-col gap-1.5 text-xs font-medium text-ink">
               <span className="flex items-center justify-between">
-                <span>数字 ID（不可修改）</span>
-                <span className="text-caption text-ink-subtle">可用于登录与客服核对</span>
+                <span>用户 ID（不可修改）</span>
+                <span className="text-caption text-ink-subtle">全站唯一数字根 ID，可用于登录与客服核对</span>
               </span>
-              <Input
-                value={`#${userId}`}
-                disabled
-                className="font-mono select-all"
-              />
-            </label>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={userId}
+                  readOnly
+                  disabled
+                  className="font-mono select-all flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="md"
+                  onClick={handleCopyId}
+                  className="shrink-0 flex items-center gap-1.5"
+                >
+                  {copiedId ? (
+                    <>
+                      <Check className="size-3.5 text-success" />
+                      <span className="text-success">已复制</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="size-3.5 text-ink-muted" />
+                      <span>复制 ID</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
 
             <label className="flex flex-col gap-1.5 text-xs font-medium text-ink">
               <span className="flex items-center justify-between">

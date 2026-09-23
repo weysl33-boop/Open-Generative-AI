@@ -24,7 +24,7 @@ const migrationDir = path.resolve('lib/db/migrations');
 const files = (await fs.readdir(migrationDir)).filter((name) => name.endsWith('.sql')).sort((a, b) => a.localeCompare(b));
 const upgradeStart = files.findIndex((name) => name.startsWith('009_'));
 if (upgradeStart === -1) throw new Error('P6 payment migration 009 is missing from the migration rehearsal.');
-const userIdRootStart = files.findIndex((name) => name.startsWith('032_user_id_root_and_allocator'));
+const userIdRootStart = files.findIndex((name) => name.startsWith('037_user_id_root_and_allocator'));
 const sqlByFile = new Map(await Promise.all(files.map(async (name) => [
   name,
   (await fs.readFile(path.join(migrationDir, name), 'utf8')).replace(/^\uFEFF/, ''),
@@ -33,7 +33,7 @@ const sqlByFile = new Map(await Promise.all(files.map(async (name) => [
 // This one explicitly authorized root-key conversion removes only the two
 // superseded aliases. Every other release migration remains forward-only.
 const destructiveColumnAllowlist = new Map([
-  ['032_user_id_root_and_allocator.sql', ['user_number', 'uuid']],
+  ['037_user_id_root_and_allocator.sql', ['user_number', 'uuid']],
 ]);
 for (const [name, sql] of sqlByFile) {
   const droppedColumns = [...sql.matchAll(/\bDROP\s+COLUMN(?:\s+IF\s+EXISTS)?\s+([a-z_][a-z0-9_]*)/gi)]
