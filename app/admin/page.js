@@ -201,7 +201,7 @@ export default async function AdminDashboardPage() {
                     >
                       {item.risk_level}
                     </StatusBadge>
-                    <p className="mt-1 text-micro text-ink-subtle">{formatDate(item.created_at)}</p>
+                    <p className="mt-1 text-caption text-ink-subtle font-mono">{formatDate(item.created_at)}</p>
                   </div>
                 </div>
               ))

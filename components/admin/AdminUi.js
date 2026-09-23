@@ -48,7 +48,7 @@ export function StatusBadge({ children, tone = 'neutral' }) {
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-micro font-medium tracking-[0.01em] ${
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-caption font-medium tracking-[0.01em] ${
         styles[tone] || styles.neutral
       }`}
     >

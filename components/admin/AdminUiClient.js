@@ -26,7 +26,7 @@ export function CopyableId({ id, label, strong = false }) {
       }`}
     >
       <span>{display}</span>
-      <span className="text-micro text-ink-subtle group-hover:text-brand">
+      <span className="text-caption text-ink-subtle group-hover:text-brand">
         {copied ? '✓' : '⧉'}
       </span>
     </button>
